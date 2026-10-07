@@ -35,24 +35,24 @@ import kotlinx.coroutines.SupervisorJob
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-//    private val expenseViewModel: ExpenseViewModel by viewModels()
-//    private val viewModel: PaymentViewModel by viewModels()
-//    private val paymentId = "payment_123"
-//
-//    private val viewModel1: PaymentViewModelWithParam by viewModels(
-//        extrasProducer = {
-//            defaultViewModelCreationExtras.withCreationCallback<
-//                    PaymentViewModelWithParam.Factory
-//                    > { factory ->
-//                factory.create(paymentId)
-//            }
-//        }
-//    )
+    private val expenseViewModel: ExpenseViewModel by viewModels()
+    private val viewModel: PaymentViewModel by viewModels()
+    private val paymentId = "payment_123"
+
+    private val viewModel1: PaymentViewModelWithParam by viewModels(
+        extrasProducer = {
+            defaultViewModelCreationExtras.withCreationCallback<
+                    PaymentViewModelWithParam.Factory
+                    > { factory ->
+                factory.create(paymentId)
+            }
+        }
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+        /*val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
         val database = AppDatabase.getDatabase(this,scope)
         val repository = TransactionRepository(database.transactionDao())
 
@@ -70,7 +70,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-        }
+        }*/
 
 /*        val runner = HiltPocRunner()
         val result = runner.run()
@@ -93,7 +93,7 @@ class MainActivity : ComponentActivity() {
 
         */
 
-       /* setContent {
+        setContent {
 
             val state by expenseViewModel.uiState.collectAsState()
 
@@ -174,6 +174,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-        }*/
+        }
     }
 }
