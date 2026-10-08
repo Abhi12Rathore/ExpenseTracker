@@ -65,9 +65,6 @@ interface TransactionDao {
     @Query("SELECT SUM(amount) FROM transactions WHERE transactionType = 'EXPENSE' AND dateMillis >= :startMillis")
     fun getMonthlyExpense(startMillis: Long): Flow<Double?>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAllCategories(categories: List<CategoryEntity>)
-
 
     @Query(
         """
