@@ -35,6 +35,18 @@ Goal: production-quality portfolio project.
 - Each screen is split in two: `XxxScreen` obtains the ViewModel and collects state, `XxxContent(state, onEvent, navigation lambdas)` is the stateless layout. Only purely visual state (animations, scroll, dropdown expansion) stays in `remember`.
 - Composables are stateless where possible: state in, lambdas out.
 
+## Low-level design rules
+Apply these to all new and changed code. Existing violations are tracked under Known issues; fix them only when the task is about them.
+- **SOLID:** one responsibility per class. Depend on interfaces from `domain/`, never on implementations.
+- **Use cases:** one operation each. When a ViewModel needs more than ~5 dependencies, add a facade use case that combines them (e.g. `GetDashboardUseCase`).
+- **Value types over primitives:** money is `Money` (whole paise as `Long`, never `Double`), IDs are typed (`@JvmInline value class TransactionId(val value: Long)`), dates go through `DateRange` / `TimeProvider`.
+- **No stringly-typed data:** fixed sets are enums or sealed types (e.g. `CategoryIcon` enum stored via a Room `TypeConverter`), not free strings.
+- **Data access:** one DAO per aggregate (`TransactionDao`, `CategoryDao`, `DashboardDao`). Don't store the same data twice; get related data through a JOIN or `@Relation`.
+- **Errors:** expected failures are typed. Use cases return `Result<T, DomainError>` (a sealed `DomainError` in `domain/`), ViewModels map them to UI state. No silent `catch {}` and no exceptions used for control flow.
+- **Time:** never call `System.currentTimeMillis()` or `Calendar.getInstance()` outside `data/time/`. Inject `TimeProvider`.
+- **Global objects:** `object` is only for stateless pure helpers. Anything that reads the clock, locale or other state is an injectable class.
+- **Immutability:** domain models and UI state are immutable `data class`es with `val`s and read-only `List`s.
+
 ## Conventions
 - Money: format only through the shared en-IN currency formatter, `utils/CurrencyFormatter` (e.g. `-₹1,00,000.00`). Never use string concatenation like `"₹$amount"`.
 - Dates: format via the shared date utility, `utils/DateFormatter`. Never show raw millis.
@@ -48,7 +60,14 @@ Goal: production-quality portfolio project.
 - Default categories are seeded in `AppDatabase` `onCreate`.
 
 ## Known issues (remove each line once fixed)
-- None currently.
+Planned for the `refactor/lld` branch:
+- `TransactionDao` has 19 methods covering transactions, categories and dashboard queries. Split it per aggregate.
+- Money is `Double` in entities and domain models. Migrate to `Money` (paise as `Long`) with a Room `Migration`.
+- `Transaction` stores `categoryName` alongside `categoryId`, so a category rename leaves stale names. Read it via JOIN/`@Relation` and drop the column (migration).
+- `HomeViewModel` has 11 constructor dependencies. Introduce `GetDashboardUseCase`.
+- No shared error model. Introduce `DomainError` + `Result`.
+- `DateFormatter.hourOfDay` and `HomeViewModel` (greeting) read the system clock directly. Use `TimeProvider`.
+- `Category.iconName` is a free string. Replace with a `CategoryIcon` enum.
 
 ## Workflow
 - Never commit to `main`. Use branches like `refactor/hilt` or `feature/theme-toggle`.
