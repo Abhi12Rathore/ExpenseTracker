@@ -49,8 +49,8 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE transactionType = :type ORDER BY dateMillis DESC")
     fun getTransactionsByType(type: TransactionType): Flow<List<TransactionEntity>>
 
-    @Query("SELECT * FROM transactions WHERE dateMillis >= :startTimestamp ORDER BY dateMillis DESC")
-    fun getFilteredTransactions(startTimestamp: Long): Flow<List<TransactionEntity>>
+    @Query("SELECT * FROM transactions WHERE dateMillis >= :startMillis AND dateMillis < :endMillis ORDER BY dateMillis DESC")
+    fun getTransactionsBetween(startMillis: Long, endMillis: Long): Flow<List<TransactionEntity>>
 
     @Query("SELECT * FROM categories")
     fun getAllCategories(): Flow<List<CategoryEntity>>
@@ -104,6 +104,7 @@ JOIN categories c
 ON t.categoryId = c.id
 
 WHERE t.transactionType = 'EXPENSE'
+AND t.dateMillis >= :startMillis AND t.dateMillis < :endMillis
 
 GROUP BY c.id
 
@@ -111,7 +112,7 @@ ORDER BY totalAmount DESC
 
 """
     )
-    fun getCategoryExpense():
+    fun getCategoryExpense(startMillis: Long, endMillis: Long):
             Flow<List<CategoryExpenseEntity>>
 
 
@@ -138,20 +139,22 @@ END
 
 FROM transactions
 
-GROUP BY date(dateMillis / 1000,'unixepoch')
+WHERE dateMillis >= :startMillis AND dateMillis < :endMillis
+
+GROUP BY date(dateMillis / 1000,'unixepoch','localtime')
 
 ORDER BY dateMillis
 """)
-    fun getDailyCashFlow(): Flow<List<DailyCashFlowEntity>>
+    fun getDailyCashFlow(startMillis: Long, endMillis: Long): Flow<List<DailyCashFlowEntity>>
 
 
     @Query(
         """
 SELECT
 
-strftime('%Y', datetime(dateMillis / 1000, 'unixepoch')) AS year,
+strftime('%Y', datetime(dateMillis / 1000, 'unixepoch', 'localtime')) AS year,
 
-strftime('%m', datetime(dateMillis / 1000, 'unixepoch')) AS month,
+strftime('%m', datetime(dateMillis / 1000, 'unixepoch', 'localtime')) AS month,
 
 
 SUM(
@@ -174,6 +177,7 @@ END
 
 FROM transactions
 
+WHERE dateMillis >= :startMillis AND dateMillis < :endMillis
 
 GROUP BY year, month
 
@@ -181,6 +185,6 @@ ORDER BY year, month
 
 """
     )
-    fun getMonthlyTrend(): Flow<List<MonthlyTrendEntity>>
+    fun getMonthlyTrend(startMillis: Long, endMillis: Long): Flow<List<MonthlyTrendEntity>>
 
 }

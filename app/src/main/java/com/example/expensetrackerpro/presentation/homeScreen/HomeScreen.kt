@@ -22,16 +22,18 @@ import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.example.expensetrackerpro.presentation.common.filter.components.PeriodFilter
+import com.example.expensetrackerpro.presentation.common.filter.shortLabel
 import com.example.expensetrackerpro.presentation.homeScreen.component.DashboardHeader
 import com.example.expensetrackerpro.presentation.homeScreen.component.DashboardSectionHeader
 import com.example.expensetrackerpro.presentation.homeScreen.component.FinancialSummaryCard
 import com.example.expensetrackerpro.presentation.homeScreen.component.HomeEmptyState
 import com.example.expensetrackerpro.presentation.homeScreen.component.InsightSection
-import com.example.expensetrackerpro.presentation.homeScreen.component.MetricGrid
 import com.example.expensetrackerpro.presentation.homeScreen.component.RecentActivityTile
 import com.example.expensetrackerpro.presentation.homeScreen.component.charts.CashFlowChart
 import com.example.expensetrackerpro.presentation.homeScreen.component.charts.CategoryExpenseDonutChart
 import com.example.expensetrackerpro.presentation.homeScreen.component.charts.MonthlyTrendBarChart
+import com.example.expensetrackerpro.presentation.homeScreen.uistate.HomeEvent
 import com.example.expensetrackerpro.presentation.homeScreen.uistate.HomeUiState
 import com.example.expensetrackerpro.presentation.homeScreen.viewmodels.HomeViewModel
 
@@ -46,6 +48,7 @@ fun HomeScreen(
 
     HomeContent(
         uiState = uiState,
+        onEvent = viewModel::onEvent,
         onViewAllTransactions = onViewAllTransactions,
         onTransactionClick = onTransactionClick
     )
@@ -54,6 +57,7 @@ fun HomeScreen(
 @Composable
 fun HomeContent(
     uiState: HomeUiState,
+    onEvent: (HomeEvent) -> Unit,
     onViewAllTransactions: () -> Unit,
     onTransactionClick: (Int) -> Unit
 ) {
@@ -67,26 +71,27 @@ fun HomeContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+            contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             // 1. Greeting Layer
             item {
                 DashboardHeader(
                     userName = "Abhishek",
-                    dayPeriod = uiState.dayPeriod,
-                    currentMonthMillis = uiState.currentMonthMillis
+                    dayPeriod = uiState.dayPeriod
+                )
+            }
+
+            item {
+                PeriodFilter(
+                    state = uiState.filter,
+                    onEvent = { onEvent(HomeEvent.Filter(it)) }
                 )
             }
 
             // 2. Hero Card Layer
             item {
-                FinancialSummaryCard(data = summary)
-            }
-
-            // 3. Quick KPI Layer
-            item {
-                MetricGrid(data = summary)
+                FinancialSummaryCard(data = summary, periodLabel = uiState.filter.shortLabel())
             }
 
             item {

@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.expensetrackerpro.presentation.common.filter.components.PeriodFilter
 import com.example.expensetrackerpro.presentation.transactions.transactionList.component.EmptyExpenseUI
 import com.example.expensetrackerpro.presentation.transactions.transactionList.component.ExpenseTile
 import com.example.expensetrackerpro.presentation.transactions.transactionList.component.TotalBalanceCard
@@ -122,7 +123,12 @@ fun TransactionListContent(
                 }
             }
 
-
+            item {
+                PeriodFilter(
+                    state = uiState.filter,
+                    onEvent = { onEvent(TransactionListEvent.Filter(it)) }
+                )
+            }
 
             // 2. Section Title: Expenses + Count
             if (!expenses.isEmpty()) {

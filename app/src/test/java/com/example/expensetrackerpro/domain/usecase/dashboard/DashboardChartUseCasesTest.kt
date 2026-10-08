@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.domain.usecase.dashboard
 
 import com.example.expensetrackerpro.domain.models.CashFlowPoint
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
+import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
 import com.example.expensetrackerpro.fakes.FakeDashboardRepository
 import kotlinx.coroutines.flow.first
@@ -45,6 +46,25 @@ class DashboardChartUseCasesTest {
         repository.monthlyTrend.value = trend
 
         assertEquals(trend, GetMonthlyTrendUseCase(repository)().first())
+    }
+
+    @Test
+    fun eachChart_asksTheRepositoryForItsRange() = runTest {
+        val range = DateRange(startMillis = 10L, endMillis = 20L)
+
+        GetCashFlowUseCase(repository)(range).first()
+        assertEquals(range, repository.cashFlowRange)
+        GetCategoryBreakdownUseCase(repository)(range).first()
+        assertEquals(range, repository.categoryBreakdownRange)
+        GetMonthlyTrendUseCase(repository)(range).first()
+        assertEquals(range, repository.monthlyTrendRange)
+    }
+
+    @Test
+    fun noRange_asksForEverything() = runTest {
+        GetCashFlowUseCase(repository)().first()
+
+        assertEquals(DateRange.ALL, repository.cashFlowRange)
     }
 
     @Test

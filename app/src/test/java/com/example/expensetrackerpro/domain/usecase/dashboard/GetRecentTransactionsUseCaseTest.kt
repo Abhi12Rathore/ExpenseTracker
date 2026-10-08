@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.dashboard
 
+import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.fakes.FakeTransactionRepository
 import com.example.expensetrackerpro.fakes.transaction
 import kotlinx.coroutines.flow.first
@@ -33,6 +34,13 @@ class GetRecentTransactionsUseCaseTest {
         val recent = useCaseWith(8)(limit = 2).first()
 
         assertEquals(listOf(8, 7), recent.map { it.id })
+    }
+
+    @Test
+    fun keepsTheNewestWithinRange() = runTest {
+        val recent = useCaseWith(8)(DateRange(startMillis = 2L, endMillis = 5L), limit = 2).first()
+
+        assertEquals(listOf(4, 3), recent.map { it.id })
     }
 
     @Test

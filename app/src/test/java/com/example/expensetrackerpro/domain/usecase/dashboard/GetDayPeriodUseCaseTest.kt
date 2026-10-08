@@ -9,8 +9,8 @@ class GetDayPeriodUseCaseTest {
     private val getDayPeriod = GetDayPeriodUseCase()
 
     @Test
-    fun midnightUntilNoon_isMorning() {
-        assertEquals(DayPeriod.MORNING, getDayPeriod(0))
+    fun fiveUntilNoon_isMorning() {
+        assertEquals(DayPeriod.MORNING, getDayPeriod(5))
         assertEquals(DayPeriod.MORNING, getDayPeriod(6))
         assertEquals(DayPeriod.MORNING, getDayPeriod(11))
     }
@@ -25,5 +25,12 @@ class GetDayPeriodUseCaseTest {
     fun fiveOnwards_isEvening() {
         assertEquals(DayPeriod.EVENING, getDayPeriod(17))
         assertEquals(DayPeriod.EVENING, getDayPeriod(23))
+    }
+
+    @Test
+    fun midnightUntilFive_isStillEvening() {
+        assertEquals(DayPeriod.EVENING, getDayPeriod(0))
+        assertEquals(DayPeriod.EVENING, getDayPeriod(2))
+        assertEquals(DayPeriod.EVENING, getDayPeriod(4))
     }
 }

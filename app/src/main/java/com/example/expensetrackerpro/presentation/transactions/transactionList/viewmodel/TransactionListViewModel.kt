@@ -2,13 +2,20 @@ package com.example.expensetrackerpro.presentation.transactions.transactionList.
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.expensetrackerpro.domain.models.DateFilter
+import com.example.expensetrackerpro.domain.models.PeriodGranularity
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.usecase.dashboard.CalculateFinancialSummaryUseCase
+import com.example.expensetrackerpro.domain.usecase.filter.GetCurrentPeriodUseCase
+import com.example.expensetrackerpro.domain.usecase.filter.GetCustomDateRangeUseCase
+import com.example.expensetrackerpro.domain.usecase.filter.GetDateRangeUseCase
+import com.example.expensetrackerpro.domain.usecase.filter.StepPeriodUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.DeleteTransactionUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionsUseCase
+import com.example.expensetrackerpro.presentation.common.filter.PeriodFilterEvent
+import com.example.expensetrackerpro.presentation.common.filter.PeriodFilterState
 import com.example.expensetrackerpro.presentation.transactions.transactionList.uistate.TransactionListEvent
 import com.example.expensetrackerpro.presentation.transactions.transactionList.uistate.TransactionListUiState
-import com.example.expensetrackerpro.utils.ExpenseFilter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -19,27 +26,33 @@ import javax.inject.Inject
 @HiltViewModel
 class TransactionListViewModel @Inject constructor(
     getTransactions: GetTransactionsUseCase,
+    private val getDateRange: GetDateRangeUseCase,
+    private val getCurrentPeriod: GetCurrentPeriodUseCase,
+    private val stepPeriod: StepPeriodUseCase,
+    private val getCustomDateRange: GetCustomDateRangeUseCase,
     private val calculateFinancialSummary: CalculateFinancialSummaryUseCase,
     private val deleteTransaction: DeleteTransactionUseCase
 ) : ViewModel() {
 
-    private val selectedFilter = MutableStateFlow(ExpenseFilter.ALL)
+    private val filter = MutableStateFlow<DateFilter>(getCurrentPeriod(PeriodGranularity.MONTH))
+
+    private val filterState = filter.map { it.toState() }
 
     private val transactionToDelete = MutableStateFlow<Transaction?>(null)
 
-    private val transactions = selectedFilter
-        .flatMapLatest { filter -> getTransactions(filter.getStartTimestamp()) }
+    private val transactions = filterState
+        .flatMapLatest { state -> getTransactions(state.dateRange) }
 
     /**
      * Income, Expense, and Balance are derived from the filtered list reactively.
      */
     val uiState: StateFlow<TransactionListUiState> =
-        combine(transactions, selectedFilter, transactionToDelete) { list, filter, toDelete ->
+        combine(transactions, filterState, transactionToDelete) { list, filterState, toDelete ->
             val summary = calculateFinancialSummary(list)
 
             TransactionListUiState(
                 transactions = list,
-                selectedFilter = filter,
+                filter = filterState,
                 totalIncome = summary.totalIncome,
                 totalExpense = summary.totalExpense,
                 totalBalance = summary.totalBalance,
@@ -48,17 +61,41 @@ class TransactionListViewModel @Inject constructor(
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = TransactionListUiState()
+            initialValue = TransactionListUiState(filter = filter.value.toState())
         )
 
     fun onEvent(event: TransactionListEvent) {
         when (event) {
-            is TransactionListEvent.FilterSelected -> selectedFilter.value = event.filter
+            is TransactionListEvent.Filter -> onFilterEvent(event.event)
             is TransactionListEvent.DeleteRequested -> transactionToDelete.value = event.transaction
             TransactionListEvent.DeleteDismissed -> transactionToDelete.value = null
             TransactionListEvent.DeleteConfirmed -> confirmDelete()
         }
     }
+
+    private fun onFilterEvent(event: PeriodFilterEvent) {
+        val current = filter.value
+
+        filter.value = when (event) {
+            // Tapping a segment always jumps to the period we are in now
+            is PeriodFilterEvent.GranularitySelected -> getCurrentPeriod(event.granularity)
+            PeriodFilterEvent.PreviousPeriod -> current.stepped(forward = false)
+            PeriodFilterEvent.NextPeriod -> current.stepped(forward = true)
+            is PeriodFilterEvent.CustomRangeSelected -> DateFilter.Custom(
+                getCustomDateRange(event.startUtcMillis, event.endUtcMillis)
+            )
+        }
+    }
+
+    /** The neighbouring period, or the filter unchanged when there is nowhere to step to. */
+    private fun DateFilter.stepped(forward: Boolean): DateFilter =
+        (this as? DateFilter.Period)?.let { stepPeriod(it, forward) } ?: this
+
+    private fun DateFilter.toState() = PeriodFilterState(
+        filter = this,
+        dateRange = getDateRange(this),
+        canStepForward = this is DateFilter.Period && stepPeriod(this, forward = true) != null
+    )
 
     private fun confirmDelete() {
         transactionToDelete.value?.let { transaction ->

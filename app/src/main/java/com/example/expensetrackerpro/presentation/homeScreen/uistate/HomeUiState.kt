@@ -8,6 +8,7 @@ import com.example.expensetrackerpro.domain.models.SmartInsight
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
 
 import com.example.expensetrackerpro.domain.models.FinancialSummary
+import com.example.expensetrackerpro.presentation.common.filter.PeriodFilterState
 
 
 
@@ -16,8 +17,8 @@ data class HomeUiState(
     // Time of day for the greeting
     val dayPeriod: DayPeriod = DayPeriod.MORNING,
 
-    // The month shown in the header pill, as epoch millis
-    val currentMonthMillis: Long = 0L,
+    // The period every section below is filtered to
+    val filter: PeriodFilterState = PeriodFilterState(),
 
     val financialSummary: FinancialSummary = FinancialSummary(),
 

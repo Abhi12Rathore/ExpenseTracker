@@ -28,15 +28,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.utils.CurrencyFormatter
-import com.example.expensetrackerpro.utils.ExpenseFilter
 
 @Composable
 fun TotalBalanceCard(
     totalBalance: Double,   // (Income - Expense)
     totalIncome: Double,    // Sum of Income
-    totalExpense: Double,   // Sum of Expenses
-    selectedFilter: ExpenseFilter,
-    onFilterSelected: (ExpenseFilter) -> Unit
+    totalExpense: Double    // Sum of Expenses
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),

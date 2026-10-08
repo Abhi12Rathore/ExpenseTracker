@@ -22,8 +22,12 @@ class MainViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             // The first load opens the database (creating and seeding it on first run)
-            getCategories().first()
-            _uiState.update { it.copy(isReady = true) }
+            try {
+                getCategories().first()
+            } finally {
+                // Released even if the load fails, so the splash can never get stuck
+                _uiState.update { it.copy(isReady = true) }
+            }
         }
     }
 }

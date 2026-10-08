@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.fakes
 
+import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.repository.TransactionRepository
@@ -40,6 +41,8 @@ class FakeTransactionRepository(
     override fun getTransactionsByType(type: TransactionType): Flow<List<Transaction>> =
         getAllTransactions().map { list -> list.filter { it.transactionType == type } }
 
-    override fun getFilteredTransactions(startTimestamp: Long): Flow<List<Transaction>> =
-        getAllTransactions().map { list -> list.filter { it.dateMillis >= startTimestamp } }
+    override fun getTransactions(range: DateRange): Flow<List<Transaction>> =
+        getAllTransactions().map { list ->
+            list.filter { it.dateMillis >= range.startMillis && it.dateMillis < range.endMillis }
+        }
 }
