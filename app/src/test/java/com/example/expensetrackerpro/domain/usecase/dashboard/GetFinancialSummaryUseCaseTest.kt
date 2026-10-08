@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.dashboard
 
+import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.FinancialSummary
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.fakes.FakeTransactionRepository
@@ -36,6 +37,25 @@ class GetFinancialSummaryUseCaseTest {
             ),
             getFinancialSummary().first()
         )
+    }
+
+    @Test
+    fun summarisesOnlyTransactionsInRange() = runTest {
+        repository.saveTransaction(
+            transaction(id = 1, amount = 2000.0, type = TransactionType.INCOME, dateMillis = 50L)
+        )
+        repository.saveTransaction(
+            transaction(id = 2, amount = 500.0, type = TransactionType.EXPENSE, dateMillis = 150L)
+        )
+        repository.saveTransaction(
+            transaction(id = 3, amount = 300.0, type = TransactionType.INCOME, dateMillis = 200L)
+        )
+
+        val summary = getFinancialSummary(DateRange(startMillis = 100L, endMillis = 200L)).first()
+
+        assertEquals(0.0, summary.totalIncome, 0.001)
+        assertEquals(500.0, summary.totalExpense, 0.001)
+        assertEquals(-500.0, summary.totalBalance, 0.001)
     }
 
     @Test

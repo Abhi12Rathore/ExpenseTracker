@@ -44,6 +44,60 @@ class DateFormatterTest {
     }
 
     @Test
+    fun formatYear_isFourDigits() {
+        assertEquals("2026", DateFormatter.formatYear(millis(2026, Calendar.OCTOBER, 8)))
+    }
+
+    @Test
+    fun formatShortMonthYear_isAbbreviatedMonth() {
+        assertEquals("Oct 2026", DateFormatter.formatShortMonthYear(millis(2026, Calendar.OCTOBER, 8)))
+    }
+
+    @Test
+    fun formatDayRange_withinAMonth_namesTheMonthOnce() {
+        val start = millis(2026, Calendar.OCTOBER, 1, hour = 0)
+        val end = millis(2026, Calendar.OCTOBER, 31, hour = 23)
+
+        assertEquals("1 – 31 Oct", DateFormatter.formatDayRange(start, end, withYear = false))
+        assertEquals("1 – 31 Oct 2026", DateFormatter.formatDayRange(start, end, withYear = true))
+    }
+
+    @Test
+    fun formatDayRange_acrossMonths_namesBoth() {
+        val start = millis(2026, Calendar.SEPTEMBER, 28)
+        val end = millis(2026, Calendar.OCTOBER, 4)
+
+        assertEquals("28 Sep – 4 Oct", DateFormatter.formatDayRange(start, end, withYear = false))
+        assertEquals("28 Sep – 4 Oct 2026", DateFormatter.formatDayRange(start, end, withYear = true))
+        assertEquals(
+            "1 Jan – 31 Dec",
+            DateFormatter.formatDayRange(
+                millis(2026, Calendar.JANUARY, 1),
+                millis(2026, Calendar.DECEMBER, 31),
+                withYear = false
+            )
+        )
+    }
+
+    @Test
+    fun formatDayRange_acrossYears_alwaysShowsBothYears() {
+        val start = millis(2025, Calendar.DECEMBER, 29)
+        val end = millis(2026, Calendar.JANUARY, 4)
+
+        assertEquals("29 Dec 2025 – 4 Jan 2026", DateFormatter.formatDayRange(start, end, withYear = false))
+        assertEquals("29 Dec 2025 – 4 Jan 2026", DateFormatter.formatDayRange(start, end, withYear = true))
+    }
+
+    @Test
+    fun formatDayRange_singleDay_isJustThatDay() {
+        val start = millis(2026, Calendar.OCTOBER, 8, hour = 0)
+        val end = millis(2026, Calendar.OCTOBER, 8, hour = 23)
+
+        assertEquals("8 Oct", DateFormatter.formatDayRange(start, end, withYear = false))
+        assertEquals("8 Oct 2026", DateFormatter.formatDayRange(start, end, withYear = true))
+    }
+
+    @Test
     fun usesDeviceTimeZone_forDayBoundary() {
         // 20:00 UTC on 31 Dec is already 1 Jan in Kolkata
         val utcEvening = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {

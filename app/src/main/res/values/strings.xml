@@ -7,9 +7,22 @@
     <string name="greeting_evening">Good Evening, %1$s 👋</string>
     <string name="dashboard_subtitle">Here\'s your financial status</string>
 
+    <!-- Date filter -->
+    <string name="filter_week">Week</string>
+    <string name="filter_month">Month</string>
+    <string name="filter_year">Year</string>
+    <string name="filter_previous_period">Previous period</string>
+    <string name="filter_next_period">Next period</string>
+    <string name="filter_custom_range">Choose a custom date range</string>
+    <string name="filter_custom_confirm">OK</string>
+    <string name="filter_custom_cancel">Cancel</string>
+
+    <!-- Dashboard balance card -->
+    <string name="balance_label">Balance · %1$s</string>
+
     <!-- Dashboard smart insights -->
     <string name="insight_saved_title">Great Saving! 🎉</string>
-    <string name="insight_saved_description">You saved %1$s this month</string>
+    <string name="insight_saved_description">You saved %1$s in this period</string>
     <string name="insight_highest_spending_title">Highest Spending</string>
     <string name="insight_highest_spending_description">%1$s is your biggest expense category</string>
     <string name="insight_spending_improved_title">Spending Improved 📉</string>

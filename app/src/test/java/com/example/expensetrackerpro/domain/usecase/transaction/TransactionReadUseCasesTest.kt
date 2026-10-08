@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.transaction
 
+import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.fakes.FakeTransactionRepository
 import com.example.expensetrackerpro.fakes.transaction
 import kotlinx.coroutines.flow.first
@@ -22,13 +23,24 @@ class TransactionReadUseCasesTest {
     }
 
     @Test
-    fun getTransactions_includesStartTimestampAndLater() = runTest {
-        assertEquals(listOf(new, mid), GetTransactionsUseCase(repository)(200L).first())
+    fun getTransactions_includesRangeStart() = runTest {
+        val fromMid = DateRange(startMillis = 200L, endMillis = Long.MAX_VALUE)
+
+        assertEquals(listOf(new, mid), GetTransactionsUseCase(repository)(fromMid).first())
     }
 
     @Test
-    fun getTransactions_startAfterEverything_isEmpty() = runTest {
-        assertTrue(GetTransactionsUseCase(repository)(301L).first().isEmpty())
+    fun getTransactions_excludesRangeEnd() = runTest {
+        val beforeNew = DateRange(startMillis = 100L, endMillis = 300L)
+
+        assertEquals(listOf(mid, old), GetTransactionsUseCase(repository)(beforeNew).first())
+    }
+
+    @Test
+    fun getTransactions_rangeAfterEverything_isEmpty() = runTest {
+        val later = DateRange(startMillis = 301L, endMillis = 400L)
+
+        assertTrue(GetTransactionsUseCase(repository)(later).first().isEmpty())
     }
 
     @Test

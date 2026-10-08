@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.repository
 
+import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
 import kotlinx.coroutines.flow.Flow
@@ -18,6 +19,6 @@ interface TransactionRepository {
 
     fun getTransactionsByType(type: TransactionType): Flow<List<Transaction>>
 
-    /** All transactions dated at or after [startTimestamp]. */
-    fun getFilteredTransactions(startTimestamp: Long): Flow<List<Transaction>>
+    /** Transactions dated within [range], newest first. */
+    fun getTransactions(range: DateRange): Flow<List<Transaction>>
 }

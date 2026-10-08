@@ -22,20 +22,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.FinancialSummary
 import com.example.expensetrackerpro.utils.CurrencyFormatter
 
 @Composable
-fun FinancialSummaryCard(data: FinancialSummary) {
+fun FinancialSummaryCard(data: FinancialSummary, periodLabel: String) {
     Surface(
         shape = RoundedCornerShape(28.dp),
         color = MaterialTheme.colorScheme.primaryContainer,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(24.dp)) {
-            Text("Current Balance", style = MaterialTheme.typography.labelMedium)
+            Text(stringResource(R.string.balance_label, periodLabel), style = MaterialTheme.typography.labelMedium)
             Text(
                 text = CurrencyFormatter.format(data.totalBalance),
                 style = MaterialTheme.typography.displaySmall,

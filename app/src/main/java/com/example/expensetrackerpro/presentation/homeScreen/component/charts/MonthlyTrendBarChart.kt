@@ -2,10 +2,12 @@ package com.example.expensetrackerpro.presentation.homeScreen.component.charts
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
@@ -23,10 +25,11 @@ fun MonthlyTrendBarChart(
 ) {
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        shape = MaterialTheme.shapes.large
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        )
     ) {
 
         Column(
@@ -44,7 +47,10 @@ fun MonthlyTrendBarChart(
 
                 Text(
                     text = "No monthly data available",
-                    modifier = Modifier.padding(32.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    textAlign = TextAlign.Center
                 )
 
             } else {

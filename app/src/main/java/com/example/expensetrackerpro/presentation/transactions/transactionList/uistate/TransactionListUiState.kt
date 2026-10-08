@@ -1,11 +1,11 @@
 package com.example.expensetrackerpro.presentation.transactions.transactionList.uistate
 
 import com.example.expensetrackerpro.domain.models.Transaction
-import com.example.expensetrackerpro.utils.ExpenseFilter
+import com.example.expensetrackerpro.presentation.common.filter.PeriodFilterState
 
 data class TransactionListUiState(
     val transactions: List<Transaction> = emptyList(),
-    val selectedFilter: ExpenseFilter = ExpenseFilter.ALL,
+    val filter: PeriodFilterState = PeriodFilterState(),
     val totalIncome: Double = 0.0,
     val totalExpense: Double = 0.0,
     val totalBalance: Double = 0.0, // Income - Expense

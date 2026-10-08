@@ -10,8 +10,10 @@ import com.example.expensetrackerpro.presentation.main.MainViewModel
 import com.example.expensetrackerpro.util.MainDispatcherRule
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
+import kotlin.coroutines.cancellation.CancellationException
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -49,6 +51,19 @@ class MainViewModelTest {
     fun readyEvenWhenThereAreNoCategories() = runTest {
         // Every category can be deleted, so an empty first load must not hold the splash
         val viewModel = MainViewModel(GetCategoriesUseCase(FakeCategoryRepository()))
+
+        assertTrue(viewModel.uiState.value.isReady)
+    }
+
+    @Test
+    fun readyEvenWhenTheFirstLoadNeverDeliversCategories() = runTest {
+        // The load ends abnormally before any list arrives; the splash must still be released
+        val repository = object : CategoryRepository by FakeCategoryRepository() {
+            override fun getAllCategories(): Flow<List<Category>> =
+                flow { throw CancellationException("load aborted") }
+        }
+
+        val viewModel = MainViewModel(GetCategoriesUseCase(repository))
 
         assertTrue(viewModel.uiState.value.isReady)
     }

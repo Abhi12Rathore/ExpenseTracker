@@ -3,6 +3,7 @@ package com.example.expensetrackerpro.data.repository
 import com.example.expensetrackerpro.data.local.dao.TransactionDao
 import com.example.expensetrackerpro.data.mapper.toDomain
 import com.example.expensetrackerpro.data.mapper.toEntity
+import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.repository.TransactionRepository
@@ -35,6 +36,7 @@ class TransactionRepositoryImpl @Inject constructor(
     override fun getTransactionsByType(type: TransactionType): Flow<List<Transaction>> =
         transactionDao.getTransactionsByType(type).map { list -> list.map { it.toDomain() } }
 
-    override fun getFilteredTransactions(startTimestamp: Long): Flow<List<Transaction>> =
-        transactionDao.getFilteredTransactions(startTimestamp).map { list -> list.map { it.toDomain() } }
+    override fun getTransactions(range: DateRange): Flow<List<Transaction>> =
+        transactionDao.getTransactionsBetween(range.startMillis, range.endMillis)
+            .map { list -> list.map { it.toDomain() } }
 }

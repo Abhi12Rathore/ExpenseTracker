@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.transaction
 
+import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.repository.TransactionRepository
 import kotlinx.coroutines.flow.Flow
@@ -9,7 +10,7 @@ class GetTransactionsUseCase @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) {
 
-    /** Transactions dated at or after [startTimestamp], newest first. */
-    operator fun invoke(startTimestamp: Long = 0L): Flow<List<Transaction>> =
-        transactionRepository.getFilteredTransactions(startTimestamp)
+    /** Transactions dated within [range], newest first. */
+    operator fun invoke(range: DateRange = DateRange.ALL): Flow<List<Transaction>> =
+        transactionRepository.getTransactions(range)
 }

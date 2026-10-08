@@ -22,7 +22,7 @@ fun InsightSection(
 ){
 
     Column(
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier.fillMaxWidth()
     ){
 
         Text(
