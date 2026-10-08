@@ -16,4 +16,7 @@
     <string name="insight_spending_improved_description">Your expenses are lower than last month</string>
     <string name="insight_spending_increased_title">Watch Spending ⚠️</string>
     <string name="insight_spending_increased_description">Your expenses increased compared to last month</string>
+
+    <!-- Manage categories -->
+    <string name="category_delete_blocked">Can\'t delete \"%1$s\" because it still has transactions. Delete or move them first.</string>
 </resources>

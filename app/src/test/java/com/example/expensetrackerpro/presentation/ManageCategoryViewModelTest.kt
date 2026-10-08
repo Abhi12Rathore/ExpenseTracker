@@ -29,7 +29,9 @@ class ManageCategoryViewModelTest {
     private val transport = category(id = 2, name = "Transport", type = TransactionType.EXPENSE)
     private val salary = category(id = 3, name = "Salary", type = TransactionType.INCOME)
 
-    private val repository = FakeCategoryRepository(listOf(food, transport, salary))
+    // Transport still has transactions, so it can't be deleted
+    private val repository =
+        FakeCategoryRepository(listOf(food, transport, salary), idsInUse = setOf(transport.id))
 
     private fun viewModel() = ManageCategoryViewModel(
         getCategories = GetCategoriesUseCase(repository),
@@ -150,5 +152,21 @@ class ManageCategoryViewModelTest {
         viewModel.onEvent(ManageCategoryEvent.DeleteClicked(food))
 
         assertEquals(listOf(transport), viewModel.uiState.value.categories)
+        assertNull(viewModel.uiState.value.deleteBlockedCategoryName)
+    }
+
+    @Test
+    fun deleteClicked_categoryWithTransactions_keepsItAndShowsMessageUntilAcknowledged() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        viewModel.onEvent(ManageCategoryEvent.DeleteClicked(transport))
+
+        assertEquals(listOf(food, transport), viewModel.uiState.value.categories)
+        assertEquals("Transport", viewModel.uiState.value.deleteBlockedCategoryName)
+
+        viewModel.onEvent(ManageCategoryEvent.DeleteBlockedMessageShown)
+
+        assertNull(viewModel.uiState.value.deleteBlockedCategoryName)
     }
 }

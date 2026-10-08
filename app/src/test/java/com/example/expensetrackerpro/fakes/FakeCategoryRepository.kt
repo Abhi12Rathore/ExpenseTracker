@@ -9,7 +9,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 
 class FakeCategoryRepository(
-    initial: List<Category> = emptyList()
+    initial: List<Category> = emptyList(),
+    // Ids of categories that still have transactions, so can't be deleted
+    private val idsInUse: Set<Int> = emptySet()
 ) : CategoryRepository {
 
     private val categories = MutableStateFlow(initial)
@@ -29,7 +31,9 @@ class FakeCategoryRepository(
         categories.update { list -> list.map { if (it.id == category.id) category else it } }
     }
 
-    override suspend fun deleteCategory(category: Category) {
+    override suspend fun deleteCategory(category: Category): Boolean {
+        if (category.id in idsInUse) return false
         categories.update { list -> list.filterNot { it.id == category.id } }
+        return true
     }
 }

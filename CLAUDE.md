@@ -48,7 +48,7 @@ Goal: production-quality portfolio project.
 - Default categories are seeded in `AppDatabase` `onCreate`.
 
 ## Known issues (remove each line once fixed)
-- Deleting a category that still has transactions throws (foreign key `RESTRICT`, no error handling in `DeleteCategoryUseCase` or `ManageCategoryViewModel`).
+- None currently.
 
 ## Workflow
 - Never commit to `main`. Use branches like `refactor/hilt` or `feature/theme-toggle`.

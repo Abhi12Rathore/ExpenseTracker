@@ -5,6 +5,8 @@ import com.example.expensetrackerpro.fakes.FakeCategoryRepository
 import com.example.expensetrackerpro.fakes.category
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CategoryWriteUseCasesTest {
@@ -35,8 +37,19 @@ class CategoryWriteUseCasesTest {
     fun deleteCategory_removesOnlyTheMatchingId() = runTest {
         val repository = FakeCategoryRepository(listOf(food, salary))
 
-        DeleteCategoryUseCase(repository)(food)
+        val deleted = DeleteCategoryUseCase(repository)(food)
 
+        assertTrue(deleted)
         assertEquals(listOf(salary), repository.current)
+    }
+
+    @Test
+    fun deleteCategory_withTransactions_keepsItAndReportsFailure() = runTest {
+        val repository = FakeCategoryRepository(listOf(food, salary), idsInUse = setOf(food.id))
+
+        val deleted = DeleteCategoryUseCase(repository)(food)
+
+        assertFalse(deleted)
+        assertEquals(listOf(food, salary), repository.current)
     }
 }

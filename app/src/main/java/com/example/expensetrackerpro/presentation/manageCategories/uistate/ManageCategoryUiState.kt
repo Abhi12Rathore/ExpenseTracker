@@ -11,5 +11,7 @@ data class ManageCategoryUiState(
     val selectedType: TransactionType = TransactionType.EXPENSE,
     val isSheetOpen: Boolean = false,
     // Null while the sheet is in "Add" mode
-    val categoryToEdit: Category? = null
+    val categoryToEdit: Category? = null,
+    // Set when a delete was refused because the category still has transactions
+    val deleteBlockedCategoryName: String? = null
 )

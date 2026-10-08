@@ -8,7 +8,7 @@ class DeleteCategoryUseCase @Inject constructor(
     private val categoryRepository: CategoryRepository
 ) {
 
-    suspend operator fun invoke(category: Category) {
+    /** Returns false when the category still has transactions and was not deleted. */
+    suspend operator fun invoke(category: Category): Boolean =
         categoryRepository.deleteCategory(category)
-    }
 }
