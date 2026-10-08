@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation.transactions.transactionList
 
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import DeleteConfirmationDialog
 import androidx.compose.runtime.Composable
 
@@ -26,7 +27,7 @@ import com.example.expensetrackerpro.presentation.transactions.transactionList.v
 
 @Composable
 fun TransactionListScreen(
-    viewModel: TransactionListViewModel,
+    viewModel: TransactionListViewModel = hiltViewModel(),
     onAddExpenseClick: () -> Unit,
     onEditExpenseClick: (Int) -> Unit,
     onNavigateToManageCategories: () -> Unit,

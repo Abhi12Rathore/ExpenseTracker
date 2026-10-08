@@ -21,8 +21,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.expensetrackerpro.data.repository.expenseRepositoryImpl.TransactionRepository
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.expensetrackerpro.presentation.homeScreen.component.DashboardHeader
 import com.example.expensetrackerpro.presentation.homeScreen.component.DashboardSectionHeader
 import com.example.expensetrackerpro.presentation.homeScreen.component.FinancialSummaryCard
@@ -34,18 +33,14 @@ import com.example.expensetrackerpro.presentation.homeScreen.component.charts.Ca
 import com.example.expensetrackerpro.presentation.homeScreen.component.charts.CategoryExpenseDonutChart
 import com.example.expensetrackerpro.presentation.homeScreen.component.charts.MonthlyTrendBarChart
 import com.example.expensetrackerpro.presentation.homeScreen.viewmodels.HomeViewModel
-import com.example.expensetrackerpro.presentation.homeScreen.viewmodels.HomeViewModelFactory
 
 
 @Composable
 fun HomeScreen(
-    repository: TransactionRepository,
     onViewAllTransactions: () -> Unit,
     onTransactionClick: (Int) -> Unit
 ) {
-    val viewModel: HomeViewModel = viewModel(
-        factory = HomeViewModelFactory(repository)
-    )
+    val viewModel: HomeViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
 
     val summary by viewModel.financialSummary.collectAsState()

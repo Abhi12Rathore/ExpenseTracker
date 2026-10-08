@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.presentation.transactions.addEditTransactions
 
 
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -16,7 +17,7 @@ import com.example.expensetrackerpro.presentation.transactions.addEditTransactio
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEditTransactionScreen(
-    viewModel: AddEditTransactionViewModel,
+    viewModel: AddEditTransactionViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()

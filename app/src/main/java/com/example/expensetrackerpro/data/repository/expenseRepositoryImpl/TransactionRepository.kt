@@ -9,8 +9,11 @@ import com.example.expensetrackerpro.data.local.model.CategoryExpenseEntity
 import com.example.expensetrackerpro.data.local.model.DailyCashFlowEntity
 import com.example.expensetrackerpro.data.local.model.MonthlyTrendEntity
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class TransactionRepository(private val transactionDao: TransactionDao) {
+@Singleton
+class TransactionRepository @Inject constructor(private val transactionDao: TransactionDao) {
 
     // --- TRANSACTION CRUD (Replaces Expense methods) ---
 
