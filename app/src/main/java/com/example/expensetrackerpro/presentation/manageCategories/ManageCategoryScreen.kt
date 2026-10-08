@@ -55,10 +55,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.presentation.categories.AddCategoryBottomSheet
 import com.example.expensetrackerpro.presentation.manageCategories.components.CategoryManageTile
+import com.example.expensetrackerpro.presentation.manageCategories.uistate.ManageCategoryEvent
+import com.example.expensetrackerpro.presentation.manageCategories.uistate.ManageCategoryUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,16 +67,29 @@ fun ManageCategoryScreen(
     viewModel: ManageCategoryViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit
 ) {
-    val categories by viewModel.filteredCategories.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
 
-    var categoryToEdit by remember { mutableStateOf<Category?>(null) }
-    var isSheetOpen by remember { mutableStateOf(false) }
+    ManageCategoryContent(
+        uiState = uiState,
+        onEvent = viewModel::onEvent,
+        onNavigateBack = onNavigateBack
+    )
+}
 
-    // Sync UI tab state with ViewModel state if needed,
-    // but better to rely on viewModel.selectedType directly.
-    val searchQuery by viewModel.searchQuery.collectAsState()
-    val selectedType by viewModel.selectedType.collectAsState()
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ManageCategoryContent(
+    uiState: ManageCategoryUiState,
+    onEvent: (ManageCategoryEvent) -> Unit,
+    onNavigateBack: () -> Unit
+) {
+    val categories = uiState.categories
+    val categoryToEdit = uiState.categoryToEdit
+    val isSheetOpen = uiState.isSheetOpen
+    val searchQuery = uiState.searchQuery
+    val selectedType = uiState.selectedType
 
+    // Purely visual: whether the type dropdown is showing
     var isFilterExpanded by remember { mutableStateOf(false) }
 
     if (isSheetOpen) {
@@ -84,20 +98,10 @@ fun ManageCategoryScreen(
             // Pass the context: If you have tabs, pass the active tab type.
             // If you are on the Add Transaction screen, pass the current state.transactionType
             initialType = selectedType,
-            onDismiss = {
-                isSheetOpen = false
-                categoryToEdit = null
-            },
-            onSaveCategory = { name, icon, type -> // Updated to receive 'type'
-                if (categoryToEdit != null) {
-                    // Keep the original type when editing, or use the one returned
-                    viewModel.updateCategory(categoryToEdit!!.id, name, icon, type)
-                } else {
-                    // Pass the type so it's saved in the correct database 'bucket'
-                    viewModel.addCategory(name, icon, type)
-                }
-                isSheetOpen = false
-                categoryToEdit = null
+            onDismiss = { onEvent(ManageCategoryEvent.SheetDismissed) },
+            onSaveCategory = { name, icon, type ->
+                // The ViewModel updates when a category is being edited, otherwise adds
+                onEvent(ManageCategoryEvent.CategorySaved(name, icon, type))
             }
         )
     }
@@ -105,10 +109,7 @@ fun ManageCategoryScreen(
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {
-                    categoryToEdit = null // Ensure we are in "Add" mode
-                    isSheetOpen = true
-                },
+                onClick = { onEvent(ManageCategoryEvent.AddClicked) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White,
                 shape = CircleShape
@@ -165,13 +166,13 @@ fun ManageCategoryScreen(
             ) {
                 OutlinedTextField(
                     value = searchQuery,
-                    onValueChange = { viewModel.onSearchQueryChange(it) },
+                    onValueChange = { onEvent(ManageCategoryEvent.SearchQueryChanged(it)) },
                     modifier = Modifier.weight(1f),
                     placeholder = { Text("Search categories...") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { viewModel.onSearchQueryChange("") }) {
+                            IconButton(onClick = { onEvent(ManageCategoryEvent.SearchQueryChanged("")) }) {
                                 Icon(Icons.Default.Close, contentDescription = null)
                             }
                         }
@@ -226,7 +227,7 @@ fun ManageCategoryScreen(
                             DropdownMenuItem(
                                 text = { Text(type.name.lowercase().replaceFirstChar { it.uppercase() }) },
                                 onClick = {
-                                    viewModel.onTypeChange(type) // This triggers the reactive filter
+                                    onEvent(ManageCategoryEvent.TypeChanged(type)) // This triggers the reactive filter
                                     isFilterExpanded = false
                                 },
                                 leadingIcon = {
@@ -260,11 +261,8 @@ fun ManageCategoryScreen(
                 items(categories) { category ->
                     CategoryManageTile(
                         category = category,
-                        onEdit = {
-                            categoryToEdit = category // Set the target category
-                            isSheetOpen = true // Open the same sheet
-                        },
-                        onDelete = { viewModel.deleteCategory(category) },
+                        onEdit = { onEvent(ManageCategoryEvent.EditClicked(category)) },
+                        onDelete = { onEvent(ManageCategoryEvent.DeleteClicked(category)) },
                         modifier = Modifier.animateItem(
                             fadeInSpec = tween(durationMillis = 400),
                             fadeOutSpec = tween(durationMillis = 400),

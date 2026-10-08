@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.presentation.transactions.transactionList.component.EmptyExpenseUI
 import com.example.expensetrackerpro.presentation.transactions.transactionList.component.ExpenseTile
 import com.example.expensetrackerpro.presentation.transactions.transactionList.component.TotalBalanceCard
+import com.example.expensetrackerpro.presentation.transactions.transactionList.uistate.TransactionListEvent
+import com.example.expensetrackerpro.presentation.transactions.transactionList.uistate.TransactionListUiState
 import com.example.expensetrackerpro.presentation.transactions.transactionList.viewmodel.TransactionListViewModel
 
 @Composable
@@ -32,22 +34,35 @@ fun TransactionListScreen(
     onEditExpenseClick: (Int) -> Unit,
     onNavigateToManageCategories: () -> Unit,
 ) {
-    val expenses by viewModel.transactions.collectAsState()
-    val selectedFilter by viewModel.selectedFilter.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
 
-    val totalBalance by viewModel.totalBalance.collectAsState() // Income - Expense
-    val totalIncome by viewModel.totalIncome.collectAsState()
-    val totalExpense by viewModel.totalExpense.collectAsState()
+    TransactionListContent(
+        uiState = uiState,
+        onEvent = viewModel::onEvent,
+        onAddExpenseClick = onAddExpenseClick,
+        onEditExpenseClick = onEditExpenseClick,
+        onNavigateToManageCategories = onNavigateToManageCategories
+    )
+}
 
-    val expenseToDelete by viewModel.transactionToDelete.collectAsState()
+@Composable
+fun TransactionListContent(
+    uiState: TransactionListUiState,
+    onEvent: (TransactionListEvent) -> Unit,
+    onAddExpenseClick: () -> Unit,
+    onEditExpenseClick: (Int) -> Unit,
+    onNavigateToManageCategories: () -> Unit,
+) {
+    val expenses = uiState.transactions
+    val expenseToDelete = uiState.transactionToDelete
 
     // Show Dialog if state is not null
 
     expenseToDelete?.let { expense ->
         DeleteConfirmationDialog(
             expense = expense,
-            onConfirm = { viewModel.confirmDelete() },
-            onDismiss = { viewModel.dismissDeleteDialog() }
+            onConfirm = { onEvent(TransactionListEvent.DeleteConfirmed) },
+            onDismiss = { onEvent(TransactionListEvent.DeleteDismissed) }
         )
     }
 
@@ -144,7 +159,7 @@ fun TransactionListScreen(
                         transaction = expense,
                         onEditClick = { onEditExpenseClick.invoke(expense.id)},
                         onDeleteClick = {
-                            viewModel.showDeleteConfirmation(expense)
+                            onEvent(TransactionListEvent.DeleteRequested(expense))
                         }
                     )
                 }

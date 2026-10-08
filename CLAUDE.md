@@ -31,7 +31,8 @@ Goal: production-quality portfolio project.
 - Repository interfaces live in `domain/repository`, implementations in `data/repository`.
 - Room entities never reach the UI. Map them to domain models.
 - Business logic (totals, savings %, insights) goes in use cases or the domain layer, not in Composables.
-- Each screen has one ViewModel exposing `StateFlow<XxxUiState>`. User actions go through a sealed `XxxEvent` interface.
+- Each screen has one ViewModel exposing `StateFlow<XxxUiState>`. User actions go through a sealed `XxxEvent` interface. Both types live in the feature's `uistate/` folder; the ViewModel takes events through `onEvent(XxxEvent)` and depends only on use cases.
+- Each screen is split in two: `XxxScreen` obtains the ViewModel and collects state, `XxxContent(state, onEvent, navigation lambdas)` is the stateless layout. Only purely visual state (animations, scroll, dropdown expansion) stays in `remember`.
 - Composables are stateless where possible: state in, lambdas out.
 
 ## Conventions
