@@ -24,10 +24,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.expensetrackerpro.presentation.homeScreen.viewmodels.FinancialSummaryData
+import com.example.expensetrackerpro.domain.models.FinancialSummary
 
 @Composable
-fun FinancialSummaryCard(data: FinancialSummaryData) {
+fun FinancialSummaryCard(data: FinancialSummary) {
     Surface(
         shape = RoundedCornerShape(28.dp),
         color = MaterialTheme.colorScheme.primaryContainer,
@@ -36,7 +36,7 @@ fun FinancialSummaryCard(data: FinancialSummaryData) {
         Column(modifier = Modifier.padding(24.dp)) {
             Text("Current Balance", style = MaterialTheme.typography.labelMedium)
             Text(
-                text = "₹${String.format("%,.2f", data.income - data.expense)}",
+                text = "₹${String.format("%,.2f", data.totalBalance)}",
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Black
             )
@@ -44,8 +44,8 @@ fun FinancialSummaryCard(data: FinancialSummaryData) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                SummaryItem("Income", "₹${data.income}", Icons.Rounded.TrendingUp)
-                SummaryItem("Expense", "₹${data.expense}", Icons.Rounded.TrendingDown)
+                SummaryItem("Income", "₹${data.totalIncome}", Icons.Rounded.TrendingUp)
+                SummaryItem("Expense", "₹${data.totalExpense}", Icons.Rounded.TrendingDown)
                 SummaryItem("Savings", "${data.savingsRate.toInt()}%", Icons.Rounded.AutoGraph)
             }
         }

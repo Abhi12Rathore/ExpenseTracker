@@ -1,11 +1,24 @@
 package com.example.expensetrackerpro.domain.models
 
-import com.example.expensetrackerpro.utils.InsightPriority
 import com.example.expensetrackerpro.utils.InsightType
 
-data class SmartInsight(
-    val title: String,
-    val description: String,
-    val type: InsightType,
-    val priority: InsightPriority
-)
+sealed interface SmartInsight {
+
+    val type: InsightType
+
+    data class Saved(val amount: Double) : SmartInsight {
+        override val type = InsightType.POSITIVE
+    }
+
+    data class HighestSpending(val categoryName: String) : SmartInsight {
+        override val type = InsightType.WARNING
+    }
+
+    data object SpendingImproved : SmartInsight {
+        override val type = InsightType.POSITIVE
+    }
+
+    data object SpendingIncreased : SmartInsight {
+        override val type = InsightType.WARNING
+    }
+}

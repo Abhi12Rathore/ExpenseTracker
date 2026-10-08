@@ -9,6 +9,10 @@ import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.repository.CategoryRepository
 import com.example.expensetrackerpro.domain.repository.TransactionRepository
+import com.example.expensetrackerpro.domain.usecase.category.AddCategoryUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.AddTransactionUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.UpdateTransactionUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.ValidateTransactionInputUseCase
 import com.example.expensetrackerpro.domain.models.AddTransactionUiState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -20,6 +24,10 @@ import javax.inject.Inject
 class AddEditTransactionViewModel @Inject constructor(
     private val repository: TransactionRepository,
     private val categoryRepository: CategoryRepository,
+    private val addTransaction: AddTransactionUseCase,
+    private val updateTransaction: UpdateTransactionUseCase,
+    private val validateTransactionInput: ValidateTransactionInputUseCase,
+    private val addCategoryUseCase: AddCategoryUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -117,10 +125,11 @@ class AddEditTransactionViewModel @Inject constructor(
 
     private fun validate() {
         val state = _uiState.value
-        val amountDouble = state.amount.toDoubleOrNull() ?: 0.0
-        val isValid = state.selectedCategory != null &&
-                state.note.isNotBlank() &&
-                amountDouble > 0.0
+        val isValid = validateTransactionInput(
+            amount = state.amount,
+            note = state.note,
+            hasCategory = state.selectedCategory != null
+        )
 
         _uiState.update { it.copy(isSaveEnabled = isValid) }
     }
@@ -141,9 +150,9 @@ class AddEditTransactionViewModel @Inject constructor(
                 )
 
                 if (isEditMode) {
-                    repository.updateTransaction(transaction)
+                    updateTransaction(transaction)
                 } else {
-                    repository.saveTransaction(transaction)
+                    addTransaction(transaction)
                 }
                 onSuccess()
             }
@@ -158,7 +167,7 @@ class AddEditTransactionViewModel @Inject constructor(
                 type = type, // Now passing the type from the UI context
                 isCustom = true
             )
-            categoryRepository.insertCategory(newCategory)
+            addCategoryUseCase(newCategory)
         }
     }
 

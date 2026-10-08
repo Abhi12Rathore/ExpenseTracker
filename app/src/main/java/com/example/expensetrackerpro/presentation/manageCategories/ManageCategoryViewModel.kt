@@ -6,6 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.repository.CategoryRepository
+import com.example.expensetrackerpro.domain.usecase.category.AddCategoryUseCase
+import com.example.expensetrackerpro.domain.usecase.category.DeleteCategoryUseCase
+import com.example.expensetrackerpro.domain.usecase.category.UpdateCategoryUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +22,10 @@ import kotlin.text.contains
 
 @HiltViewModel
 class ManageCategoryViewModel @Inject constructor(
-    private val repository: CategoryRepository
+    private val repository: CategoryRepository,
+    private val addCategoryUseCase: AddCategoryUseCase,
+    private val updateCategoryUseCase: UpdateCategoryUseCase,
+    private val deleteCategoryUseCase: DeleteCategoryUseCase
 ) : ViewModel() {
 
     // Fetch all categories from the repository
@@ -70,20 +76,20 @@ class ManageCategoryViewModel @Inject constructor(
 
     fun addCategory(name: String, icon: String, type: TransactionType) {
         viewModelScope.launch {
-            repository.insertCategory(Category(name = name, iconName = icon, type = type))
+            addCategoryUseCase(Category(name = name, iconName = icon, type = type))
         }
     }
 
     fun deleteCategory(category: Category) {
         viewModelScope.launch {
-            repository.deleteCategory(category)
+            deleteCategoryUseCase(category)
         }
     }
 
     fun updateCategory(id: Int, name: String, icon: String,type: TransactionType) {
         viewModelScope.launch {
             // We use the existing ID to ensure Room updates the record instead of inserting a new one
-            repository.updateCategory(
+            updateCategoryUseCase(
                 Category(id = id, name = name,type= type, iconName = icon, isCustom = true)
             )
         }

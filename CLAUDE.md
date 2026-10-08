@@ -19,7 +19,7 @@ Goal: production-quality portfolio project.
 - `data/local/` → Room: `entity/`, `dao/`, `expenseDatabase/`, `model/` (query result classes)
 - `data/mapper/` → entity ↔ domain mappers
 - `data/repository/` → repository implementations
-- `domain/` → `models/`, `repository/` (interfaces)
+- `domain/` → `models/`, `repository/` (interfaces), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
 - `presentation/<feature>/` → Screen, ViewModel, `components/`, `uistate/`
 - `ui/theme/` → colors, typography, theme
 - `utils/` → shared helpers

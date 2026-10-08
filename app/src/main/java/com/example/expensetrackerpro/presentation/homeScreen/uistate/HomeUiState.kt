@@ -3,16 +3,16 @@ package com.example.expensetrackerpro.presentation.homeScreen.uistate
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
 import com.example.expensetrackerpro.domain.models.CashFlowPoint
-import com.example.expensetrackerpro.domain.models.FinancialInsight
+import com.example.expensetrackerpro.domain.models.SmartInsight
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
 
-import com.example.expensetrackerpro.presentation.homeScreen.viewmodels.FinancialSummaryData
+import com.example.expensetrackerpro.domain.models.FinancialSummary
 
 
 
 data class HomeUiState(
 
-    val financialSummary: FinancialSummaryData = FinancialSummaryData(),
+    val financialSummary: FinancialSummary = FinancialSummary(),
 
     val categoryExpense:
     List<CategoryBreakdown> = emptyList(),
@@ -33,6 +33,6 @@ data class HomeUiState(
     val isLoading: Boolean = false,
 
     val insights:
-    List<FinancialInsight> = emptyList()
+    List<SmartInsight> = emptyList()
 
 )

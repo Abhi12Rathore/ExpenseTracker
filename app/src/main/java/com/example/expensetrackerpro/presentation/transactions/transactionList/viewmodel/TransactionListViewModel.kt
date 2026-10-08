@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.SharingStarted
 
 import com.example.expensetrackerpro.domain.models.Transaction
-import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.domain.models.FinancialSummary
 import com.example.expensetrackerpro.domain.repository.TransactionRepository
+import com.example.expensetrackerpro.domain.usecase.dashboard.CalculateFinancialSummaryUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.DeleteTransactionUseCase
 import com.example.expensetrackerpro.utils.ExpenseFilter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -17,7 +19,9 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class TransactionListViewModel @Inject constructor(
-    private val repository: TransactionRepository
+    private val repository: TransactionRepository,
+    private val calculateFinancialSummary: CalculateFinancialSummaryUseCase,
+    private val deleteTransaction: DeleteTransactionUseCase
 ) : ViewModel() {
 
     private val _selectedFilter = MutableStateFlow(ExpenseFilter.ALL)
@@ -41,18 +45,19 @@ class TransactionListViewModel @Inject constructor(
      * Financial Summary State:
      * We derive Income, Expense, and Balance from the filtered list reactively.
      */
-    val totalIncome = transactions.map { list ->
-        list.filter { it.transactionType == TransactionType.INCOME }.sumOf { it.amount }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+    private val summary = transactions
+        .map { calculateFinancialSummary(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FinancialSummary())
 
-    val totalExpense = transactions.map { list ->
-        list.filter { it.transactionType == TransactionType.EXPENSE }.sumOf { it.amount }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+    val totalIncome = summary.map { it.totalIncome }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    val totalExpense = summary.map { it.totalExpense }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     // The "Whole" part: Income - Expense
-    val totalBalance = combine(totalIncome, totalExpense) { income, expense ->
-        income - expense
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+    val totalBalance = summary.map { it.totalBalance }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     fun onFilterSelected(filter: ExpenseFilter) {
         _selectedFilter.value = filter
@@ -73,7 +78,7 @@ class TransactionListViewModel @Inject constructor(
     fun confirmDelete() {
         _transactionToDelete.value?.let { transaction ->
             viewModelScope.launch {
-                repository.deleteTransaction(transaction)
+                deleteTransaction(transaction)
                 _transactionToDelete.value = null
             }
         }

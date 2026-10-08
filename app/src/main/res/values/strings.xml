@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">ExpenseTracker Pro</string>
+
+    <!-- Dashboard smart insights -->
+    <string name="insight_saved_title">Great Saving! 🎉</string>
+    <string name="insight_saved_description">You saved ₹%1$d this month</string>
+    <string name="insight_highest_spending_title">Highest Spending</string>
+    <string name="insight_highest_spending_description">%1$s is your biggest expense category</string>
+    <string name="insight_spending_improved_title">Spending Improved 📉</string>
+    <string name="insight_spending_improved_description">Your expenses are lower than last month</string>
+    <string name="insight_spending_increased_title">Watch Spending ⚠️</string>
+    <string name="insight_spending_increased_description">Your expenses increased compared to last month</string>
 </resources>

@@ -10,12 +10,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.example.expensetrackerpro.domain.models.FinancialInsight
+import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.domain.models.SmartInsight
 
 @Composable
 fun InsightSection(
-    insights: List<FinancialInsight>
+    insights: List<SmartInsight>
 ){
 
     Column(
@@ -46,13 +48,13 @@ fun InsightSection(
                 ){
 
                     Text(
-                        text = it.title,
+                        text = it.title(),
                         style = MaterialTheme.typography.titleSmall
                     )
 
 
                     Text(
-                        text = it.description
+                        text = it.description()
                     )
 
                 }
@@ -63,4 +65,24 @@ fun InsightSection(
 
     }
 
+}
+
+@Composable
+private fun SmartInsight.title(): String = when (this) {
+    is SmartInsight.Saved -> stringResource(R.string.insight_saved_title)
+    is SmartInsight.HighestSpending -> stringResource(R.string.insight_highest_spending_title)
+    SmartInsight.SpendingImproved -> stringResource(R.string.insight_spending_improved_title)
+    SmartInsight.SpendingIncreased -> stringResource(R.string.insight_spending_increased_title)
+}
+
+@Composable
+private fun SmartInsight.description(): String = when (this) {
+    is SmartInsight.Saved ->
+        stringResource(R.string.insight_saved_description, amount.toInt())
+    is SmartInsight.HighestSpending ->
+        stringResource(R.string.insight_highest_spending_description, categoryName)
+    SmartInsight.SpendingImproved ->
+        stringResource(R.string.insight_spending_improved_description)
+    SmartInsight.SpendingIncreased ->
+        stringResource(R.string.insight_spending_increased_description)
 }
