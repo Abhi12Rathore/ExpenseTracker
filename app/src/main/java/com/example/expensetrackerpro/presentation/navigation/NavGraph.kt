@@ -6,7 +6,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.expensetrackerpro.presentation.manageCategories.ManageCategoryScreen
 import com.example.expensetrackerpro.presentation.navigation.Screens
-import com.example.expensetrackerpro.presentation.splash.SplashScreen
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.AddEditTransactionScreen
 
 
@@ -16,20 +15,8 @@ fun AppNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = "splash" // Updated Start Destination
+        startDestination = "main_shell"
     ) {
-        // Destination 0: Premium Splash Screen
-        composable("splash") {
-            SplashScreen(
-                onTimeout = {
-                    navController.navigate("main_shell") {
-                        // Pop up to "splash" and include it to clear backstack
-                        popUpTo("splash") { inclusive = true }
-                    }
-                }
-            )
-        }
-
         // Destination 1: The Bottom Nav Shell
         composable("main_shell") {
             MainScreen(

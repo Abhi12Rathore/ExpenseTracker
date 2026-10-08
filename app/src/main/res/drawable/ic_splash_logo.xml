@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Splash icon for the Android 12+ SplashScreen API.
+     288dp canvas; the logo sits inside the 192dp visible circle so nothing is clipped. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="288dp"
+    android:height="288dp"
+    android:viewportWidth="300"
+    android:viewportHeight="300">
+    <group android:translateX="75" android:translateY="75" android:scaleX="0.75" android:scaleY="0.75">
+        <path android:fillColor="#FFFFFF" android:pathData="M56,0 H144 A56,56 0 0 1 200,56 V144 A56,56 0 0 1 144,200 H56 A56,56 0 0 1 0,144 V56 A56,56 0 0 1 56,0 Z"/>
+        <path android:fillColor="#256324" android:fillAlpha="0.35" android:pathData="M51,112 H63 A9,9 0 0 1 72,121 V149 A9,9 0 0 1 63,158 H51 A9,9 0 0 1 42,149 V121 A9,9 0 0 1 51,112 Z"/>
+        <path android:fillColor="#256324" android:fillAlpha="0.6" android:pathData="M94,92 H106 A9,9 0 0 1 115,101 V149 A9,9 0 0 1 106,158 H94 A9,9 0 0 1 85,149 V101 A9,9 0 0 1 94,92 Z"/>
+        <path android:fillColor="#256324" android:pathData="M137,70 H149 A9,9 0 0 1 158,79 V149 A9,9 0 0 1 149,158 H137 A9,9 0 0 1 128,149 V79 A9,9 0 0 1 137,70 Z"/>
+        <path android:fillColor="#00000000" android:strokeColor="#E0A526" android:strokeWidth="11" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M40,94 L80,66 L104,80 L150,40"/>
+        <path android:fillColor="#00000000" android:strokeColor="#E0A526" android:strokeWidth="11" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M128,36 L156,34 L154,62"/>
+    </group>
+</vector>
