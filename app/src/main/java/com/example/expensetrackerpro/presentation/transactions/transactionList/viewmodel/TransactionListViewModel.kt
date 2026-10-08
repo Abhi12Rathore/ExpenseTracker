@@ -11,9 +11,12 @@ import com.example.expensetrackerpro.utils.ExpenseFilter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class TransactionListViewModel(
+@HiltViewModel
+class TransactionListViewModel @Inject constructor(
     private val repository: TransactionRepository
 ) : ViewModel() {
 

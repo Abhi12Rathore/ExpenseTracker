@@ -46,8 +46,6 @@ Goal: production-quality portfolio project.
 - Default categories are seeded in `AppDatabase` `onCreate`.
 
 ## Known issues (remove each line once fixed)
-- Hilt is half set up: `@HiltAndroidApp` is present, but DB/repository are still created manually in `ExpenseTrackerApplication` and ViewModels use `*ViewModelFactory` classes.
-- Hilt uses kapt while Room uses KSP. Migrate Hilt to KSP.
 - `DashboardRepository` interface has no implementation. `TransactionRepository` is a concrete class with no interface.
 - `RecentActivityTile.kt`: date shows the literal text "transaction.dateMillis".
 - Dashboard header month is wrong, greeting ignores time of day, and currency formatting is inconsistent.

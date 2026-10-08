@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.presentation.transactions.addEditTransactions
 
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.expensetrackerpro.data.local.entity.Category
@@ -11,11 +12,18 @@ import com.example.expensetrackerpro.domain.models.AddTransactionUiState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class AddEditTransactionViewModel(
+@HiltViewModel
+class AddEditTransactionViewModel @Inject constructor(
     private val repository: TransactionRepository,
-    private val transactionId: Int?
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    // Nav argument; -1 (the default) means "add" mode
+    private val transactionId: Int? =
+        savedStateHandle.get<Int>("transactionId")?.takeIf { it != -1 }
 
     private val _uiState = MutableStateFlow(AddTransactionUiState())
     val uiState: StateFlow<AddTransactionUiState> = _uiState.asStateFlow()

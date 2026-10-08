@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation.manageCategories
 
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -62,7 +63,7 @@ import com.example.expensetrackerpro.presentation.manageCategories.components.Ca
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageCategoryScreen(
-    viewModel: ManageCategoryViewModel,
+    viewModel: ManageCategoryViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit
 ) {
     val categories by viewModel.filteredCategories.collectAsState()

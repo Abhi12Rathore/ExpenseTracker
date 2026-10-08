@@ -12,18 +12,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.expensetrackerpro.data.repository.expenseRepositoryImpl.TransactionRepository
 import com.example.expensetrackerpro.presentation.homeScreen.HomeScreen
 import com.example.expensetrackerpro.presentation.settings.SettingsScreen
 import com.example.expensetrackerpro.presentation.transactions.transactionList.TransactionListScreen
-import com.example.expensetrackerpro.presentation.transactions.transactionList.viewmodel.TransactionListViewModel
-import com.example.expensetrackerpro.presentation.transactions.transactionList.viewmodel.TransactionListViewModelFactory
 import androidx.compose.runtime.getValue // Add this
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
@@ -32,7 +28,6 @@ import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun MainScreen(
-    repository: TransactionRepository,
     onNavigateToTransactionForm: (Int?) -> Unit,
     onNavigateToManageCategories: () -> Unit
 ) {
@@ -112,7 +107,6 @@ fun MainScreen(
             ) {
                 composable(BottomNavItem.Home.route) {
                     HomeScreen(
-                        repository = repository,
                         onViewAllTransactions = {
                             // Logic to switch tab to Transactions
                             bottomNavController.navigate(BottomNavItem.Transactions.route) {
@@ -130,9 +124,7 @@ fun MainScreen(
                     )
                 }
                 composable(BottomNavItem.Transactions.route) {
-                    val viewModel: TransactionListViewModel = viewModel(factory = TransactionListViewModelFactory(repository))
                     TransactionListScreen(
-                        viewModel = viewModel,
                         onAddExpenseClick = { onNavigateToTransactionForm(null) },
                         onEditExpenseClick = { id -> onNavigateToTransactionForm(id) },
                         onNavigateToManageCategories = onNavigateToManageCategories
