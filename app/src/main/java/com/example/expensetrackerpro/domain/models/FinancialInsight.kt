@@ -1,4 +1,4 @@
-package com.example.expensetrackerpro.data.local.model
+package com.example.expensetrackerpro.domain.models
 
 import com.example.expensetrackerpro.utils.InsightType
 

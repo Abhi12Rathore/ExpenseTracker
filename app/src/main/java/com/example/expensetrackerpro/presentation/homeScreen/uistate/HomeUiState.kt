@@ -1,10 +1,10 @@
 package com.example.expensetrackerpro.presentation.homeScreen.uistate
 
-import com.example.expensetrackerpro.data.local.entity.Transaction
-import com.example.expensetrackerpro.data.local.model.CategoryExpenseEntity
-import com.example.expensetrackerpro.data.local.model.DailyCashFlowEntity
-import com.example.expensetrackerpro.data.local.model.FinancialInsight
-import com.example.expensetrackerpro.data.local.model.MonthlyTrendEntity
+import com.example.expensetrackerpro.domain.models.Transaction
+import com.example.expensetrackerpro.domain.models.CategoryBreakdown
+import com.example.expensetrackerpro.domain.models.CashFlowPoint
+import com.example.expensetrackerpro.domain.models.FinancialInsight
+import com.example.expensetrackerpro.domain.models.MonthlyTrend
 
 import com.example.expensetrackerpro.presentation.homeScreen.viewmodels.FinancialSummaryData
 
@@ -15,15 +15,15 @@ data class HomeUiState(
     val financialSummary: FinancialSummaryData = FinancialSummaryData(),
 
     val categoryExpense:
-    List<CategoryExpenseEntity> = emptyList(),
+    List<CategoryBreakdown> = emptyList(),
 
 
     val dailyCashFlow:
-    List<DailyCashFlowEntity> = emptyList(),
+    List<CashFlowPoint> = emptyList(),
 
 
     val monthlyTrend:
-    List<MonthlyTrendEntity> = emptyList(),
+    List<MonthlyTrend> = emptyList(),
 
 
     val recentTransactions:

@@ -55,8 +55,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.expensetrackerpro.data.local.entity.Category
-import com.example.expensetrackerpro.data.local.entity.TransactionType
+import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.presentation.categories.AddCategoryBottomSheet
 import com.example.expensetrackerpro.presentation.manageCategories.components.CategoryManageTile
 

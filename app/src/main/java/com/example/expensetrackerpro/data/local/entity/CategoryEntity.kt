@@ -1,11 +1,11 @@
 package com.example.expensetrackerpro.data.local.entity
 
-import androidx.compose.ui.graphics.Color
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.example.expensetrackerpro.domain.models.TransactionType
 
 @Entity(tableName = "categories")
-data class Category(
+data class CategoryEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String,
     val type: TransactionType, // This is the crucial filter

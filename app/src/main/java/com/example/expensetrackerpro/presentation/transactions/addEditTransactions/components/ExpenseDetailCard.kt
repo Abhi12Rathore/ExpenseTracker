@@ -25,7 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.expensetrackerpro.data.local.entity.TransactionType
+import com.example.expensetrackerpro.domain.models.TransactionType
 
 @Composable
 fun ExpenseDetailCard(title:String,amount:String, onTitleChange:(String)->Unit,onAmountChange:(String)->Unit,selectedType: TransactionType){

@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.example.expensetrackerpro.data.local.model.DailyCashFlowEntity
+import com.example.expensetrackerpro.domain.models.CashFlowPoint
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
@@ -20,7 +20,7 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 
 @Composable
 fun CashFlowChart(
-    data: List<DailyCashFlowEntity>
+    data: List<CashFlowPoint>
 ) {
 
     Card(

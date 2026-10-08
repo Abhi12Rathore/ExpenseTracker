@@ -1,34 +1,18 @@
 package com.example.expensetrackerpro.domain.repository
 
-import com.example.expensetrackerpro.data.local.entity.Transaction
 import com.example.expensetrackerpro.domain.models.CashFlowPoint
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
-import com.example.expensetrackerpro.domain.models.DateRange
-import com.example.expensetrackerpro.domain.models.FinancialSummary
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
-import com.example.expensetrackerpro.domain.models.SmartInsight
+import kotlinx.coroutines.flow.Flow
 
 interface DashboardRepository {
 
-    suspend fun getFinancialSummary(
-        range: DateRange
-    ): FinancialSummary
+    /** Total expense per category, highest first. */
+    fun getCategoryBreakdown(): Flow<List<CategoryBreakdown>>
 
-    suspend fun getCashFlow(
-        range: DateRange
-    ): List<CashFlowPoint>
+    /** Income and expense per day, oldest first. */
+    fun getCashFlow(): Flow<List<CashFlowPoint>>
 
-    suspend fun getCategoryBreakdown(
-        range: DateRange
-    ): List<CategoryBreakdown>
-
-    suspend fun getMonthlyTrend(): List<MonthlyTrend>
-
-    suspend fun getRecentTransactions(
-        limit: Int = 5
-    ): List<Transaction>
-
-    suspend fun getSmartInsights(
-        range: DateRange
-    ): List<SmartInsight>
+    /** Income and expense per calendar month, oldest first. */
+    fun getMonthlyTrend(): Flow<List<MonthlyTrend>>
 }

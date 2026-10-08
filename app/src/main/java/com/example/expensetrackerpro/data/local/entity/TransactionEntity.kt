@@ -4,12 +4,13 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.expensetrackerpro.domain.models.TransactionType
 
 @Entity(
     tableName = "transactions",
     foreignKeys = [
         ForeignKey(
-            entity = Category::class,
+            entity = CategoryEntity::class,
             parentColumns = ["id"],
             childColumns = ["categoryId"],
             onDelete = ForeignKey.RESTRICT
@@ -17,7 +18,7 @@ import androidx.room.PrimaryKey
     ],
     indices = [Index(value = ["categoryId"]), Index(value = ["dateMillis"])]
 )
-data class Transaction(
+data class TransactionEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val title: String,
     val amount: Double,

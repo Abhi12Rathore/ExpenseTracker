@@ -1,8 +1,8 @@
 package com.example.expensetrackerpro.domain.models
 
 
-import com.example.expensetrackerpro.data.local.entity.Category
-import com.example.expensetrackerpro.data.local.entity.TransactionType
+import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.TransactionType
 
 data class AddTransactionUiState(
     val title:String="",

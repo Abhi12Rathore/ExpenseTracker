@@ -1,7 +1,7 @@
 package com.example.expensetrackerpro.data.local.utils
 
 import androidx.room.TypeConverter
-import com.example.expensetrackerpro.data.local.entity.TransactionType
+import com.example.expensetrackerpro.domain.models.TransactionType
 
 class Converters {
     @TypeConverter

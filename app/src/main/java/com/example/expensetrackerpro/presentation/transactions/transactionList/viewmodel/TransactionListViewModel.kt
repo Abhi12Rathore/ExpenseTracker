@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.SharingStarted
 
-import com.example.expensetrackerpro.data.local.entity.Transaction
-import com.example.expensetrackerpro.data.local.entity.TransactionType
-import com.example.expensetrackerpro.data.repository.expenseRepositoryImpl.TransactionRepository
+import com.example.expensetrackerpro.domain.models.Transaction
+import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.domain.repository.TransactionRepository
 import com.example.expensetrackerpro.utils.ExpenseFilter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*

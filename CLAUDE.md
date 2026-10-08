@@ -17,6 +17,7 @@ Goal: production-quality portfolio project.
 
 ## Package structure (`com.example.expensetrackerpro`)
 - `data/local/` → Room: `entity/`, `dao/`, `expenseDatabase/`, `model/` (query result classes)
+- `data/mapper/` → entity ↔ domain mappers
 - `data/repository/` → repository implementations
 - `domain/` → `models/`, `repository/` (interfaces)
 - `presentation/<feature>/` → Screen, ViewModel, `components/`, `uistate/`
@@ -46,7 +47,6 @@ Goal: production-quality portfolio project.
 - Default categories are seeded in `AppDatabase` `onCreate`.
 
 ## Known issues (remove each line once fixed)
-- `DashboardRepository` interface has no implementation. `TransactionRepository` is a concrete class with no interface.
 - `RecentActivityTile.kt`: date shows the literal text "transaction.dateMillis".
 - Dashboard header month is wrong, greeting ignores time of day, and currency formatting is inconsistent.
 - `play-services-wallet` dependency appears unused.

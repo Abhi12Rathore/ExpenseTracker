@@ -4,10 +4,11 @@ package com.example.expensetrackerpro.presentation.transactions.addEditTransacti
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.expensetrackerpro.data.local.entity.Category
-import com.example.expensetrackerpro.data.local.entity.Transaction
-import com.example.expensetrackerpro.data.local.entity.TransactionType
-import com.example.expensetrackerpro.data.repository.expenseRepositoryImpl.TransactionRepository
+import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.Transaction
+import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.domain.repository.CategoryRepository
+import com.example.expensetrackerpro.domain.repository.TransactionRepository
 import com.example.expensetrackerpro.domain.models.AddTransactionUiState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -18,6 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AddEditTransactionViewModel @Inject constructor(
     private val repository: TransactionRepository,
+    private val categoryRepository: CategoryRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -46,7 +48,7 @@ class AddEditTransactionViewModel @Inject constructor(
         .map { it.transactionType }
         .distinctUntilChanged()
         .flatMapLatest { type ->
-            repository.getCategoriesByType(type)
+            categoryRepository.getCategoriesByType(type)
         }
         .stateIn(
             scope = viewModelScope,
@@ -59,7 +61,7 @@ class AddEditTransactionViewModel @Inject constructor(
             repository.getTransactionById(transactionId!!).let { transaction ->
                 if (transaction != null) {
                     // We need to fetch the category object because transaction only stores categoryId
-                    val allCats = repository.getAllCategories().first()
+                    val allCats = categoryRepository.getAllCategories().first()
                     val category = allCats.find { it.id == transaction.categoryId }
 
                     _uiState.update { it.copy(
@@ -156,7 +158,7 @@ class AddEditTransactionViewModel @Inject constructor(
                 type = type, // Now passing the type from the UI context
                 isCustom = true
             )
-            repository.insertCategory(newCategory)
+            categoryRepository.insertCategory(newCategory)
         }
     }
 

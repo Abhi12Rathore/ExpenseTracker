@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.example.expensetrackerpro.data.local.model.CategoryExpenseEntity
+import com.example.expensetrackerpro.domain.models.CategoryBreakdown
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.PieData
@@ -16,7 +16,7 @@ import com.github.mikephil.charting.data.PieEntry
 
 @Composable
 fun CategoryExpenseDonutChart(
-    data: List<CategoryExpenseEntity>
+    data: List<CategoryBreakdown>
 ) {
 
     Card(
@@ -61,7 +61,7 @@ fun CategoryExpenseDonutChart(
                         val entries = data.map {
 
                             PieEntry(
-                                it.totalAmount.toFloat(),
+                                it.amount.toFloat(),
                                 it.categoryName
                             )
 
@@ -118,7 +118,7 @@ fun CategoryExpenseDonutChart(
                         //------------------------
 
                         val totalExpense =
-                            data.sumOf { it.totalAmount }
+                            data.sumOf { it.amount }
 
                         chart.centerText =
 

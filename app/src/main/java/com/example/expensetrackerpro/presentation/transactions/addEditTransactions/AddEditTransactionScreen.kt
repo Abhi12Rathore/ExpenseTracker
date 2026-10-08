@@ -9,7 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.expensetrackerpro.data.local.entity.TransactionType
+import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.presentation.categories.AddCategoryBottomSheet
 import com.example.expensetrackerpro.presentation.transactions.CategorySection
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.*

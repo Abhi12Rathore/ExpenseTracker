@@ -2,13 +2,14 @@ package com.example.expensetrackerpro.presentation.homeScreen.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.expensetrackerpro.data.local.entity.Transaction
-import com.example.expensetrackerpro.data.local.entity.TransactionType
-import com.example.expensetrackerpro.data.local.model.CategoryExpenseEntity
-import com.example.expensetrackerpro.data.local.model.DailyCashFlowEntity
-import com.example.expensetrackerpro.data.local.model.FinancialInsight
-import com.example.expensetrackerpro.data.local.model.MonthlyTrendEntity
-import com.example.expensetrackerpro.data.repository.expenseRepositoryImpl.TransactionRepository
+import com.example.expensetrackerpro.domain.models.Transaction
+import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.domain.models.CategoryBreakdown
+import com.example.expensetrackerpro.domain.models.CashFlowPoint
+import com.example.expensetrackerpro.domain.models.FinancialInsight
+import com.example.expensetrackerpro.domain.models.MonthlyTrend
+import com.example.expensetrackerpro.domain.repository.DashboardRepository
+import com.example.expensetrackerpro.domain.repository.TransactionRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -27,7 +28,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val repository: TransactionRepository
+    private val repository: TransactionRepository,
+    private val dashboardRepository: DashboardRepository
 ) : ViewModel() {
 
 
@@ -101,7 +103,7 @@ class HomeViewModel @Inject constructor(
 
 
     val categorySpending =
-        repository.getCategoryExpense()
+        dashboardRepository.getCategoryBreakdown()
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5000),
@@ -110,7 +112,7 @@ class HomeViewModel @Inject constructor(
 
 
     val dailyCashFlow =
-        repository.getDailyCashFlow()
+        dashboardRepository.getCashFlow()
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5000),
@@ -119,7 +121,7 @@ class HomeViewModel @Inject constructor(
 
 
     val monthlyTrend =
-        repository.getMonthlyTrend()
+        dashboardRepository.getMonthlyTrend()
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5000),
@@ -277,11 +279,11 @@ class HomeViewModel @Inject constructor(
 
                     financialSummary = values[0] as FinancialSummaryData,
 
-                    categoryExpense = values[1] as List<CategoryExpenseEntity>,
+                    categoryExpense = values[1] as List<CategoryBreakdown>,
 
-                    dailyCashFlow = values[2] as List<DailyCashFlowEntity>,
+                    dailyCashFlow = values[2] as List<CashFlowPoint>,
 
-                    monthlyTrend = values[3] as List<MonthlyTrendEntity>,
+                    monthlyTrend = values[3] as List<MonthlyTrend>,
 
                     recentTransactions = values[4] as List<Transaction>,
 

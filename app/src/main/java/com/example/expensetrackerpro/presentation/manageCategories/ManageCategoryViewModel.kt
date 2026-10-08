@@ -3,9 +3,9 @@ package com.example.expensetrackerpro.presentation.manageCategories
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.expensetrackerpro.data.local.entity.Category
-import com.example.expensetrackerpro.data.local.entity.TransactionType
-import com.example.expensetrackerpro.data.repository.expenseRepositoryImpl.TransactionRepository
+import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.domain.repository.CategoryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +19,7 @@ import kotlin.text.contains
 
 @HiltViewModel
 class ManageCategoryViewModel @Inject constructor(
-    private val repository: TransactionRepository
+    private val repository: CategoryRepository
 ) : ViewModel() {
 
     // Fetch all categories from the repository
