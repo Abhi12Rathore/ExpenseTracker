@@ -32,19 +32,33 @@ import com.example.expensetrackerpro.presentation.homeScreen.component.RecentAct
 import com.example.expensetrackerpro.presentation.homeScreen.component.charts.CashFlowChart
 import com.example.expensetrackerpro.presentation.homeScreen.component.charts.CategoryExpenseDonutChart
 import com.example.expensetrackerpro.presentation.homeScreen.component.charts.MonthlyTrendBarChart
+import com.example.expensetrackerpro.presentation.homeScreen.uistate.HomeUiState
 import com.example.expensetrackerpro.presentation.homeScreen.viewmodels.HomeViewModel
 
 
 @Composable
 fun HomeScreen(
     onViewAllTransactions: () -> Unit,
-    onTransactionClick: (Int) -> Unit
+    onTransactionClick: (Int) -> Unit,
+    viewModel: HomeViewModel = hiltViewModel()
 ) {
-    val viewModel: HomeViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
 
-    val summary by viewModel.financialSummary.collectAsState()
-    val recentTransactions by viewModel.recentTransactions.collectAsState()
+    HomeContent(
+        uiState = uiState,
+        onViewAllTransactions = onViewAllTransactions,
+        onTransactionClick = onTransactionClick
+    )
+}
+
+@Composable
+fun HomeContent(
+    uiState: HomeUiState,
+    onViewAllTransactions: () -> Unit,
+    onTransactionClick: (Int) -> Unit
+) {
+    val summary = uiState.financialSummary
+    val recentTransactions = uiState.recentTransactions
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background

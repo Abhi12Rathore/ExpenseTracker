@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.example.expensetrackerpro.data.local.model.MonthlyTrendEntity
+import com.example.expensetrackerpro.domain.models.MonthlyTrend
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
@@ -19,7 +19,7 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 
 @Composable
 fun MonthlyTrendBarChart(
-    data: List<MonthlyTrendEntity>
+    data: List<MonthlyTrend>
 ) {
 
     Card(

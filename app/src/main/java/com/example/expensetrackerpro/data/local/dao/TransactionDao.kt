@@ -6,9 +6,9 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.example.expensetrackerpro.data.local.entity.Category
-import com.example.expensetrackerpro.data.local.entity.Transaction
-import com.example.expensetrackerpro.data.local.entity.TransactionType
+import com.example.expensetrackerpro.data.local.entity.CategoryEntity
+import com.example.expensetrackerpro.data.local.entity.TransactionEntity
+import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.data.local.model.DailyCashFlowEntity
 import kotlinx.coroutines.flow.Flow
 import com.example.expensetrackerpro.data.local.model.CategoryExpenseEntity
@@ -20,43 +20,43 @@ interface TransactionDao {
     // --- Transaction CRUD ---
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertTransaction(transaction: Transaction)
+    suspend fun insertTransaction(transaction: TransactionEntity)
 
     @Update
-    suspend fun updateTransaction(transaction: Transaction)
+    suspend fun updateTransaction(transaction: TransactionEntity)
 
     @Delete
-    suspend fun deleteTransaction(transaction: Transaction)
+    suspend fun deleteTransaction(transaction: TransactionEntity)
 
     @Query("SELECT * FROM transactions WHERE id = :id")
-    suspend fun getTransactionById(id: Int): Transaction?
+    suspend fun getTransactionById(id: Int): TransactionEntity?
 
     // --- Category CRUD ---
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCategory(category: Category)
+    suspend fun insertCategory(category: CategoryEntity)
 
     @Update
-    suspend fun updateCategory(category: Category)
+    suspend fun updateCategory(category: CategoryEntity)
 
     @Delete
-    suspend fun deleteCategory(category: Category)
+    suspend fun deleteCategory(category: CategoryEntity)
 
     // --- Existing Queries (Flows) ---
     @Query("SELECT * FROM transactions ORDER BY dateMillis DESC")
-    fun getAllTransactions(): Flow<List<Transaction>>
+    fun getAllTransactions(): Flow<List<TransactionEntity>>
 
     @Query("SELECT * FROM transactions WHERE transactionType = :type ORDER BY dateMillis DESC")
-    fun getTransactionsByType(type: TransactionType): Flow<List<Transaction>>
+    fun getTransactionsByType(type: TransactionType): Flow<List<TransactionEntity>>
 
     @Query("SELECT * FROM transactions WHERE dateMillis >= :startTimestamp ORDER BY dateMillis DESC")
-    fun getFilteredTransactions(startTimestamp: Long): Flow<List<Transaction>>
+    fun getFilteredTransactions(startTimestamp: Long): Flow<List<TransactionEntity>>
 
     @Query("SELECT * FROM categories")
-    fun getAllCategories(): Flow<List<Category>>
+    fun getAllCategories(): Flow<List<CategoryEntity>>
 
     @Query("SELECT * FROM categories WHERE type = :type")
-    fun getCategoriesByType(type: TransactionType): Flow<List<Category>>
+    fun getCategoriesByType(type: TransactionType): Flow<List<CategoryEntity>>
 
     // --- Financial Stats ---
     @Query("SELECT SUM(amount) FROM transactions WHERE transactionType = 'INCOME' AND dateMillis >= :startMillis")
@@ -66,7 +66,7 @@ interface TransactionDao {
     fun getMonthlyExpense(startMillis: Long): Flow<Double?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAllCategories(categories: List<Category>)
+    suspend fun insertAllCategories(categories: List<CategoryEntity>)
 
 
     @Query(

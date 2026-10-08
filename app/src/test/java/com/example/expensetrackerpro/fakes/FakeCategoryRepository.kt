@@ -1,0 +1,35 @@
+package com.example.expensetrackerpro.fakes
+
+import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.domain.repository.CategoryRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
+
+class FakeCategoryRepository(
+    initial: List<Category> = emptyList()
+) : CategoryRepository {
+
+    private val categories = MutableStateFlow(initial)
+
+    val current: List<Category> get() = categories.value
+
+    override fun getAllCategories(): Flow<List<Category>> = categories
+
+    override fun getCategoriesByType(type: TransactionType): Flow<List<Category>> =
+        categories.map { list -> list.filter { it.type == type } }
+
+    override suspend fun insertCategory(category: Category) {
+        categories.update { list -> list.filterNot { it.id == category.id } + category }
+    }
+
+    override suspend fun updateCategory(category: Category) {
+        categories.update { list -> list.map { if (it.id == category.id) category else it } }
+    }
+
+    override suspend fun deleteCategory(category: Category) {
+        categories.update { list -> list.filterNot { it.id == category.id } }
+    }
+}

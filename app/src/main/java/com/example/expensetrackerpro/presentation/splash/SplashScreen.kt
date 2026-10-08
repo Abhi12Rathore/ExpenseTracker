@@ -37,14 +37,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.animation.OvershootInterpolator
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 // presentation/splash/SplashScreen.kt
 @Composable
-fun SplashScreen(onTimeout: () -> Unit) {
-    val viewModel: SplashViewModel = viewModel()
-    val isReady by viewModel.isReady.collectAsState()
+fun SplashScreen(
+    onTimeout: () -> Unit,
+    viewModel: SplashViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
 
+    // Navigate when ViewModel signals ready
+    LaunchedEffect(uiState.isReady) {
+        if (uiState.isReady) onTimeout()
+    }
+
+    SplashContent()
+}
+
+@Composable
+fun SplashContent() {
     var startAnimation by remember { mutableStateOf(false) }
 
     // Animation Specs
@@ -62,11 +74,6 @@ fun SplashScreen(onTimeout: () -> Unit) {
     )
 
     LaunchedEffect(Unit) { startAnimation = true }
-
-    // Navigate when ViewModel signals ready
-    LaunchedEffect(isReady) {
-        if (isReady) onTimeout()
-    }
 
     Box(
         modifier = Modifier

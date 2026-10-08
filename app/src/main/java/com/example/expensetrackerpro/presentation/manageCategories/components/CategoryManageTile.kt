@@ -24,7 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.expensetrackerpro.data.local.entity.Category
+import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.utils.CategoryIcons
 
 @Composable

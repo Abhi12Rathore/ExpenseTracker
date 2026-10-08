@@ -18,7 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.example.expensetrackerpro.data.local.entity.Transaction
+import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.utils.CategoryIcons
 import com.example.expensetrackerpro.utils.Utility
 import java.text.SimpleDateFormat

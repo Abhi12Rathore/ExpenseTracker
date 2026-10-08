@@ -9,10 +9,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.expensetrackerpro.data.local.entity.TransactionType
+import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.presentation.categories.AddCategoryBottomSheet
 import com.example.expensetrackerpro.presentation.transactions.CategorySection
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.*
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEvent
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,20 +23,32 @@ fun AddEditTransactionScreen(
     onNavigateBack: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
-    // Observe the reactively filtered categories from the ViewModel
-    val categories by viewModel.availableCategories.collectAsState()
 
-    var showBottomSheet by remember { mutableStateOf(false) }
+    AddEditTransactionContent(
+        state = state,
+        onEvent = viewModel::onEvent,
+        onNavigateBack = onNavigateBack
+    )
+}
 
-    if (showBottomSheet) {
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddEditTransactionContent(
+    state: AddEditTransactionUiState,
+    onEvent: (AddEditTransactionEvent) -> Unit,
+    onNavigateBack: () -> Unit
+) {
+    // Categories already filtered by the ViewModel for the current type
+    val categories = state.availableCategories
+
+    if (state.isCategorySheetVisible) {
         AddCategoryBottomSheet(
             // Pass the current transaction type (Income/Expense) from the screen state
             initialType = state.transactionType,
-            onDismiss = { showBottomSheet = false },
+            onDismiss = { onEvent(AddEditTransactionEvent.CategorySheetDismissed) },
             onSaveCategory = { name, iconName, type ->
                 // Pass the type to the ViewModel so it's saved correctly in the DB
-                viewModel.addCategory(name, iconName, type)
-                showBottomSheet = false
+                onEvent(AddEditTransactionEvent.CategoryAdded(name, iconName, type))
             }
         )
     }
@@ -43,8 +57,8 @@ fun AddEditTransactionScreen(
 
     // Dynamic Titles based on Transaction Type and Edit Mode
     val typeText = if (state.transactionType == TransactionType.INCOME) "Income" else "Expense"
-    val titleText = if (viewModel.isEditMode) "Edit $typeText" else "Add $typeText"
-    val buttonText = if (viewModel.isEditMode) "Update $typeText" else "Save $typeText"
+    val titleText = if (state.isEditMode) "Edit $typeText" else "Add $typeText"
+    val buttonText = if (state.isEditMode) "Update $typeText" else "Save $typeText"
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -66,15 +80,15 @@ fun AddEditTransactionScreen(
             // This is the core migration change: switching between Income and Expense
             TransactionTypeToggle(
                 selectedType = state.transactionType,
-                onTypeSelected = { viewModel.onTypeChange(it) }
+                onTypeSelected = { onEvent(AddEditTransactionEvent.TypeChanged(it)) }
             )
 
             // Input Fields Card (Updated to use 'note' instead of 'title')
             ExpenseDetailCard(
                 title = state.note,
                 amount = state.amount,
-                onTitleChange = viewModel::onNoteChange,
-                onAmountChange = viewModel::onAmountChange,
+                onTitleChange = { onEvent(AddEditTransactionEvent.NoteChanged(it)) },
+                onAmountChange = { onEvent(AddEditTransactionEvent.AmountChanged(it)) },
                 selectedType = state.transactionType
             )
 
@@ -86,15 +100,15 @@ fun AddEditTransactionScreen(
                 onCategorySelected = { categoryName ->
                     // Find the object from the list to pass back to VM
                     val selectedObj = categories.find { it.name == categoryName }
-                    selectedObj?.let { viewModel.onCategorySelect(it) }
+                    selectedObj?.let { onEvent(AddEditTransactionEvent.CategorySelected(it)) }
                 },
-                onAddCategoryClicked = { showBottomSheet = true }
+                onAddCategoryClicked = { onEvent(AddEditTransactionEvent.CategorySheetOpened) }
             )
 
             // Date Selection
             DateSelectionSection(
                 selectedDateMillis = state.dateMillis,
-                onDateSelected = viewModel::onDateSelected
+                onDateSelected = { onEvent(AddEditTransactionEvent.DateSelected(it)) }
             )
 
             // Preview Section (Updated for polymorphic types)
@@ -112,7 +126,7 @@ fun AddEditTransactionScreen(
             SaveExpenseButton(
                 isEnabled = state.isSaveEnabled,
                 onSaveClick = {
-                    viewModel.saveTransaction()
+                    onEvent(AddEditTransactionEvent.SaveClicked)
                     onNavigateBack()
                 },
                 modifier = Modifier.navigationBarsPadding(),

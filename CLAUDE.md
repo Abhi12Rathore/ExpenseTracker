@@ -17,8 +17,9 @@ Goal: production-quality portfolio project.
 
 ## Package structure (`com.example.expensetrackerpro`)
 - `data/local/` → Room: `entity/`, `dao/`, `expenseDatabase/`, `model/` (query result classes)
+- `data/mapper/` → entity ↔ domain mappers
 - `data/repository/` → repository implementations
-- `domain/` → `models/`, `repository/` (interfaces)
+- `domain/` → `models/`, `repository/` (interfaces), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
 - `presentation/<feature>/` → Screen, ViewModel, `components/`, `uistate/`
 - `ui/theme/` → colors, typography, theme
 - `utils/` → shared helpers
@@ -30,7 +31,8 @@ Goal: production-quality portfolio project.
 - Repository interfaces live in `domain/repository`, implementations in `data/repository`.
 - Room entities never reach the UI. Map them to domain models.
 - Business logic (totals, savings %, insights) goes in use cases or the domain layer, not in Composables.
-- Each screen has one ViewModel exposing `StateFlow<XxxUiState>`. User actions go through a sealed `XxxEvent` interface.
+- Each screen has one ViewModel exposing `StateFlow<XxxUiState>`. User actions go through a sealed `XxxEvent` interface. Both types live in the feature's `uistate/` folder; the ViewModel takes events through `onEvent(XxxEvent)` and depends only on use cases.
+- Each screen is split in two: `XxxScreen` obtains the ViewModel and collects state, `XxxContent(state, onEvent, navigation lambdas)` is the stateless layout. Only purely visual state (animations, scroll, dropdown expansion) stays in `remember`.
 - Composables are stateless where possible: state in, lambdas out.
 
 ## Conventions
@@ -46,7 +48,6 @@ Goal: production-quality portfolio project.
 - Default categories are seeded in `AppDatabase` `onCreate`.
 
 ## Known issues (remove each line once fixed)
-- `DashboardRepository` interface has no implementation. `TransactionRepository` is a concrete class with no interface.
 - `RecentActivityTile.kt`: date shows the literal text "transaction.dateMillis".
 - Dashboard header month is wrong, greeting ignores time of day, and currency formatting is inconsistent.
 - `play-services-wallet` dependency appears unused.

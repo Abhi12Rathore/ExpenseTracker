@@ -22,14 +22,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.expensetrackerpro.presentation.homeScreen.viewmodels.FinancialSummaryData
+import com.example.expensetrackerpro.domain.models.FinancialSummary
 
 @Composable
-fun MetricGrid(data: FinancialSummaryData) {
+fun MetricGrid(data: FinancialSummary) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        MetricCard("Income", "₹${data.income}", Icons.Rounded.ArrowDownward,
+        MetricCard("Income", "₹${data.totalIncome}", Icons.Rounded.ArrowDownward,
             Modifier.weight(1f))
-        MetricCard("Expense", "₹${data.expense}", Icons.Rounded.ArrowUpward,
+        MetricCard("Expense", "₹${data.totalExpense}", Icons.Rounded.ArrowUpward,
             Modifier.weight(1f))
     }
 }

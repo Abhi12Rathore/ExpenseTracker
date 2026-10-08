@@ -1,0 +1,34 @@
+package com.example.expensetrackerpro.util
+
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.rules.TestWatcher
+import org.junit.runner.Description
+
+/** Swaps Dispatchers.Main so viewModelScope runs on the test scheduler. */
+@OptIn(ExperimentalCoroutinesApi::class)
+class MainDispatcherRule(
+    val dispatcher: TestDispatcher = UnconfinedTestDispatcher()
+) : TestWatcher() {
+
+    override fun starting(description: Description) {
+        Dispatchers.setMain(dispatcher)
+    }
+
+    override fun finished(description: Description) {
+        Dispatchers.resetMain()
+    }
+}
+
+/** Keeps a WhileSubscribed [state] active for the rest of the test, like a screen would. */
+@OptIn(ExperimentalCoroutinesApi::class)
+fun TestScope.subscribe(state: StateFlow<*>) {
+    backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { state.collect {} }
+}
