@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.data.repository
 
+import android.database.sqlite.SQLiteConstraintException
 import com.example.expensetrackerpro.data.local.dao.TransactionDao
 import com.example.expensetrackerpro.data.mapper.toDomain
 import com.example.expensetrackerpro.data.mapper.toEntity
@@ -28,7 +29,12 @@ class CategoryRepositoryImpl @Inject constructor(
         transactionDao.updateCategory(category.toEntity())
     }
 
-    override suspend fun deleteCategory(category: Category) {
-        transactionDao.deleteCategory(category.toEntity())
-    }
+    override suspend fun deleteCategory(category: Category): Boolean =
+        try {
+            transactionDao.deleteCategory(category.toEntity())
+            true
+        } catch (e: SQLiteConstraintException) {
+            // Transactions reference this category (foreign key RESTRICT)
+            false
+        }
 }

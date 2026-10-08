@@ -41,8 +41,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,10 +54,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.presentation.categories.AddCategoryBottomSheet
 import com.example.expensetrackerpro.presentation.manageCategories.components.CategoryManageTile
@@ -92,6 +97,17 @@ fun ManageCategoryContent(
     // Purely visual: whether the type dropdown is showing
     var isFilterExpanded by remember { mutableStateOf(false) }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    val deleteBlockedMessage = uiState.deleteBlockedCategoryName?.let {
+        stringResource(R.string.category_delete_blocked, it)
+    }
+    LaunchedEffect(deleteBlockedMessage) {
+        if (deleteBlockedMessage != null) {
+            snackbarHostState.showSnackbar(deleteBlockedMessage)
+            onEvent(ManageCategoryEvent.DeleteBlockedMessageShown)
+        }
+    }
+
     if (isSheetOpen) {
         AddCategoryBottomSheet(
             initialCategory = categoryToEdit,
@@ -107,6 +123,7 @@ fun ManageCategoryContent(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { onEvent(ManageCategoryEvent.AddClicked) },

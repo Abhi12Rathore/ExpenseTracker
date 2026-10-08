@@ -55,8 +55,9 @@ class ManageCategoryViewModel @Inject constructor(
             ManageCategoryEvent.SheetDismissed -> closeSheet()
             is ManageCategoryEvent.CategorySaved ->
                 saveCategory(event.name, event.iconName, event.type)
-            is ManageCategoryEvent.DeleteClicked ->
-                viewModelScope.launch { deleteCategory(event.category) }
+            is ManageCategoryEvent.DeleteClicked -> delete(event.category)
+            ManageCategoryEvent.DeleteBlockedMessageShown ->
+                screenState.update { it.copy(deleteBlockedCategoryName = null) }
         }
     }
 
@@ -73,6 +74,14 @@ class ManageCategoryViewModel @Inject constructor(
             }
         }
         closeSheet()
+    }
+
+    private fun delete(category: Category) {
+        viewModelScope.launch {
+            if (!deleteCategory(category)) {
+                screenState.update { it.copy(deleteBlockedCategoryName = category.name) }
+            }
+        }
     }
 
     private fun closeSheet() {

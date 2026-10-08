@@ -15,4 +15,5 @@ sealed interface ManageCategoryEvent {
         val type: TransactionType
     ) : ManageCategoryEvent
     data class DeleteClicked(val category: Category) : ManageCategoryEvent
+    data object DeleteBlockedMessageShown : ManageCategoryEvent
 }

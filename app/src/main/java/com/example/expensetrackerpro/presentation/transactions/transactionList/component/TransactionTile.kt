@@ -18,7 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.utils.CategoryIcons
-import java.text.SimpleDateFormat
+import com.example.expensetrackerpro.utils.CurrencyFormatter
+import com.example.expensetrackerpro.utils.DateFormatter
 import java.util.*
 
 @Composable
@@ -33,7 +34,6 @@ fun ExpenseTile(
     val categoryIcon = CategoryIcons.icons[transaction.categoryName]
         ?: Icons.Default.Category
 
-    val dateFormatter = remember { SimpleDateFormat("dd MMM, yyyy", Locale.getDefault()) }
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -73,7 +73,7 @@ fun ExpenseTile(
                     maxLines = 1
                 )
                 Text(
-                    text = dateFormatter.format(Date(transaction.dateMillis)),
+                    text = DateFormatter.formatDate(transaction.dateMillis),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -85,7 +85,7 @@ fun ExpenseTile(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = "₹${transaction.amount}",
+                    text = CurrencyFormatter.format(transaction.amount),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onSurface,

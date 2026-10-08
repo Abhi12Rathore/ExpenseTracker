@@ -14,5 +14,6 @@ interface CategoryRepository {
 
     suspend fun updateCategory(category: Category)
 
-    suspend fun deleteCategory(category: Category)
+    /** Returns false, leaving the category in place, when transactions still use it. */
+    suspend fun deleteCategory(category: Category): Boolean
 }

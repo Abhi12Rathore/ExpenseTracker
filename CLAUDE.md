@@ -36,8 +36,8 @@ Goal: production-quality portfolio project.
 - Composables are stateless where possible: state in, lambdas out.
 
 ## Conventions
-- Money: format only through the shared en-IN currency formatter (e.g. `-₹1,00,000.00`). Never use string concatenation like `"₹$amount"`.
-- Dates: format via a shared date utility. Never show raw millis.
+- Money: format only through the shared en-IN currency formatter, `utils/CurrencyFormatter` (e.g. `-₹1,00,000.00`). Never use string concatenation like `"₹$amount"`.
+- Dates: format via the shared date utility, `utils/DateFormatter`. Never show raw millis.
 - UI strings go in `strings.xml`.
 - No `!!`. Handle nulls explicitly.
 - Every new ViewModel or use case gets unit tests in `app/src/test`.
@@ -48,9 +48,7 @@ Goal: production-quality portfolio project.
 - Default categories are seeded in `AppDatabase` `onCreate`.
 
 ## Known issues (remove each line once fixed)
-- `RecentActivityTile.kt`: date shows the literal text "transaction.dateMillis".
-- Dashboard header month is wrong, greeting ignores time of day, and currency formatting is inconsistent.
-- `play-services-wallet` dependency appears unused.
+- None currently.
 
 ## Workflow
 - Never commit to `main`. Use branches like `refactor/hilt` or `feature/theme-toggle`.

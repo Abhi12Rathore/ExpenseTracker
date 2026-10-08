@@ -5,10 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.expensetrackerpro.domain.usecase.dashboard.GenerateSmartInsightsUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetCashFlowUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetCategoryBreakdownUseCase
+import com.example.expensetrackerpro.domain.usecase.dashboard.GetDayPeriodUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetFinancialSummaryUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetMonthlyTrendUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetRecentTransactionsUseCase
 import com.example.expensetrackerpro.presentation.homeScreen.uistate.HomeUiState
+import com.example.expensetrackerpro.utils.DateFormatter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -24,8 +26,13 @@ class HomeViewModel @Inject constructor(
     getCategoryBreakdown: GetCategoryBreakdownUseCase,
     getCashFlow: GetCashFlowUseCase,
     getMonthlyTrend: GetMonthlyTrendUseCase,
-    private val generateSmartInsights: GenerateSmartInsightsUseCase
+    private val generateSmartInsights: GenerateSmartInsightsUseCase,
+    getDayPeriod: GetDayPeriodUseCase
 ) : ViewModel() {
+
+    // Read once when the dashboard opens
+    private val now = System.currentTimeMillis()
+    private val dayPeriod = getDayPeriod(DateFormatter.hourOfDay(now))
 
     val uiState: StateFlow<HomeUiState> =
         combine(
@@ -37,6 +44,8 @@ class HomeViewModel @Inject constructor(
         ) { summary, categories, cashFlow, monthly, recent ->
 
             HomeUiState(
+                dayPeriod = dayPeriod,
+                currentMonthMillis = now,
                 financialSummary = summary,
                 categoryExpense = categories,
                 dailyCashFlow = cashFlow,
@@ -49,6 +58,6 @@ class HomeViewModel @Inject constructor(
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5000),
-                HomeUiState()
+                HomeUiState(dayPeriod = dayPeriod, currentMonthMillis = now)
             )
 }

@@ -21,7 +21,8 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.utils.CategoryIcons
 import com.example.expensetrackerpro.utils.Utility
-import java.text.SimpleDateFormat
+import com.example.expensetrackerpro.utils.CurrencyFormatter
+import com.example.expensetrackerpro.utils.DateFormatter
 import java.util.*
 
 @Composable
@@ -30,7 +31,6 @@ fun DeleteConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    val dateFormatter = remember { SimpleDateFormat("dd MMM, yyyy", Locale.getDefault()) }
 
     // Use base Dialog for 100% control over the background/scrim
     Dialog(
@@ -114,12 +114,12 @@ fun DeleteConfirmationDialog(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(expense.title, fontWeight = FontWeight.Bold, maxLines = 1)
                                 Text(
-                                    dateFormatter.format(Date(expense.dateMillis)),
+                                    DateFormatter.formatDate(expense.dateMillis),
                                     style = MaterialTheme.typography.labelSmall
                                 )
                             }
                             Text(
-                                "₹${expense.amount}",
+                                CurrencyFormatter.format(expense.amount),
                                 fontWeight = FontWeight.ExtraBold
                             )
                         }
