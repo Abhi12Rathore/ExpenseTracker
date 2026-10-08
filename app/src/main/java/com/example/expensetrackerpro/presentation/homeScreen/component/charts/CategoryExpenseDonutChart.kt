@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
+import com.example.expensetrackerpro.utils.CurrencyFormatter
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.PieData
@@ -122,7 +123,7 @@ fun CategoryExpenseDonutChart(
 
                         chart.centerText =
 
-                            "Expenses\n₹${"%,.0f".format(totalExpense)}"
+                            "Expenses\n${CurrencyFormatter.format(totalExpense)}"
 
                         chart.setCenterTextSize(18f)
 

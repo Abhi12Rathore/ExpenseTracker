@@ -23,13 +23,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.domain.models.FinancialSummary
+import com.example.expensetrackerpro.utils.CurrencyFormatter
 
 @Composable
 fun MetricGrid(data: FinancialSummary) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        MetricCard("Income", "₹${data.totalIncome}", Icons.Rounded.ArrowDownward,
+        MetricCard("Income", CurrencyFormatter.format(data.totalIncome), Icons.Rounded.ArrowDownward,
             Modifier.weight(1f))
-        MetricCard("Expense", "₹${data.totalExpense}", Icons.Rounded.ArrowUpward,
+        MetricCard("Expense", CurrencyFormatter.format(data.totalExpense), Icons.Rounded.ArrowUpward,
             Modifier.weight(1f))
     }
 }

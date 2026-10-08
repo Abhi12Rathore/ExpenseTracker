@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.utils.CurrencyFormatter
+import com.example.expensetrackerpro.utils.DateFormatter
 
 @Composable
 fun AddExpensePreview(
@@ -19,11 +21,7 @@ fun AddExpensePreview(
     type: TransactionType,
     modifier: Modifier = Modifier
 ) {
-    val displayAmount = amount.ifEmpty { "0.00" }
     val isIncome = type == TransactionType.INCOME
-
-    // UI Logic: Income is +, Expense is -
-    val prefix = if (isIncome) "+" else "-"
     val amountColor = MaterialTheme.colorScheme.primary
 
     Surface(
@@ -43,13 +41,14 @@ fun AddExpensePreview(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "$prefix₹$displayAmount",
+                // Income is +, Expense is -
+                text = CurrencyFormatter.formatSigned(amount.toDoubleOrNull() ?: 0.0, isIncome),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Black,
                 color = amountColor
             )
             Text(
-                text = "$category • ${java.text.SimpleDateFormat("dd MMM yyyy", java.util.Locale.getDefault()).format(java.util.Date(dateMillis))}",
+                text = "$category • ${DateFormatter.formatDate(dateMillis)}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

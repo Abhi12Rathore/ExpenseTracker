@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.domain.models.FinancialSummary
+import com.example.expensetrackerpro.utils.CurrencyFormatter
 
 @Composable
 fun FinancialSummaryCard(data: FinancialSummary) {
@@ -36,7 +37,7 @@ fun FinancialSummaryCard(data: FinancialSummary) {
         Column(modifier = Modifier.padding(24.dp)) {
             Text("Current Balance", style = MaterialTheme.typography.labelMedium)
             Text(
-                text = "₹${String.format("%,.2f", data.totalBalance)}",
+                text = CurrencyFormatter.format(data.totalBalance),
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Black
             )
@@ -44,8 +45,8 @@ fun FinancialSummaryCard(data: FinancialSummary) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                SummaryItem("Income", "₹${data.totalIncome}", Icons.Rounded.TrendingUp)
-                SummaryItem("Expense", "₹${data.totalExpense}", Icons.Rounded.TrendingDown)
+                SummaryItem("Income", CurrencyFormatter.format(data.totalIncome), Icons.Rounded.TrendingUp)
+                SummaryItem("Expense", CurrencyFormatter.format(data.totalExpense), Icons.Rounded.TrendingDown)
                 SummaryItem("Savings", "${data.savingsRate.toInt()}%", Icons.Rounded.AutoGraph)
             }
         }

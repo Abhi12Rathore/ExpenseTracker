@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.expensetrackerpro.utils.CurrencyFormatter
 import com.example.expensetrackerpro.utils.ExpenseFilter
 
 @Composable
@@ -53,7 +54,7 @@ fun TotalBalanceCard(
                 color = Color.Black
             )
             Text(
-                text = "₹${String.format("%,.2f", totalBalance)}",
+                text = CurrencyFormatter.format(totalBalance),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.primary
@@ -113,7 +114,7 @@ fun BalanceSummaryItem(
         Spacer(modifier = Modifier.width(8.dp))
         Column {
             Text(label, style = MaterialTheme.typography.labelSmall, color = Color.Black)
-            Text("₹${String.format("%,.0f", amount)}", style = MaterialTheme.typography.titleMedium, color =tint, fontWeight = FontWeight.Bold)
+            Text(CurrencyFormatter.format(amount), style = MaterialTheme.typography.titleMedium, color =tint, fontWeight = FontWeight.Bold)
         }
     }
 }

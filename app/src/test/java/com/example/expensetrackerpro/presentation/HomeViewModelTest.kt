@@ -9,6 +9,7 @@ import com.example.expensetrackerpro.domain.usecase.dashboard.CalculateSavingsRa
 import com.example.expensetrackerpro.domain.usecase.dashboard.GenerateSmartInsightsUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetCashFlowUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetCategoryBreakdownUseCase
+import com.example.expensetrackerpro.domain.usecase.dashboard.GetDayPeriodUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetFinancialSummaryUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetMonthlyTrendUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetRecentTransactionsUseCase
@@ -19,8 +20,10 @@ import com.example.expensetrackerpro.presentation.homeScreen.uistate.HomeUiState
 import com.example.expensetrackerpro.presentation.homeScreen.viewmodels.HomeViewModel
 import com.example.expensetrackerpro.util.MainDispatcherRule
 import com.example.expensetrackerpro.util.subscribe
+import com.example.expensetrackerpro.utils.DateFormatter
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -41,15 +44,26 @@ class HomeViewModelTest {
         getCategoryBreakdown = GetCategoryBreakdownUseCase(dashboard),
         getCashFlow = GetCashFlowUseCase(dashboard),
         getMonthlyTrend = GetMonthlyTrendUseCase(dashboard),
-        generateSmartInsights = GenerateSmartInsightsUseCase()
+        generateSmartInsights = GenerateSmartInsightsUseCase(),
+        getDayPeriod = GetDayPeriodUseCase()
     )
 
     @Test
-    fun noData_isEmptyState() = runTest {
+    fun noData_isEmptyStateWithCurrentMonthAndGreeting() = runTest {
+        val before = System.currentTimeMillis()
         val viewModel = viewModel()
         subscribe(viewModel.uiState)
+        val state = viewModel.uiState.value
 
-        assertEquals(HomeUiState(), viewModel.uiState.value)
+        assertEquals(
+            HomeUiState(dayPeriod = state.dayPeriod, currentMonthMillis = state.currentMonthMillis),
+            state
+        )
+        assertTrue(state.currentMonthMillis in before..System.currentTimeMillis())
+        assertEquals(
+            GetDayPeriodUseCase()(DateFormatter.hourOfDay(state.currentMonthMillis)),
+            state.dayPeriod
+        )
     }
 
     @Test

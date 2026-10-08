@@ -72,7 +72,11 @@ fun HomeContent(
         ) {
             // 1. Greeting Layer
             item {
-                DashboardHeader(userName = "Abhishek", currentMonth = "July 2026")
+                DashboardHeader(
+                    userName = "Abhishek",
+                    dayPeriod = uiState.dayPeriod,
+                    currentMonthMillis = uiState.currentMonthMillis
+                )
             }
 
             // 2. Hero Card Layer

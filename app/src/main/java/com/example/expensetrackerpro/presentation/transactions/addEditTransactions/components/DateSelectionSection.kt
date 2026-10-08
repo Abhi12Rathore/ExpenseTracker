@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import java.text.SimpleDateFormat
+import com.example.expensetrackerpro.utils.DateFormatter
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,8 +32,7 @@ fun DateSelectionSection(
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDateMillis)
 
     // Formatting the date for display
-    val dateFormatter = remember { SimpleDateFormat("dd MMM, yyyy", Locale.getDefault()) }
-    val dateString = dateFormatter.format(Date(selectedDateMillis))
+    val dateString = DateFormatter.formatDate(selectedDateMillis)
 
     Column(modifier = modifier.fillMaxWidth()) {
         // Requirement: Title "Date" in Primary color

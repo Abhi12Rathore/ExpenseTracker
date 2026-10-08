@@ -16,11 +16,21 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.domain.models.DayPeriod
+import com.example.expensetrackerpro.utils.DateFormatter
 
 @Composable
-fun DashboardHeader(userName: String, currentMonth: String) {
+fun DashboardHeader(userName: String, dayPeriod: DayPeriod, currentMonthMillis: Long) {
+    val greeting = when (dayPeriod) {
+        DayPeriod.MORNING -> R.string.greeting_morning
+        DayPeriod.AFTERNOON -> R.string.greeting_afternoon
+        DayPeriod.EVENING -> R.string.greeting_evening
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -30,12 +40,12 @@ fun DashboardHeader(userName: String, currentMonth: String) {
     ) {
         Column {
             Text(
-                text = "Good Morning, $userName 👋",
+                text = stringResource(greeting, userName),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Here's your financial status",
+                text = stringResource(R.string.dashboard_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.outline
             )
@@ -51,7 +61,7 @@ fun DashboardHeader(userName: String, currentMonth: String) {
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(currentMonth, style = MaterialTheme.typography.labelLarge)
+                Text(DateFormatter.formatMonthYear(currentMonthMillis), style = MaterialTheme.typography.labelLarge)
                 Icon(Icons.Default.KeyboardArrowDown, null, Modifier.size(18.dp))
             }
         }

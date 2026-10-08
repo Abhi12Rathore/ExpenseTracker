@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.utils.CategoryIcons
+import com.example.expensetrackerpro.utils.CurrencyFormatter
+import com.example.expensetrackerpro.utils.DateFormatter
 
 @Composable
 fun RecentActivityTile(
@@ -73,10 +75,10 @@ fun RecentActivityTile(
         // 3. Amount & Date
         Column(horizontalAlignment = Alignment.End) {
             Text(
-                text = if (transaction.transactionType == TransactionType.INCOME)
-                    "+ ₹${transaction.amount}"
-                else
-                    "- ₹${transaction.amount}",
+                text = CurrencyFormatter.formatSigned(
+                    amount = transaction.amount,
+                    isIncome = transaction.transactionType == TransactionType.INCOME
+                ),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 color = if (transaction.transactionType == TransactionType.INCOME)
@@ -85,7 +87,7 @@ fun RecentActivityTile(
                     MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "transaction.dateMillis", // Assuming it's already a formatted string
+                text = DateFormatter.formatDate(transaction.dateMillis),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.outline
             )
