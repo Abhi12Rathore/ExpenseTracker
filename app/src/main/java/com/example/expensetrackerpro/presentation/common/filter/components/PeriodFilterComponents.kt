@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -55,12 +56,13 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.R
 
 /*
- * Home/History period filter, matching design option C:
+ * Home/Transactions period filter, matching design option C:
  *
  *   [ Week | (Month) | Year ]  [📅]
  *   ┌──────────────────────────────┐
@@ -216,6 +218,39 @@ fun TonalSquareIconButton(
     }
 }
 
+/** 44dp chip that names the current choice and opens a menu of the others. */
+@Composable
+fun DropdownChip(
+    label: String,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = MaterialTheme.colorScheme
+    Row(
+        modifier = modifier
+            .height(44.dp)
+            .clip(IconButtonShape)
+            .background(colors.secondaryContainer)
+            .clickable(onClickLabel = contentDescription, role = Role.DropdownList, onClick = onClick)
+            .padding(start = 14.dp, end = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.primary,
+            maxLines = 1,
+        )
+        Icon(
+            imageVector = Icons.Rounded.ArrowDropDown,
+            contentDescription = null,
+            tint = colors.primary,
+        )
+    }
+}
+
 /**
  * White bordered card: ‹  title / subtitle  ›
  * Swipe left/right on it to step too.
@@ -230,9 +265,12 @@ fun PeriodStepper(
     onNext: () -> Unit,
     modifier: Modifier = Modifier,
     showArrows: Boolean = true,   // false in custom-range mode
+    compact: Boolean = false,     // one line, as tall as the buttons it sits between
 ) {
     val colors = MaterialTheme.colorScheme
     val dragTotal = remember { mutableFloatStateOf(0f) }
+    // Compact: 36dp arrows inside 3dp padding and a 1dp border make the 44dp of its neighbours
+    val arrowSize = if (compact) 36.dp else 40.dp
 
     Surface(
         modifier = modifier
@@ -255,7 +293,7 @@ fun PeriodStepper(
         border = BorderStroke(1.dp, colors.outlineVariant),
     ) {
         Row(
-            modifier = Modifier.padding(6.dp),
+            modifier = Modifier.padding(if (compact) 3.dp else 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             StepperArrow(
@@ -264,6 +302,7 @@ fun PeriodStepper(
                 enabled = canGoPrevious,
                 visible = showArrows,
                 onClick = onPrevious,
+                size = arrowSize,
             )
 
             AnimatedContent(
@@ -281,7 +320,11 @@ fun PeriodStepper(
                 ) {
                     Text(
                         text = t,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = if (compact) {
+                            MaterialTheme.typography.titleSmall
+                        } else {
+                            MaterialTheme.typography.titleMedium
+                        },
                         fontWeight = FontWeight.Bold,
                         color = colors.onSurface,
                         maxLines = 1,
@@ -304,6 +347,7 @@ fun PeriodStepper(
                 enabled = canGoNext,
                 visible = showArrows,
                 onClick = onNext,
+                size = arrowSize,
             )
         }
     }
@@ -316,11 +360,12 @@ private fun StepperArrow(
     enabled: Boolean,
     visible: Boolean,
     onClick: () -> Unit,
+    size: Dp,
 ) {
     val colors = MaterialTheme.colorScheme
     Box(
         modifier = Modifier
-            .size(40.dp)
+            .size(size)
             .alpha(if (visible) 1f else 0f)
             .clip(IconButtonShape)
             .background(colors.surfaceContainerLow)

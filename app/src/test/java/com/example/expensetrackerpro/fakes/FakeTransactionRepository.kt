@@ -4,6 +4,7 @@ import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.repository.TransactionRepository
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,13 @@ class FakeTransactionRepository(
 
     /** While true every write is rejected, as a failing database would. */
     var failWrites = false
+
+    /** How many times a delete was asked for, whether or not it went through. */
+    var deleteCalls = 0
+        private set
+
+    /** When set, every delete waits for it to complete, as a slow database would. */
+    var deleteGate: CompletableDeferred<Unit>? = null
 
     private val _deletions = MutableSharedFlow<Transaction>(extraBufferCapacity = 16)
     override val deletions: Flow<Transaction> = _deletions
@@ -40,6 +48,8 @@ class FakeTransactionRepository(
     }
 
     override suspend fun deleteTransaction(transaction: Transaction): Boolean {
+        deleteCalls++
+        deleteGate?.await()
         if (failWrites) return false
         transactions.update { list -> list.filterNot { it.id == transaction.id } }
         _deletions.tryEmit(transaction)

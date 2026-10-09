@@ -120,6 +120,7 @@ class DateFormatterTest {
         assertEquals("17", DateFormatter.formatDayOfMonth(day))
         assertEquals("17 Oct", DateFormatter.formatDayMonth(day))
         assertEquals("Sat, 17 Oct", DateFormatter.formatWeekdayDayMonth(day))
+        assertEquals("Sat 17 Oct", DateFormatter.formatDayHeader(day))
     }
 
     @Test

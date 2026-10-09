@@ -38,6 +38,9 @@ object DateFormatter {
     /** e.g. `Fri, 17 Oct` */
     fun formatWeekdayDayMonth(millis: Long): String = format("EEE, d MMM", millis)
 
+    /** e.g. `Fri 9 Oct`, for the header of a day's transactions */
+    fun formatDayHeader(millis: Long): String = format("EEE d MMM", millis)
+
     /**
      * Both days inclusive, repeating only what differs: `1 – 31 Oct`, `28 Sep – 4 Oct`, or
      * `8 Oct` for a single day. [withYear] appends the year (`1 – 31 Oct 2026`); a range that

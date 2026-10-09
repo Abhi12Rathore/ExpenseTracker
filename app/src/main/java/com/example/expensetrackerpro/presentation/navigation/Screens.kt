@@ -17,8 +17,8 @@ sealed class Screens(val route: String) {
 
     data object ManageCategories : Screens("manage_categories")
 
-    /** The History tab. Every argument is optional: without them it opens on the current month. */
-    data object History : Screens(
+    /** The Transactions tab. Every argument is optional: without them it opens on the current month. */
+    data object Transactions : Screens(
         "transactions?start={start}&end={end}&granularity={granularity}" +
             "&categoryId={categoryId}&categoryName={categoryName}"
     ) {
@@ -30,7 +30,7 @@ sealed class Screens(val route: String) {
         const val ARG_CATEGORY_NAME = "categoryName"
         const val NO_VALUE = -1L
 
-        fun getRoute(filter: HistoryFilter): String {
+        fun getRoute(filter: TransactionsFilter): String {
             val dates = when (val dateFilter = filter.dateFilter) {
                 is DateFilter.Period ->
                     "$ARG_START=${dateFilter.anchorMillis}&$ARG_GRANULARITY=${dateFilter.granularity.name}"

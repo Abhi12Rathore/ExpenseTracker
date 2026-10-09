@@ -19,7 +19,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** Runs the History search against a real SQLite database, through the repository that escapes it. */
+/** Runs the Transactions search against a real SQLite database, through the repository that escapes it. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class TransactionDaoSearchTest {

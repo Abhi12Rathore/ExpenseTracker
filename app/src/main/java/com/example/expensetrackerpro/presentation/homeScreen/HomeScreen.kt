@@ -39,7 +39,7 @@ import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
 import com.example.expensetrackerpro.domain.models.SpendingBucket
 import com.example.expensetrackerpro.presentation.navigation.CategoryFilter
-import com.example.expensetrackerpro.presentation.navigation.HistoryFilter
+import com.example.expensetrackerpro.presentation.navigation.TransactionsFilter
 import com.example.expensetrackerpro.presentation.homeScreen.uistate.HomeEvent
 import com.example.expensetrackerpro.presentation.homeScreen.uistate.HomeUiState
 import com.example.expensetrackerpro.presentation.homeScreen.viewmodels.HomeViewModel
@@ -52,7 +52,7 @@ import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 fun HomeScreen(
     onViewAllTransactions: () -> Unit,
     onTransactionClick: (Int) -> Unit,
-    onOpenHistory: (HistoryFilter) -> Unit,
+    onOpenTransactions: (TransactionsFilter) -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -62,7 +62,7 @@ fun HomeScreen(
         onEvent = viewModel::onEvent,
         onViewAllTransactions = onViewAllTransactions,
         onTransactionClick = onTransactionClick,
-        onOpenHistory = onOpenHistory
+        onOpenTransactions = onOpenTransactions
     )
 }
 
@@ -72,7 +72,7 @@ fun HomeContent(
     onEvent: (HomeEvent) -> Unit,
     onViewAllTransactions: () -> Unit,
     onTransactionClick: (Int) -> Unit,
-    onOpenHistory: (HistoryFilter) -> Unit
+    onOpenTransactions: (TransactionsFilter) -> Unit
 ) {
     val dashboard = uiState.dashboard
     val recentTransactions = dashboard.recentTransactions
@@ -118,8 +118,8 @@ fun HomeContent(
                     chart = dashboard.spending,
                     isLoading = uiState.isLoading,
                     onBucketClick = { bucket ->
-                        onOpenHistory(
-                            HistoryFilter(bucket.toDateFilter(dashboard.spending.bucketSize, uiState.filter.filter))
+                        onOpenTransactions(
+                            TransactionsFilter(bucket.toDateFilter(dashboard.spending.bucketSize, uiState.filter.filter))
                         )
                     }
                 )
@@ -137,8 +137,8 @@ fun HomeContent(
                     ranking = dashboard.categoryRanking,
                     isLoading = uiState.isLoading,
                     onCategoryClick = { category ->
-                        onOpenHistory(
-                            HistoryFilter(
+                        onOpenTransactions(
+                            TransactionsFilter(
                                 dateFilter = uiState.filter.filter,
                                 category = CategoryFilter(category.categoryId, category.categoryName)
                             )
@@ -189,7 +189,7 @@ fun HomeContent(
 }
 
 /**
- * What History is filtered to for a tapped bar. A month of a year view opens as that month, so
+ * What Transactions is filtered to for a tapped bar. A month of a year view opens as that month, so
  * it can be stepped from there; anything else opens as exactly the days the bar covers.
  */
 private fun SpendingBucket.toDateFilter(bucketSize: BucketSize, selected: DateFilter): DateFilter =
@@ -255,7 +255,7 @@ private fun HomeContentPreview() {
             onEvent = {},
             onViewAllTransactions = {},
             onTransactionClick = {},
-            onOpenHistory = {}
+            onOpenTransactions = {}
         )
     }
 }

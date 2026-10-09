@@ -1,3 +1,4 @@
+import com.example.expensetrackerpro.R
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -13,6 +14,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -53,7 +55,7 @@ fun MainScreen(
                 }
             ) {
                 val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
-                // History's route carries optional arguments, so compare what comes before them
+                // Transactions's route carries optional arguments, so compare what comes before them
                 val currentRoute = navBackStackEntry?.destination?.route?.substringBefore('?')
 
                 val items = listOf(
@@ -64,6 +66,7 @@ fun MainScreen(
 
                 items.forEach { item ->
                     val isSelected = currentRoute == item.route
+                    val title = stringResource(item.titleRes)
                     NavigationBarItem(
                         selected = isSelected,
                         onClick = {
@@ -86,13 +89,13 @@ fun MainScreen(
                         icon = {
                             Icon(
                                 imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
-                                contentDescription = item.title,
+                                contentDescription = title,
                                 modifier = Modifier.size(24.dp)
                             )
                         },
                         label = {
                             Text(
-                                text = item.title,
+                                text = title,
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium
                             )
@@ -130,9 +133,9 @@ fun MainScreen(
                         onTransactionClick = { id ->
                             onNavigateToTransactionForm(id)
                         },
-                        onOpenHistory = { filter ->
-                            // No restoreState: a chart opens History on its own filter, not the last one
-                            bottomNavController.navigate(Screens.History.getRoute(filter)) {
+                        onOpenTransactions = { filter ->
+                            // No restoreState: a chart opens Transactions on its own filter, not the last one
+                            bottomNavController.navigate(Screens.Transactions.getRoute(filter)) {
                                 popUpTo(bottomNavController.graph.findStartDestination().id) {
                                     saveState = true
                                 }
@@ -142,29 +145,29 @@ fun MainScreen(
                     )
                 }
                 composable(
-                    route = Screens.History.route,
+                    route = Screens.Transactions.route,
                     arguments = listOf(
-                        navArgument(Screens.History.ARG_START) {
-                            type = NavType.LongType; defaultValue = Screens.History.NO_VALUE
+                        navArgument(Screens.Transactions.ARG_START) {
+                            type = NavType.LongType; defaultValue = Screens.Transactions.NO_VALUE
                         },
-                        navArgument(Screens.History.ARG_END) {
-                            type = NavType.LongType; defaultValue = Screens.History.NO_VALUE
+                        navArgument(Screens.Transactions.ARG_END) {
+                            type = NavType.LongType; defaultValue = Screens.Transactions.NO_VALUE
                         },
-                        navArgument(Screens.History.ARG_GRANULARITY) {
+                        navArgument(Screens.Transactions.ARG_GRANULARITY) {
                             type = NavType.StringType; nullable = true
                         },
-                        navArgument(Screens.History.ARG_CATEGORY_ID) {
-                            type = NavType.LongType; defaultValue = Screens.History.NO_VALUE
+                        navArgument(Screens.Transactions.ARG_CATEGORY_ID) {
+                            type = NavType.LongType; defaultValue = Screens.Transactions.NO_VALUE
                         },
-                        navArgument(Screens.History.ARG_CATEGORY_NAME) {
+                        navArgument(Screens.Transactions.ARG_CATEGORY_NAME) {
                             type = NavType.StringType; nullable = true
                         }
                     )
                 ) {
                     TransactionListScreen(
-                        onAddExpenseClick = { onNavigateToTransactionForm(null) },
-                        onEditExpenseClick = { id -> onNavigateToTransactionForm(id) },
-                        onNavigateToManageCategories = onNavigateToManageCategories
+                        snackbarHostState = snackbarHostState,
+                        onAddClick = { onNavigateToTransactionForm(null) },
+                        onTransactionClick = { id -> onNavigateToTransactionForm(id) }
                     )
                 }
                 composable(BottomNavItem.Settings.route) {

@@ -298,7 +298,7 @@ fun SpendingBarChart(
                     ),
                     modifier = Modifier.centeredOn((index + 0.5f) / buckets.size),
                     onClick = { onBucketClick(bucket) },
-                    onClickLabel = stringResource(R.string.spending_tooltip_open_history)
+                    onClickLabel = stringResource(R.string.spending_tooltip_open_transactions)
                 )
             }
         }
