@@ -34,8 +34,9 @@ sealed interface TransactionListSummary {
     ) : TransactionListSummary
 
     /**
-     * Search results. [total] is income minus expense of the results; [average] is the mean
-     * size of one result whatever its type, 0 when there is none.
+     * Search results. [total] is income minus expense of the results and [average] is that
+     * total per result, so both are negative when the results cost more than they brought in.
+     * [average] is 0 when there are no results.
      */
     data class Search(
         val count: Int,

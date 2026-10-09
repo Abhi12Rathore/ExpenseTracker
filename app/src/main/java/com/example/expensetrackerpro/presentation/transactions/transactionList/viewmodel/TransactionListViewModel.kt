@@ -61,6 +61,9 @@ class TransactionListViewModel @Inject constructor(
 
     private val swipeResetToken = MutableStateFlow(0)
 
+    // Deletes that have been asked for and have not finished yet
+    private val pendingDeleteIds = mutableSetOf<Int>()
+
     // A Channel, not state: each effect is handled once, and waits if nobody is collecting yet
     private val _effects = Channel<TransactionListEffect>(Channel.BUFFERED)
     val effects: Flow<TransactionListEffect> = _effects.receiveAsFlow()
@@ -159,11 +162,20 @@ class TransactionListViewModel @Inject constructor(
     )
 
     private fun delete(transaction: Transaction) {
+        // A swipe can be reported twice. Only a transaction that is listed and not already on
+        // its way out is deleted, so each swipe leads to one delete and one Undo.
+        val isListed = uiState.value.days.any { day -> day.transactions.any { it.id == transaction.id } }
+        if (!isListed || !pendingDeleteIds.add(transaction.id)) return
+
         viewModelScope.launch {
-            if (!deleteTransaction(transaction)) {
-                // The row is still swiped aside, so it has to be brought back
-                swipeResetToken.update { it + 1 }
-                _effects.send(TransactionListEffect.DeleteFailed)
+            try {
+                if (!deleteTransaction(transaction)) {
+                    // The row is still swiped aside, so it has to be brought back
+                    swipeResetToken.update { it + 1 }
+                    _effects.send(TransactionListEffect.DeleteFailed)
+                }
+            } finally {
+                pendingDeleteIds.remove(transaction.id)
             }
         }
     }

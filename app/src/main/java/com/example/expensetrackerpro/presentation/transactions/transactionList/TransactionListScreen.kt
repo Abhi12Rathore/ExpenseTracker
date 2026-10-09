@@ -279,7 +279,7 @@ private fun TransactionListSearchPreview() {
             uiState = TransactionListUiState(
                 // "ca" is in the note "…plus the cake…" and in the title "Metro card"
                 days = PreviewData.transactionDays.take(1) + PreviewData.transactionDays.takeLast(1),
-                summary = TransactionListSummary.Search(count = 3, total = -4650.0, average = 1550.0),
+                summary = TransactionListSummary.Search(count = 3, total = -4650.0, average = -1550.0),
                 counts = TransactionTypeCounts(all = 3, expense = 3, income = 0),
                 filter = previewFilter,
                 isSearchOpen = true,

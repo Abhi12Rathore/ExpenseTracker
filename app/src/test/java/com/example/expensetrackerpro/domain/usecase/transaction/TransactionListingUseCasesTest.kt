@@ -169,17 +169,28 @@ class TransactionListingUseCasesTest {
     }
 
     @Test
-    fun summary_whileSearching_isResultsNetTotalAndAverageSize() {
-        // 200 in, 300 out: a net of -100 over two results averaging 250 each
-        assertEquals(
-            TransactionListSummary.Search(count = 2, total = -100.0, average = 250.0),
-            summarize(listOf(taxi, refund), TransactionTypeFilter.ALL, isSearching = true)
-        )
+    fun summary_whileSearching_isResultsNetTotalAndThatTotalPerResult() {
         // Searching wins over the type filter
         assertEquals(
-            TransactionListSummary.Search(count = 1, total = -300.0, average = 300.0),
+            TransactionListSummary.Search(count = 1, total = -300.0, average = -300.0),
             summarize(listOf(taxi), TransactionTypeFilter.EXPENSE, isSearching = true)
         )
+        assertEquals(
+            TransactionListSummary.Search(count = 1, total = 200.0, average = 200.0),
+            summarize(listOf(refund), TransactionTypeFilter.INCOME, isSearching = true)
+        )
+    }
+
+    @Test
+    fun summary_whileSearching_averagesIncomeAndExpenseWithTheirSigns() {
+        // 200 in, 300 out: a net of -100, which is -50 per result
+        assertEquals(
+            TransactionListSummary.Search(count = 2, total = -100.0, average = -50.0),
+            summarize(listOf(taxi, refund), TransactionTypeFilter.ALL, isSearching = true)
+        )
+        // 5000 and 200 in, 120 and 800 out: the average always times the count back to the total
+        val mixed = summarize(listOf(coffee, salary, dinner, refund), TransactionTypeFilter.ALL, isSearching = true)
+        assertEquals(TransactionListSummary.Search(count = 4, total = 4280.0, average = 1070.0), mixed)
     }
 
     @Test

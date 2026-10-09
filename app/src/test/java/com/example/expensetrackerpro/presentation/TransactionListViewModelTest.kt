@@ -20,6 +20,7 @@ import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionLi
 import com.example.expensetrackerpro.domain.usecase.transaction.GroupTransactionsByDayUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.SummarizeTransactionsUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionsUseCase
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -415,7 +416,7 @@ class TransactionListViewModelTest {
         // In October, matching "trip", in Travel, and an expense
         assertEquals(listOf(travelTaxi), state.transactions)
         assertEquals(TransactionTypeCounts(all = 2, expense = 1, income = 1), state.counts)
-        assertEquals(TransactionListSummary.Search(count = 1, total = -90.0, average = 90.0), state.summary)
+        assertEquals(TransactionListSummary.Search(count = 1, total = -90.0, average = -90.0), state.summary)
     }
 
     // --- Swipe to delete
@@ -435,6 +436,66 @@ class TransactionListViewModelTest {
         assertEquals(listOf(salary, oldRent), repository.current.sortedBy { it.id })
         assertEquals(listOf(lunch), deleted)
         assertEquals(0, state.swipeResetToken)
+    }
+
+    @Test
+    fun deleteSwiped_twiceForTheSameTransaction_deletesOnce_andOffersOneUndo() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        val deleted = mutableListOf<Transaction>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { repository.deletions.collect(deleted::add) }
+
+        viewModel.onEvent(TransactionListEvent.DeleteSwiped(lunch))
+        viewModel.onEvent(TransactionListEvent.DeleteSwiped(lunch))
+
+        assertEquals(1, repository.deleteCalls)
+        assertEquals(listOf(lunch), deleted)
+        assertEquals(listOf(salary), viewModel.uiState.value.transactions)
+        assertEquals(0, viewModel.uiState.value.swipeResetToken)
+    }
+
+    @Test
+    fun deleteSwiped_twiceWhileTheFirstIsStillRunning_deletesOnce() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        // Holds the first delete open, as a slow database would
+        repository.deleteGate = CompletableDeferred()
+
+        viewModel.onEvent(TransactionListEvent.DeleteSwiped(lunch))
+        viewModel.onEvent(TransactionListEvent.DeleteSwiped(lunch))
+        repository.deleteGate?.complete(Unit)
+        runCurrent()
+
+        assertEquals(1, repository.deleteCalls)
+        assertEquals(listOf(salary), viewModel.uiState.value.transactions)
+    }
+
+    @Test
+    fun deleteSwiped_again_afterTheTransactionWasRestored_deletesItAgain() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        viewModel.onEvent(TransactionListEvent.DeleteSwiped(lunch))
+        repository.saveTransaction(lunch)
+        assertEquals(listOf(salary, lunch), viewModel.uiState.value.transactions)
+
+        viewModel.onEvent(TransactionListEvent.DeleteSwiped(lunch))
+
+        assertEquals(2, repository.deleteCalls)
+        assertEquals(listOf(salary), viewModel.uiState.value.transactions)
+    }
+
+    @Test
+    fun deleteSwiped_whenTheWriteFails_canBeTriedAgain() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        repository.failWrites = true
+        viewModel.onEvent(TransactionListEvent.DeleteSwiped(lunch))
+        repository.failWrites = false
+
+        viewModel.onEvent(TransactionListEvent.DeleteSwiped(lunch))
+
+        assertEquals(listOf(salary), viewModel.uiState.value.transactions)
     }
 
     @Test
@@ -476,7 +537,7 @@ class TransactionListViewModelTest {
 
         assertEquals(listOf(teamLunch), viewModel.uiState.value.transactions)
         assertEquals(
-            TransactionListSummary.Search(count = 1, total = -250.0, average = 250.0),
+            TransactionListSummary.Search(count = 1, total = -250.0, average = -250.0),
             viewModel.uiState.value.summary
         )
     }

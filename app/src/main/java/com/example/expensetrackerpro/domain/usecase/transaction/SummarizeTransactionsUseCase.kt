@@ -17,11 +17,15 @@ class SummarizeTransactionsUseCase @Inject constructor() {
         typeFilter: TransactionTypeFilter,
         isSearching: Boolean
     ): TransactionListSummary = when {
-        isSearching -> TransactionListSummary.Search(
-            count = transactions.size,
-            total = transactions.sumOf { it.signedAmount },
-            average = if (transactions.isEmpty()) 0.0 else transactions.sumOf { it.amount } / transactions.size
-        )
+        isSearching -> {
+            val total = transactions.sumOf { it.signedAmount }
+
+            TransactionListSummary.Search(
+                count = transactions.size,
+                total = total,
+                average = if (transactions.isEmpty()) 0.0 else total / transactions.size
+            )
+        }
         typeFilter == TransactionTypeFilter.EXPENSE -> singleType(TransactionType.EXPENSE, transactions)
         typeFilter == TransactionTypeFilter.INCOME -> singleType(TransactionType.INCOME, transactions)
         else -> {

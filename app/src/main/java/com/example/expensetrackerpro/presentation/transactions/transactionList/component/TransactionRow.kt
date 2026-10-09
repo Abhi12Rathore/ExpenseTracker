@@ -26,7 +26,10 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -80,15 +83,31 @@ fun TransactionRow(
     modifier: Modifier = Modifier
 ) {
     val currentOnDelete by rememberUpdatedState(onDelete)
+    // Only decides whether the swipe may finish: it can be asked more than once for one swipe
     val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.EndToStart) currentOnDelete()
-            value == SwipeToDismissBoxValue.EndToStart
-        }
+        confirmValueChange = { value -> value == SwipeToDismissBoxValue.EndToStart }
     )
 
-    // A row stays swiped aside until the list drops it. One that is still here after a failed
-    // delete, or that comes back through Undo with its old swipe restored, slides back instead.
+    // True once the row has been seen at rest. A row that enters already swiped aside is an old
+    // swipe restored with it (it came back through Undo), which must not delete it again.
+    var isArmed by remember { mutableStateOf(false) }
+
+    LaunchedEffect(dismissState.currentValue) {
+        when (dismissState.currentValue) {
+            SwipeToDismissBoxValue.Settled -> isArmed = true
+            SwipeToDismissBoxValue.EndToStart ->
+                if (isArmed) {
+                    isArmed = false
+                    currentOnDelete()
+                } else {
+                    dismissState.snapTo(SwipeToDismissBoxValue.Settled)
+                }
+            SwipeToDismissBoxValue.StartToEnd -> Unit
+        }
+    }
+
+    // A row stays swiped aside until the list drops it. One still here after a failed delete
+    // slides back instead.
     LaunchedEffect(swipeResetToken) {
         if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) dismissState.reset()
     }

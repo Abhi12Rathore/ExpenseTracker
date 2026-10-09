@@ -74,7 +74,7 @@ fun TransactionSummaryStrip(summary: TransactionListSummary, modifier: Modifier 
             SummaryCell(
                 stringResource(R.string.transactions_summary_average),
                 CurrencyFormatter.formatWhole(summary.average),
-                neutral
+                netColor(summary.average)
             )
         )
     }
