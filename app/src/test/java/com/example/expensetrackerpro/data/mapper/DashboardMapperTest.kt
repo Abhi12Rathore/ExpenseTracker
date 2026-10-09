@@ -2,9 +2,11 @@ package com.example.expensetrackerpro.data.mapper
 
 import com.example.expensetrackerpro.data.local.model.CategoryExpenseEntity
 import com.example.expensetrackerpro.data.local.model.DailyCashFlowEntity
+import com.example.expensetrackerpro.data.local.model.DailyExpenseEntity
 import com.example.expensetrackerpro.data.local.model.MonthlyTrendEntity
 import com.example.expensetrackerpro.domain.models.CashFlowPoint
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
+import com.example.expensetrackerpro.domain.models.DailyExpense
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -13,10 +15,10 @@ class DashboardMapperTest {
 
     @Test
     fun categoryExpense_mapsTotalAmountToAmount() {
-        val entity = CategoryExpenseEntity(categoryId = 2, categoryName = "Food", totalAmount = 1250.75)
+        val entity = CategoryExpenseEntity(categoryId = 2, categoryName = "Food", iconName = "Food", totalAmount = 1250.75)
 
         assertEquals(
-            CategoryBreakdown(categoryId = 2, categoryName = "Food", amount = 1250.75),
+            CategoryBreakdown(categoryId = 2, categoryName = "Food", iconName = "Food", amount = 1250.75),
             entity.toDomain()
         )
     }
@@ -27,6 +29,16 @@ class DashboardMapperTest {
 
         assertEquals(
             CashFlowPoint(dateMillis = 1_700_000_000_000, income = 500.0, expense = 120.0),
+            entity.toDomain()
+        )
+    }
+
+    @Test
+    fun dailyExpense_mapsDayMillisToDateMillis() {
+        val entity = DailyExpenseEntity(dayMillis = 1_700_000_000_000, amount = 340.5, transactionCount = 3)
+
+        assertEquals(
+            DailyExpense(dateMillis = 1_700_000_000_000, amount = 340.5, transactionCount = 3),
             entity.toDomain()
         )
     }

@@ -5,6 +5,7 @@ import com.example.expensetrackerpro.presentation.common.filter.PeriodFilterEven
 
 sealed interface TransactionListEvent {
     data class Filter(val event: PeriodFilterEvent) : TransactionListEvent
+    data object CategoryFilterCleared : TransactionListEvent
     data class DeleteRequested(val transaction: Transaction) : TransactionListEvent
     data object DeleteConfirmed : TransactionListEvent
     data object DeleteDismissed : TransactionListEvent

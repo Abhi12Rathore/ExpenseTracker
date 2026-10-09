@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.domain.repository
 
 import com.example.expensetrackerpro.domain.models.CashFlowPoint
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
+import com.example.expensetrackerpro.domain.models.DailyExpense
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
 import kotlinx.coroutines.flow.Flow
@@ -13,6 +14,9 @@ interface DashboardRepository {
 
     /** Income and expense per day within [range], oldest first. */
     fun getCashFlow(range: DateRange): Flow<List<CashFlowPoint>>
+
+    /** Expense total and count per day within [range], oldest first. Days without expenses are absent. */
+    fun getDailyExpenses(range: DateRange): Flow<List<DailyExpense>>
 
     /** Income and expense per calendar month within [range], oldest first. */
     fun getMonthlyTrend(range: DateRange): Flow<List<MonthlyTrend>>

@@ -1,21 +1,30 @@
 package com.example.expensetrackerpro.presentation
 
+import com.example.expensetrackerpro.domain.models.BucketSize
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
+import com.example.expensetrackerpro.domain.models.CategoryRanking
+import com.example.expensetrackerpro.domain.models.DailyExpense
 import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.DateRange
+import com.example.expensetrackerpro.domain.models.FinancialSummary
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
+import com.example.expensetrackerpro.domain.models.PeriodComparison
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
 import com.example.expensetrackerpro.domain.models.SmartInsight
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.dashboard.CalculateFinancialSummaryUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.CalculateSavingsRateUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GenerateSmartInsightsUseCase
+import com.example.expensetrackerpro.domain.usecase.dashboard.GetBalanceTrendUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetCashFlowUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetCategoryBreakdownUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetDayPeriodUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetFinancialSummaryUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetMonthlyTrendUseCase
+import com.example.expensetrackerpro.domain.usecase.dashboard.GetPeriodComparisonUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetRecentTransactionsUseCase
+import com.example.expensetrackerpro.domain.usecase.dashboard.GetSpendingBucketsUseCase
+import com.example.expensetrackerpro.domain.usecase.dashboard.RankCategorySpendingUseCase
 import com.example.expensetrackerpro.domain.usecase.filter.GetCurrentPeriodUseCase
 import com.example.expensetrackerpro.domain.usecase.filter.GetCustomDateRangeUseCase
 import com.example.expensetrackerpro.domain.usecase.filter.GetDateRangeUseCase
@@ -35,6 +44,8 @@ import com.example.expensetrackerpro.util.subscribe
 import com.example.expensetrackerpro.utils.DateFormatter
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -67,14 +78,23 @@ class HomeViewModelTest {
         canStepForward = true
     )
 
+    private val getFinancialSummary = GetFinancialSummaryUseCase(
+        transactions,
+        CalculateFinancialSummaryUseCase(CalculateSavingsRateUseCase())
+    )
+
     private fun viewModel() = HomeViewModel(
-        getFinancialSummary = GetFinancialSummaryUseCase(
-            transactions,
-            CalculateFinancialSummaryUseCase(CalculateSavingsRateUseCase())
-        ),
+        getFinancialSummary = getFinancialSummary,
         getRecentTransactions = GetRecentTransactionsUseCase(transactions),
         getCategoryBreakdown = GetCategoryBreakdownUseCase(dashboard),
-        getCashFlow = GetCashFlowUseCase(dashboard),
+        getSpendingBuckets = GetSpendingBucketsUseCase(dashboard, timeProvider),
+        getBalanceTrend = GetBalanceTrendUseCase(GetCashFlowUseCase(dashboard), timeProvider),
+        getPeriodComparison = GetPeriodComparisonUseCase(
+            getFinancialSummary,
+            GetDateRangeUseCase(timeProvider),
+            StepPeriodUseCase(timeProvider)
+        ),
+        rankCategorySpending = RankCategorySpendingUseCase(),
         getMonthlyTrend = GetMonthlyTrendUseCase(dashboard),
         generateSmartInsights = GenerateSmartInsightsUseCase(),
         getDayPeriod = GetDayPeriodUseCase(),
@@ -106,6 +126,7 @@ class HomeViewModelTest {
     private fun assertChartsAskedFor(range: DateRange) {
         assertEquals(range, dashboard.categoryBreakdownRange)
         assertEquals(range, dashboard.cashFlowRange)
+        assertEquals(range, dashboard.dailyExpensesRange)
         assertEquals(range, dashboard.monthlyTrendRange)
     }
 
@@ -117,15 +138,24 @@ class HomeViewModelTest {
         subscribe(viewModel.uiState)
         val state = viewModel.uiState.value
 
-        assertEquals(HomeUiState(dayPeriod = state.dayPeriod, filter = thisMonth), state)
+        assertEquals(thisMonth, state.filter)
+        assertFalse(state.isLoading)
+        assertEquals(FinancialSummary(), state.financialSummary)
+        assertEquals(CategoryRanking(), state.categoryRanking)
+        assertFalse(state.spending.hasSpending)
+        assertTrue(state.monthlyTrend.isEmpty())
+        assertTrue(state.recentTransactions.isEmpty())
+        assertTrue(state.insights.isEmpty())
         // The greeting uses the real clock, which may tick into the next period mid-test
         val possiblePeriods = listOf(before, after).map { GetDayPeriodUseCase()(DateFormatter.hourOfDay(it)) }
         assertTrue(state.dayPeriod in possiblePeriods)
     }
 
     @Test
-    fun beforeAnyoneSubscribes_alreadyShowsThisMonth() {
-        assertEquals(thisMonth, viewModel().uiState.value.filter)
+    fun beforeAnyoneSubscribes_alreadyShowsThisMonth_asLoading() {
+        val state = viewModel().uiState.value
+
+        assertEquals(HomeUiState(dayPeriod = state.dayPeriod, filter = thisMonth, isLoading = true), state)
     }
 
     @Test
@@ -138,7 +168,7 @@ class HomeViewModelTest {
         transactions.saveTransaction(
             transaction(id = 8, amount = 1400.0, type = TransactionType.INCOME, dateMillis = october.startMillis + 8)
         )
-        val breakdown = listOf(CategoryBreakdown(categoryId = 1, categoryName = "Food", amount = 700.0))
+        val breakdown = listOf(CategoryBreakdown(categoryId = 1, categoryName = "Food", iconName = "Food", amount = 700.0))
         dashboard.categoryBreakdown.value = breakdown
 
         val viewModel = viewModel()
@@ -149,7 +179,85 @@ class HomeViewModelTest {
         assertEquals(700.0, state.financialSummary.totalExpense, 0.001)
         assertEquals(50f, state.financialSummary.savingsRate, 0.001f)
         assertEquals(listOf(8, 7, 6, 5, 4), state.recentTransactions.map { it.id })
-        assertEquals(breakdown, state.categoryExpense)
+        assertEquals(breakdown, state.categoryRanking.top.map { it.category })
+        assertEquals(700.0, state.categoryRanking.total, 0.001)
+    }
+
+    @Test
+    fun spending_isOneBucketPerDayOfTheMonth_withTodayTheLastStarted() = runTest {
+        dashboard.dailyExpenses.value = listOf(
+            DailyExpense(millisAt(2026, Calendar.OCTOBER, 2, hour = 9), amount = 300.0, transactionCount = 2),
+            DailyExpense(millisAt(2026, Calendar.OCTOBER, 7, hour = 20), amount = 500.0, transactionCount = 1)
+        )
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        val spending = viewModel.uiState.value.spending
+
+        assertEquals(BucketSize.DAY, spending.bucketSize)
+        assertEquals(31, spending.buckets.size)
+        assertEquals(300.0, spending.buckets[1].amount, 0.001)
+        assertEquals(2, spending.buckets[1].transactionCount)
+        assertEquals(8, spending.buckets.count { !it.isFuture })
+        assertEquals(100.0, spending.average, 0.001)
+    }
+
+    @Test
+    fun yearView_bucketsSpendingByMonth() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        viewModel.onFilterEvent(PeriodFilterEvent.GranularitySelected(PeriodGranularity.YEAR))
+        val spending = viewModel.uiState.value.spending
+
+        assertEquals(BucketSize.MONTH, spending.bucketSize)
+        assertEquals(12, spending.buckets.size)
+    }
+
+    @Test
+    fun comparison_isAgainstThePreviousPeriod_andFollowsTheFilter() = runTest {
+        saveTwoMonths()
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        // October saved 750, September 500
+        assertEquals(
+            PeriodComparison(PeriodGranularity.MONTH, september, balanceDifference = 250.0),
+            viewModel.uiState.value.periodComparison
+        )
+
+        // September against an empty August
+        viewModel.onFilterEvent(PeriodFilterEvent.PreviousPeriod)
+        assertEquals(500.0, viewModel.uiState.value.periodComparison?.balanceDifference ?: 0.0, 0.001)
+    }
+
+    @Test
+    fun customRange_hasNoComparison() = runTest {
+        saveTwoMonths()
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        val utc = TimeZone.getTimeZone("UTC")
+
+        viewModel.onFilterEvent(
+            PeriodFilterEvent.CustomRangeSelected(
+                startUtcMillis = millisAt(2026, Calendar.SEPTEMBER, 30, timeZone = utc),
+                endUtcMillis = millisAt(2026, Calendar.OCTOBER, 1, timeZone = utc)
+            )
+        )
+
+        assertNull(viewModel.uiState.value.periodComparison)
+        assertEquals(BucketSize.DAY, viewModel.uiState.value.spending.bucketSize)
+        assertEquals(2, viewModel.uiState.value.spending.buckets.size)
+    }
+
+    @Test
+    fun balanceTrend_runsFromTheStartOfThePeriodToToday() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        assertEquals(List(8) { 0.0 }, viewModel.uiState.value.balanceTrend)
+
+        viewModel.onFilterEvent(PeriodFilterEvent.PreviousPeriod)
+        assertEquals(30, viewModel.uiState.value.balanceTrend.size)
     }
 
     @Test
@@ -312,7 +420,7 @@ class HomeViewModelTest {
             transaction(id = 1, amount = 500.0, type = TransactionType.INCOME, dateMillis = october.startMillis)
         )
         dashboard.categoryBreakdown.value =
-            listOf(CategoryBreakdown(categoryId = 1, categoryName = "Bills", amount = 90.0))
+            listOf(CategoryBreakdown(categoryId = 1, categoryName = "Bills", iconName = "Bills", amount = 90.0))
         val viewModel = viewModel()
         subscribe(viewModel.uiState)
 

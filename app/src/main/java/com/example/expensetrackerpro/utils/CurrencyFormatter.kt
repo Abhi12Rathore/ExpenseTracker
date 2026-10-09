@@ -11,6 +11,9 @@ object CurrencyFormatter {
 
     private const val SYMBOL = "₹"
 
+    // Largest first: crore, lakh, thousand
+    private val SHORT_UNITS = listOf(10_000_000L to "Cr", 100_000L to "L", 1_000L to "k")
+
     fun format(amount: Double): String {
         val fixed = String.format(Locale.US, "%.2f", abs(amount))
         val integerPart = fixed.substringBefore('.')
@@ -24,6 +27,39 @@ object CurrencyFormatter {
     /** Always signed: `+₹500.00` for income, `-₹500.00` for an expense. */
     fun formatSigned(amount: Double, isIncome: Boolean): String =
         (if (isIncome) "+" else "-") + format(abs(amount))
+
+    /** Rounded to whole rupees, for summaries where paise are noise: `₹27,550`. */
+    fun formatWhole(amount: Double): String {
+        val rupees = Math.round(abs(amount))
+        val sign = if (amount < 0 && rupees != 0L) "-" else ""
+
+        return "$sign$SYMBOL${groupIndian(rupees.toString())}"
+    }
+
+    /**
+     * At most one decimal with a k, L (lakh) or Cr (crore) suffix, for chart axes:
+     * `₹950`, `₹2.4k`, `₹12k`, `₹1.5L`, `₹2Cr`.
+     */
+    fun formatShort(amount: Double): String {
+        val rupees = Math.round(abs(amount))
+        val sign = if (amount < 0 && rupees != 0L) "-" else ""
+
+        var unitIndex = SHORT_UNITS.indexOfFirst { (size, _) -> rupees >= size }
+        if (unitIndex == -1) return "$sign$SYMBOL$rupees"
+
+        var tenths = Math.round(rupees * 10.0 / SHORT_UNITS[unitIndex].first)
+        // Rounding can reach the next unit up: 99,960 is 1L, not 100k
+        if (unitIndex > 0 && tenths * SHORT_UNITS[unitIndex].first >= SHORT_UNITS[unitIndex - 1].first * 10) {
+            unitIndex -= 1
+            tenths = 10
+        }
+
+        val whole = tenths / 10
+        val decimal = tenths % 10
+        val number = if (decimal == 0L) "$whole" else "$whole.$decimal"
+
+        return "$sign$SYMBOL$number${SHORT_UNITS[unitIndex].second}"
+    }
 
     // Last three digits form one group, then groups of two: 12,34,567
     private fun groupIndian(digits: String): String {

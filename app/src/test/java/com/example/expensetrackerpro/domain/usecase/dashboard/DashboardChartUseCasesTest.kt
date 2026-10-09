@@ -29,8 +29,8 @@ class DashboardChartUseCasesTest {
     @Test
     fun getCategoryBreakdown_returnsRepositoryOrder() = runTest {
         val breakdown = listOf(
-            CategoryBreakdown(categoryId = 2, categoryName = "Bills", amount = 900.0),
-            CategoryBreakdown(categoryId = 1, categoryName = "Food", amount = 300.0)
+            CategoryBreakdown(categoryId = 2, categoryName = "Bills", iconName = "Bills", amount = 900.0),
+            CategoryBreakdown(categoryId = 1, categoryName = "Food", iconName = "Food", amount = 300.0)
         )
         repository.categoryBreakdown.value = breakdown
 

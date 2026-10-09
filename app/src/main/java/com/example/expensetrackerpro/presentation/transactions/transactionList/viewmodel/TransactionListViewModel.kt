@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation.transactions.transactionList.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.expensetrackerpro.domain.models.DateFilter
@@ -14,6 +15,7 @@ import com.example.expensetrackerpro.domain.usecase.transaction.DeleteTransactio
 import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionsUseCase
 import com.example.expensetrackerpro.presentation.common.filter.PeriodFilterEvent
 import com.example.expensetrackerpro.presentation.common.filter.PeriodFilterState
+import com.example.expensetrackerpro.presentation.navigation.HistoryFilter
 import com.example.expensetrackerpro.presentation.transactions.transactionList.uistate.TransactionListEvent
 import com.example.expensetrackerpro.presentation.transactions.transactionList.uistate.TransactionListUiState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,10 +33,18 @@ class TransactionListViewModel @Inject constructor(
     private val stepPeriod: StepPeriodUseCase,
     private val getCustomDateRange: GetCustomDateRangeUseCase,
     private val calculateFinancialSummary: CalculateFinancialSummaryUseCase,
-    private val deleteTransaction: DeleteTransactionUseCase
+    private val deleteTransaction: DeleteTransactionUseCase,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val filter = MutableStateFlow<DateFilter>(getCurrentPeriod(PeriodGranularity.MONTH))
+    // Set when History was opened from a dashboard chart
+    private val openedWith = HistoryFilter.from(savedStateHandle)
+
+    private val filter = MutableStateFlow(
+        openedWith?.dateFilter ?: getCurrentPeriod(PeriodGranularity.MONTH)
+    )
+
+    private val categoryFilter = MutableStateFlow(openedWith?.category)
 
     private val filterState = filter.map { it.toState() }
 
@@ -42,17 +52,26 @@ class TransactionListViewModel @Inject constructor(
 
     private val transactions = filterState
         .flatMapLatest { state -> getTransactions(state.dateRange) }
+        .combine(categoryFilter) { list, category ->
+            if (category == null) list else list.filter { it.categoryId.toLong() == category.id }
+        }
 
     /**
      * Income, Expense, and Balance are derived from the filtered list reactively.
      */
     val uiState: StateFlow<TransactionListUiState> =
-        combine(transactions, filterState, transactionToDelete) { list, filterState, toDelete ->
+        combine(
+            transactions,
+            filterState,
+            categoryFilter,
+            transactionToDelete
+        ) { list, filterState, category, toDelete ->
             val summary = calculateFinancialSummary(list)
 
             TransactionListUiState(
                 transactions = list,
                 filter = filterState,
+                categoryFilter = category,
                 totalIncome = summary.totalIncome,
                 totalExpense = summary.totalExpense,
                 totalBalance = summary.totalBalance,
@@ -61,12 +80,16 @@ class TransactionListViewModel @Inject constructor(
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = TransactionListUiState(filter = filter.value.toState())
+            initialValue = TransactionListUiState(
+                filter = filter.value.toState(),
+                categoryFilter = categoryFilter.value
+            )
         )
 
     fun onEvent(event: TransactionListEvent) {
         when (event) {
             is TransactionListEvent.Filter -> onFilterEvent(event.event)
+            TransactionListEvent.CategoryFilterCleared -> categoryFilter.value = null
             is TransactionListEvent.DeleteRequested -> transactionToDelete.value = event.transaction
             TransactionListEvent.DeleteDismissed -> transactionToDelete.value = null
             TransactionListEvent.DeleteConfirmed -> confirmDelete()

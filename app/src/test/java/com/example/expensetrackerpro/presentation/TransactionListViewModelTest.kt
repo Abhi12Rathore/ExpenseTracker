@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation
 
+import androidx.lifecycle.SavedStateHandle
 import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
@@ -18,6 +19,8 @@ import com.example.expensetrackerpro.fakes.millisAt
 import com.example.expensetrackerpro.fakes.transaction
 import com.example.expensetrackerpro.presentation.common.filter.PeriodFilterEvent
 import com.example.expensetrackerpro.presentation.common.filter.PeriodFilterState
+import com.example.expensetrackerpro.presentation.navigation.CategoryFilter
+import com.example.expensetrackerpro.presentation.navigation.Screens
 import com.example.expensetrackerpro.presentation.transactions.transactionList.uistate.TransactionListEvent
 import com.example.expensetrackerpro.presentation.transactions.transactionList.uistate.TransactionListUiState
 import com.example.expensetrackerpro.presentation.transactions.transactionList.viewmodel.TransactionListViewModel
@@ -63,7 +66,10 @@ class TransactionListViewModelTest {
         canStepForward = false
     )
 
-    private fun viewModel(repository: FakeTransactionRepository = this.repository) =
+    private fun viewModel(
+        repository: FakeTransactionRepository = this.repository,
+        savedStateHandle: SavedStateHandle = SavedStateHandle()
+    ) =
         TransactionListViewModel(
             getTransactions = GetTransactionsUseCase(repository),
             getDateRange = GetDateRangeUseCase(timeProvider),
@@ -71,7 +77,8 @@ class TransactionListViewModelTest {
             stepPeriod = StepPeriodUseCase(timeProvider),
             getCustomDateRange = GetCustomDateRangeUseCase(timeProvider),
             calculateFinancialSummary = CalculateFinancialSummaryUseCase(CalculateSavingsRateUseCase()),
-            deleteTransaction = DeleteTransactionUseCase(repository)
+            deleteTransaction = DeleteTransactionUseCase(repository),
+            savedStateHandle = savedStateHandle
         )
 
     private fun TransactionListViewModel.onFilterEvent(event: PeriodFilterEvent) =
@@ -178,6 +185,124 @@ class TransactionListViewModelTest {
         // The arrows have nothing to step in a custom range
         viewModel.onFilterEvent(PeriodFilterEvent.PreviousPeriod)
         assertEquals(state.filter, viewModel.uiState.value.filter)
+    }
+
+    // --- Opened from a dashboard chart ---
+
+    @Test
+    fun openedWithADay_showsOnlyThatDay_asACustomRange() = runTest {
+        val secondOfOctober =
+            DateRange(millisAt(2026, Calendar.OCTOBER, 2), millisAt(2026, Calendar.OCTOBER, 3))
+        val viewModel = viewModel(
+            savedStateHandle = SavedStateHandle(
+                mapOf(
+                    Screens.History.ARG_START to secondOfOctober.startMillis,
+                    Screens.History.ARG_END to secondOfOctober.endMillis
+                )
+            )
+        )
+        subscribe(viewModel.uiState)
+        val state = viewModel.uiState.value
+
+        assertEquals(
+            PeriodFilterState(
+                filter = DateFilter.Custom(secondOfOctober),
+                dateRange = secondOfOctober,
+                canStepForward = false
+            ),
+            state.filter
+        )
+        assertEquals(listOf(lunch), state.transactions)
+        assertNull(state.categoryFilter)
+    }
+
+    @Test
+    fun openedWithAMonth_showsThatMonth_andCanStillBeStepped() = runTest {
+        val viewModel = viewModel(
+            savedStateHandle = SavedStateHandle(
+                mapOf(
+                    Screens.History.ARG_START to millisAt(2026, Calendar.SEPTEMBER, 1),
+                    Screens.History.ARG_GRANULARITY to PeriodGranularity.MONTH.name
+                )
+            )
+        )
+        subscribe(viewModel.uiState)
+
+        assertEquals(listOf(oldRent), viewModel.uiState.value.transactions)
+        assertEquals(true, viewModel.uiState.value.filter.canStepForward)
+
+        viewModel.onFilterEvent(PeriodFilterEvent.NextPeriod)
+        assertEquals(thisMonth, viewModel.uiState.value.filter)
+    }
+
+    @Test
+    fun openedWithACategory_listsOnlyThatCategory_untilTheFilterIsCleared() = runTest {
+        val travel = lunch.copy(id = 4, categoryId = 7, categoryName = "Travel", amount = 90.0)
+        val repository = FakeTransactionRepository(listOf(salary, lunch, oldRent, travel))
+        val viewModel = viewModel(
+            repository = repository,
+            savedStateHandle = SavedStateHandle(
+                mapOf(
+                    Screens.History.ARG_START to october.startMillis,
+                    Screens.History.ARG_GRANULARITY to PeriodGranularity.MONTH.name,
+                    Screens.History.ARG_CATEGORY_ID to 7L,
+                    Screens.History.ARG_CATEGORY_NAME to "Travel"
+                )
+            )
+        )
+        subscribe(viewModel.uiState)
+        val filtered = viewModel.uiState.value
+
+        assertEquals(thisMonth, filtered.filter)
+        assertEquals(CategoryFilter(id = 7, name = "Travel"), filtered.categoryFilter)
+        assertEquals(listOf(travel), filtered.transactions)
+        // Totals follow what is listed
+        assertEquals(90.0, filtered.totalExpense, 0.001)
+        assertEquals(0.0, filtered.totalIncome, 0.001)
+
+        viewModel.onEvent(TransactionListEvent.CategoryFilterCleared)
+        val cleared = viewModel.uiState.value
+
+        assertNull(cleared.categoryFilter)
+        assertEquals(listOf(salary, lunch, travel), cleared.transactions)
+    }
+
+    @Test
+    fun categoryFilter_staysWhenThePeriodChanges() = runTest {
+        val viewModel = viewModel(
+            savedStateHandle = SavedStateHandle(
+                mapOf(
+                    Screens.History.ARG_START to october.startMillis,
+                    Screens.History.ARG_GRANULARITY to PeriodGranularity.MONTH.name,
+                    Screens.History.ARG_CATEGORY_ID to 1L,
+                    Screens.History.ARG_CATEGORY_NAME to "Food"
+                )
+            )
+        )
+        subscribe(viewModel.uiState)
+
+        viewModel.onFilterEvent(PeriodFilterEvent.PreviousPeriod)
+
+        assertEquals(CategoryFilter(id = 1, name = "Food"), viewModel.uiState.value.categoryFilter)
+        assertEquals(listOf(oldRent), viewModel.uiState.value.transactions)
+    }
+
+    @Test
+    fun openedWithTheRoutesDefaults_isThePlainHistory() = runTest {
+        val viewModel = viewModel(
+            savedStateHandle = SavedStateHandle(
+                mapOf(
+                    Screens.History.ARG_START to Screens.History.NO_VALUE,
+                    Screens.History.ARG_END to Screens.History.NO_VALUE,
+                    Screens.History.ARG_CATEGORY_ID to Screens.History.NO_VALUE
+                )
+            )
+        )
+        subscribe(viewModel.uiState)
+
+        assertEquals(thisMonth, viewModel.uiState.value.filter)
+        assertNull(viewModel.uiState.value.categoryFilter)
+        assertEquals(listOf(salary, lunch), viewModel.uiState.value.transactions)
     }
 
     @Test

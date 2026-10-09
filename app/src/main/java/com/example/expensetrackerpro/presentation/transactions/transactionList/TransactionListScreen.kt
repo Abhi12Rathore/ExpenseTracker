@@ -17,7 +17,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.example.expensetrackerpro.R
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.presentation.common.filter.components.PeriodFilter
 import com.example.expensetrackerpro.presentation.transactions.transactionList.component.EmptyExpenseUI
@@ -130,6 +132,23 @@ fun TransactionListContent(
                     state = uiState.filter,
                     onEvent = { onEvent(TransactionListEvent.Filter(it)) }
                 )
+            }
+
+            uiState.categoryFilter?.let { category ->
+                item {
+                    InputChip(
+                        selected = true,
+                        onClick = { onEvent(TransactionListEvent.CategoryFilterCleared) },
+                        label = { Text(category.name) },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(R.string.history_clear_category_filter),
+                                modifier = Modifier.size(InputChipDefaults.IconSize)
+                            )
+                        }
+                    )
+                }
             }
 
             // 2. Section Title: Expenses + Count
