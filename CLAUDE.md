@@ -12,6 +12,7 @@ Goal: production-quality portfolio project.
 ## Tech stack
 - Kotlin 2.0.21, Jetpack Compose (Material 3), minSdk 24, targetSdk 35
 - Room 2.6.1 (KSP), Navigation Compose, Hilt 2.56.1
+- App lock: androidx.biometric (`BiometricPrompt` behind `presentation/lock/BiometricAuthenticator`), settings in DataStore
 - Charts: custom Compose Canvas components (no chart library) in `presentation/homeScreen/component/charts/`; shared drawing helpers in `ChartDrawing.kt`
 - Dependencies are declared in `gradle/libs.versions.toml`. Add new ones there, never hardcode versions in `app/build.gradle.kts`.
 
@@ -19,8 +20,10 @@ Goal: production-quality portfolio project.
 - `data/local/` → Room: `entity/`, `dao/`, `expenseDatabase/`, `model/` (query result classes)
 - `data/mapper/` → entity ↔ domain mappers
 - `data/repository/` → repository implementations
-- `domain/` → `models/`, `repository/` (interfaces), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
+- `data/preferences/` → DataStore-backed repositories (theme, app lock); `data/security/` → Android biometric availability
+- `domain/` → `models/`, `repository/` (interfaces), `security/` (device capability interfaces), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
 - `presentation/<feature>/` → Screen, ViewModel, `components/`, `uistate/`
+- `presentation/lock/` → lock screen and the biometric prompt wrapper; lock state itself lives in `MainViewModel`
 - `ui/theme/` → colors, typography, theme
 - `utils/` → shared helpers
 

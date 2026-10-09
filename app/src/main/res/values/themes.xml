@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.ExpenseTrackerPro" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.ExpenseTrackerPro" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Below Android 9 the biometric library shows an AppCompat dialog, which needs this -->
+        <item name="alertDialogTheme">@style/Theme.AppCompat.DayNight.Dialog.Alert</item>
+    </style>
 
     <!-- Launch theme: system splash, then hands over to the app theme -->
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">

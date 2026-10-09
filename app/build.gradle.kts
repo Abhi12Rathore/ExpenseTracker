@@ -67,6 +67,13 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
 
+    // App lock
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.lifecycle.process)
+    // Declared explicitly: biometric would otherwise bring in a much older fragment and appcompat
+    implementation(libs.androidx.fragment.ktx)
+    implementation(libs.androidx.appcompat)
+
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

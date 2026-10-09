@@ -103,4 +103,34 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_dialog_cancel">Cancel</string>
+
+    <!-- Settings: app lock -->
+    <string name="settings_section_security">Security</string>
+    <string name="settings_app_lock">App lock</string>
+    <string name="settings_app_lock_biometric">Unlock with biometrics or screen lock</string>
+    <string name="settings_app_lock_credential">Unlock with your screen lock</string>
+    <string name="settings_app_lock_unavailable">Set a screen lock in your device settings to use app lock</string>
+    <string name="settings_lock_after">Lock after</string>
+    <string name="lock_timeout_dialog_title">Lock after</string>
+    <string name="lock_timeout_immediately">Immediately</string>
+    <string name="lock_timeout_30_seconds">30 seconds</string>
+    <string name="lock_timeout_1_minute">1 minute</string>
+    <string name="lock_timeout_5_minutes">5 minutes</string>
+    <string name="lock_timeout_dialog_cancel">Cancel</string>
+    <string name="app_lock_enable_prompt_title">Turn on app lock</string>
+    <string name="app_lock_enable_prompt_subtitle">Confirm it\'s you to lock ExpenseTracker Pro</string>
+    <string name="app_lock_enable_lockout">Too many attempts. Try again in a moment.</string>
+    <string name="app_lock_enable_lockout_permanent">Biometrics are locked. Unlock your device with its screen lock, then try again.</string>
+    <string name="app_lock_enable_no_credential">Set a screen lock in your device settings first.</string>
+    <string name="app_lock_enable_error">Couldn\'t confirm it\'s you. App lock is still off.</string>
+
+    <!-- Lock screen -->
+    <string name="lock_title">ExpenseTracker Pro is locked</string>
+    <string name="lock_unlock">Unlock</string>
+    <string name="lock_prompt_title">Unlock ExpenseTracker Pro</string>
+    <string name="lock_prompt_subtitle">Confirm it\'s you to continue</string>
+    <string name="lock_message_canceled">Authentication was cancelled. Tap Unlock to try again.</string>
+    <string name="lock_message_lockout">Too many attempts. Wait a moment, then tap Unlock to try again.</string>
+    <string name="lock_message_lockout_permanent">Biometrics are locked after too many attempts. Tap Unlock and use your screen lock.</string>
+    <string name="lock_message_error">Couldn\'t verify it\'s you. Tap Unlock to try again.</string>
 </resources>
