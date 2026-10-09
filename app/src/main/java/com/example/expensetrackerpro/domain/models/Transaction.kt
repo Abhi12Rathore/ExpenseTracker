@@ -8,5 +8,7 @@ data class Transaction(
     val dateMillis: Long,
     val categoryId: Int,
     val categoryName: String,
-    val transactionType: TransactionType
+    val transactionType: TransactionType,
+    // Read from the category, never stored with the transaction
+    val categoryIcon: CategoryIcon = CategoryIcon.DEFAULT
 )

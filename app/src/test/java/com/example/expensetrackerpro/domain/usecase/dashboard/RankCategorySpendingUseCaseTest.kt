@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.dashboard
 
+import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
 import com.example.expensetrackerpro.domain.models.CategoryRanking
 import org.junit.Assert.assertEquals
@@ -11,7 +12,7 @@ class RankCategorySpendingUseCaseTest {
     private val rankCategorySpending = RankCategorySpendingUseCase()
 
     private fun category(id: Long, amount: Double) =
-        CategoryBreakdown(categoryId = id, categoryName = "Category $id", iconName = "Food", amount = amount)
+        CategoryBreakdown(categoryId = id, categoryName = "Category $id", icon = CategoryIcon.RESTAURANT, amount = amount)
 
     @Test
     fun noCategories_isAnEmptyRanking() {

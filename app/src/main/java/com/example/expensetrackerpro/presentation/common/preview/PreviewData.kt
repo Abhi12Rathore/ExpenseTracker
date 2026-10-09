@@ -3,6 +3,7 @@ package com.example.expensetrackerpro.presentation.common.preview
 import com.example.expensetrackerpro.domain.models.BucketSize
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
+import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.Dashboard
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.DayLabel
@@ -29,18 +30,18 @@ internal object PreviewData {
     private const val DAY_MILLIS = 86_400_000L
 
     val categories = listOf(
-        Category(id = 1, name = "Food", type = TransactionType.EXPENSE, iconName = "Food", isCustom = false),
-        Category(id = 2, name = "Transport", type = TransactionType.EXPENSE, iconName = "Transport", isCustom = false),
-        Category(id = 3, name = "Shopping", type = TransactionType.EXPENSE, iconName = "Shopping", isCustom = false),
-        Category(id = 4, name = "Bills", type = TransactionType.EXPENSE, iconName = "Bills", isCustom = false),
-        Category(id = 5, name = "Pets", type = TransactionType.EXPENSE, iconName = "Pets")
+        Category(id = 1, name = "Food", type = TransactionType.EXPENSE, icon = CategoryIcon.RESTAURANT, isCustom = false),
+        Category(id = 2, name = "Transport", type = TransactionType.EXPENSE, icon = CategoryIcon.DIRECTIONS_CAR, isCustom = false),
+        Category(id = 3, name = "Shopping", type = TransactionType.EXPENSE, icon = CategoryIcon.SHOPPING_BAG, isCustom = false),
+        Category(id = 4, name = "Bills", type = TransactionType.EXPENSE, icon = CategoryIcon.RECEIPT_LONG, isCustom = false),
+        Category(id = 5, name = "Pets", type = TransactionType.EXPENSE, icon = CategoryIcon.PETS)
     )
 
     val transactions = listOf(
-        Transaction(1, "Groceries", 1850.0, "Weekly shop, plus the cake for Sunday", DATE_MILLIS, 1, "Food", TransactionType.EXPENSE),
-        Transaction(2, "Salary", 85000.0, "", DATE_MILLIS - DAY_MILLIS, 6, "Payments", TransactionType.INCOME),
-        Transaction(3, "Metro card", 500.0, "", DATE_MILLIS - 2 * DAY_MILLIS, 2, "Transport", TransactionType.EXPENSE),
-        Transaction(4, "Electricity", 2300.0, "", DATE_MILLIS - 3 * DAY_MILLIS, 4, "Bills", TransactionType.EXPENSE)
+        Transaction(1, "Groceries", 1850.0, "Weekly shop, plus the cake for Sunday", DATE_MILLIS, 1, "Food", TransactionType.EXPENSE, CategoryIcon.RESTAURANT),
+        Transaction(2, "Salary", 85000.0, "", DATE_MILLIS - DAY_MILLIS, 6, "Payments", TransactionType.INCOME, CategoryIcon.PAYMENTS),
+        Transaction(3, "Metro card", 500.0, "", DATE_MILLIS - 2 * DAY_MILLIS, 2, "Transport", TransactionType.EXPENSE, CategoryIcon.DIRECTIONS_CAR),
+        Transaction(4, "Electricity", 2300.0, "", DATE_MILLIS - 3 * DAY_MILLIS, 4, "Bills", TransactionType.EXPENSE, CategoryIcon.RECEIPT_LONG)
     )
 
     // The same transactions as the Transactions list groups them, seen on the 9th
@@ -75,13 +76,13 @@ internal object PreviewData {
 
     // Highest first, as the repository returns them
     val categoryExpense = listOf(
-        CategoryBreakdown(4, "Bills", "Bills", 9800.0),
-        CategoryBreakdown(1, "Food", "Food", 7450.0),
-        CategoryBreakdown(3, "Shopping", "Shopping", 4900.0),
-        CategoryBreakdown(2, "Transport", "Transport", 2600.0),
-        CategoryBreakdown(6, "Health", "Health", 1500.0),
-        CategoryBreakdown(5, "Pets", "Pets", 800.0),
-        CategoryBreakdown(7, "Gifts", "Gift", 500.0)
+        CategoryBreakdown(4, "Bills", CategoryIcon.RECEIPT_LONG, 9800.0),
+        CategoryBreakdown(1, "Food", CategoryIcon.RESTAURANT, 7450.0),
+        CategoryBreakdown(3, "Shopping", CategoryIcon.SHOPPING_BAG, 4900.0),
+        CategoryBreakdown(2, "Transport", CategoryIcon.DIRECTIONS_CAR, 2600.0),
+        CategoryBreakdown(6, "Health", CategoryIcon.MEDICAL_SERVICES, 1500.0),
+        CategoryBreakdown(5, "Pets", CategoryIcon.PETS, 800.0),
+        CategoryBreakdown(7, "Gifts", CategoryIcon.CARD_GIFTCARD, 500.0)
     )
 
     val categoryRanking = RankCategorySpendingUseCase()(categoryExpense)

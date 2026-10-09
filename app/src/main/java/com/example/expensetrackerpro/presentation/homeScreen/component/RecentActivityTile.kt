@@ -19,7 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
-import com.example.expensetrackerpro.utils.CategoryIcons
+import com.example.expensetrackerpro.presentation.common.category.CategoryIconTile
 import com.example.expensetrackerpro.utils.CurrencyFormatter
 import com.example.expensetrackerpro.utils.DateFormatter
 import com.example.expensetrackerpro.ui.theme.extendedColors
@@ -37,23 +37,7 @@ fun RecentActivityTile(
             .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 1. Icon Container
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(12.dp)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = CategoryIcons.icons[transaction.categoryName] ?: Icons.Default.Category,
-                contentDescription = null,
-                tint = CategoryIcons.color(transaction.categoryName) ?: MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
-        }
+        CategoryIconTile(icon = transaction.categoryIcon, size = 48.dp)
 
         Spacer(modifier = Modifier.width(16.dp))
 

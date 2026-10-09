@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.presentation
 
 import androidx.lifecycle.SavedStateHandle
+import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.DateChoice
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.category.AddCategoryUseCase
@@ -284,7 +285,7 @@ class AddEditTransactionViewModelTest {
         val viewModel = viewModel()
         viewModel.onEvent(AddEditTransactionEvent.CategorySheetOpened)
 
-        viewModel.onEvent(AddEditTransactionEvent.CategoryAdded("Gym", "Fitness", TransactionType.EXPENSE))
+        viewModel.onEvent(AddEditTransactionEvent.CategoryAdded("Gym", CategoryIcon.FITNESS_CENTER, TransactionType.EXPENSE))
         val state = viewModel.uiState.value
         val gym = categories.current.single { it.name == "Gym" }
 

@@ -1,5 +1,11 @@
 package com.example.expensetrackerpro.presentation
 
+import com.example.expensetrackerpro.domain.models.BuildInfo
+import com.example.expensetrackerpro.domain.usecase.sample.ClearAllDataUseCase
+import com.example.expensetrackerpro.domain.usecase.sample.LoadSampleDataUseCase
+import com.example.expensetrackerpro.fakes.FakeSampleDataRepository
+import com.example.expensetrackerpro.presentation.settings.uistate.DeveloperAction
+import com.example.expensetrackerpro.presentation.settings.uistate.DeveloperMessage
 import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.AuthResult
 import com.example.expensetrackerpro.domain.models.BiometricStatus
@@ -33,14 +39,20 @@ class SettingsViewModelTest {
     private val appLockRepository = FakeAppLockRepository()
     private val biometricAvailability = FakeBiometricAvailability()
 
+    private val sampleData = FakeSampleDataRepository()
+
     private fun viewModel(
-        repository: FakeThemePreferenceRepository = FakeThemePreferenceRepository()
+        repository: FakeThemePreferenceRepository = FakeThemePreferenceRepository(),
+        isDebug: Boolean = true
     ) = SettingsViewModel(
         GetThemeModeUseCase(repository),
         SetThemeModeUseCase(repository),
         GetAppLockSettingsUseCase(appLockRepository),
         SetAppLockSettingsUseCase(appLockRepository),
-        GetBiometricStatusUseCase(biometricAvailability)
+        GetBiometricStatusUseCase(biometricAvailability),
+        LoadSampleDataUseCase(sampleData),
+        ClearAllDataUseCase(sampleData),
+        BuildInfo(isDebug = isDebug)
     )
 
     @Test
@@ -283,5 +295,106 @@ class SettingsViewModelTest {
         )
         assertEquals(LockTimeout.IMMEDIATELY, viewModel.uiState.value.appLock.timeout)
         assertFalse(viewModel.uiState.value.isLockTimeoutDialogOpen)
+    }
+
+    // --- Developer section
+
+    private fun SettingsViewModel.click(action: DeveloperAction) =
+        onEvent(SettingsEvent.DeveloperActionClicked(action))
+
+    @Test
+    fun developerSection_isShownInDebugBuildsOnly() = runTest {
+        val debug = viewModel(isDebug = true)
+        val release = viewModel(isDebug = false)
+        subscribe(debug.uiState)
+        subscribe(release.uiState)
+
+        assertTrue(debug.uiState.value.isDeveloperSectionVisible)
+        assertFalse(release.uiState.value.isDeveloperSectionVisible)
+    }
+
+    @Test
+    fun loadSampleData_asksFirst_andOnlyLoadsOnceConfirmed() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        viewModel.click(DeveloperAction.LOAD_SAMPLE_DATA)
+
+        assertEquals(DeveloperAction.LOAD_SAMPLE_DATA, viewModel.uiState.value.pendingDeveloperAction)
+        assertEquals(0, sampleData.loadCalls)
+
+        viewModel.onEvent(SettingsEvent.DeveloperActionConfirmed)
+        val state = viewModel.uiState.value
+
+        assertEquals(1, sampleData.loadCalls)
+        assertEquals(0, sampleData.clearCalls)
+        assertNull(state.pendingDeveloperAction)
+        assertFalse(state.isDeveloperActionRunning)
+        assertEquals(DeveloperMessage.SampleDataLoaded(240), state.developerMessage)
+
+        viewModel.onEvent(SettingsEvent.DeveloperMessageShown)
+        assertNull(viewModel.uiState.value.developerMessage)
+    }
+
+    @Test
+    fun loadSampleData_dismissed_changesNothing() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        viewModel.click(DeveloperAction.LOAD_SAMPLE_DATA)
+        viewModel.onEvent(SettingsEvent.DeveloperActionDismissed)
+        // Nothing is waiting to be confirmed any more
+        viewModel.onEvent(SettingsEvent.DeveloperActionConfirmed)
+
+        assertNull(viewModel.uiState.value.pendingDeveloperAction)
+        assertNull(viewModel.uiState.value.developerMessage)
+        assertEquals(0, sampleData.loadCalls)
+    }
+
+    @Test
+    fun clearAllData_asksFirst_thenClears() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        viewModel.click(DeveloperAction.CLEAR_ALL_DATA)
+        assertEquals(0, sampleData.clearCalls)
+
+        viewModel.onEvent(SettingsEvent.DeveloperActionConfirmed)
+
+        assertEquals(1, sampleData.clearCalls)
+        assertEquals(0, sampleData.loadCalls)
+        assertEquals(DeveloperMessage.AllDataCleared, viewModel.uiState.value.developerMessage)
+    }
+
+    @Test
+    fun developerAction_thatFails_saysSo() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        sampleData.fail = true
+
+        viewModel.click(DeveloperAction.LOAD_SAMPLE_DATA)
+        viewModel.onEvent(SettingsEvent.DeveloperActionConfirmed)
+        assertEquals(DeveloperMessage.Failed, viewModel.uiState.value.developerMessage)
+
+        viewModel.click(DeveloperAction.CLEAR_ALL_DATA)
+        viewModel.onEvent(SettingsEvent.DeveloperActionConfirmed)
+        assertEquals(DeveloperMessage.Failed, viewModel.uiState.value.developerMessage)
+        assertFalse(viewModel.uiState.value.isDeveloperActionRunning)
+    }
+
+    @Test
+    fun inAReleaseBuild_developerActionsDoNothing() = runTest {
+        val viewModel = viewModel(isDebug = false)
+        subscribe(viewModel.uiState)
+
+        viewModel.click(DeveloperAction.LOAD_SAMPLE_DATA)
+        viewModel.onEvent(SettingsEvent.DeveloperActionConfirmed)
+        viewModel.click(DeveloperAction.CLEAR_ALL_DATA)
+        viewModel.onEvent(SettingsEvent.DeveloperActionConfirmed)
+
+        assertNull(viewModel.uiState.value.pendingDeveloperAction)
+        assertNull(viewModel.uiState.value.developerMessage)
+        assertEquals(0, sampleData.loadCalls)
+        assertEquals(0, sampleData.clearCalls)
     }
 }

@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.di
 
 import android.content.Context
 import androidx.room.Room
+import com.example.expensetrackerpro.data.local.dao.SampleDataDao
 import com.example.expensetrackerpro.data.local.dao.TransactionDao
 import com.example.expensetrackerpro.data.local.expenseDatabase.AppDatabase
 import com.example.expensetrackerpro.data.local.expenseDatabase.ExpenseDatabaseCallback
@@ -33,4 +34,8 @@ object DatabaseModule {
     @Provides
     fun provideTransactionDao(database: AppDatabase): TransactionDao =
         database.transactionDao()
+
+    @Provides
+    fun provideSampleDataDao(database: AppDatabase): SampleDataDao =
+        database.sampleDataDao()
 }

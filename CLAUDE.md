@@ -59,9 +59,9 @@ Apply these to all new and changed code. Existing violations are tracked under K
 - Every new ViewModel or use case gets unit tests in `app/src/test`.
 
 ## Database
-- Any schema change must bump the version and add a Room `Migration`.
-- Don't rely on `fallbackToDestructiveMigration()`, because it wipes user data. Remove it once migrations exist.
-- Default categories are seeded in `AppDatabase` `onCreate`.
+- Pre-release: every schema change bumps the version; `fallbackToDestructiveMigration` resets the data. From the first public release, write a tested Migration instead.
+- Default categories (`domain/models/DefaultCategories`) are seeded in `AppDatabase` `onCreate`.
+- Debug builds have Settings → Developer → "Load sample data" / "Clear all data" (`data/sample/`), gated by `BuildInfo.isDebug`.
 
 ## Known issues (remove each line once fixed)
 Planned for the `refactor/lld` branch:
@@ -69,7 +69,6 @@ Planned for the `refactor/lld` branch:
 - Money is `Double` in entities and domain models. Migrate to `Money` (paise as `Long`) with a Room `Migration`.
 - `Transaction` stores `categoryName` alongside `categoryId`, so a category rename leaves stale names. Read it via JOIN/`@Relation` and drop the column (migration).
 - No shared error model. Introduce `DomainError` + `Result`.
-- `Category.iconName` is a free string. Replace with a `CategoryIcon` enum.
 
 ## Workflow
 - Never commit to `main`. Use branches like `refactor/hilt` or `feature/theme-toggle`.

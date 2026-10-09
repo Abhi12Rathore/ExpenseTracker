@@ -4,6 +4,7 @@ import com.example.expensetrackerpro.data.local.model.CategoryExpenseEntity
 import com.example.expensetrackerpro.data.local.model.DailyCashFlowEntity
 import com.example.expensetrackerpro.data.local.model.DailyExpenseEntity
 import com.example.expensetrackerpro.data.local.model.MonthlyTrendEntity
+import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.CashFlowPoint
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
 import com.example.expensetrackerpro.domain.models.DailyExpense
@@ -15,10 +16,10 @@ class DashboardMapperTest {
 
     @Test
     fun categoryExpense_mapsTotalAmountToAmount() {
-        val entity = CategoryExpenseEntity(categoryId = 2, categoryName = "Food", iconName = "Food", totalAmount = 1250.75)
+        val entity = CategoryExpenseEntity(categoryId = 2, categoryName = "Food", icon = CategoryIcon.RESTAURANT, totalAmount = 1250.75)
 
         assertEquals(
-            CategoryBreakdown(categoryId = 2, categoryName = "Food", iconName = "Food", amount = 1250.75),
+            CategoryBreakdown(categoryId = 2, categoryName = "Food", icon = CategoryIcon.RESTAURANT, amount = 1250.75),
             entity.toDomain()
         )
     }

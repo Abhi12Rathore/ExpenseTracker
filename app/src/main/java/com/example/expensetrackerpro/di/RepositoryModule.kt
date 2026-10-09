@@ -10,6 +10,8 @@ import com.example.expensetrackerpro.domain.repository.CategoryRepository
 import com.example.expensetrackerpro.domain.repository.DashboardRepository
 import com.example.expensetrackerpro.domain.repository.ThemePreferenceRepository
 import com.example.expensetrackerpro.domain.repository.TransactionRepository
+import com.example.expensetrackerpro.data.sample.SampleDataSeeder
+import com.example.expensetrackerpro.domain.repository.SampleDataRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -41,4 +43,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindAppLockRepository(impl: AppLockRepositoryImpl): AppLockRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSampleDataRepository(impl: SampleDataSeeder): SampleDataRepository
 }

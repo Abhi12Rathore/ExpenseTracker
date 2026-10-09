@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation
 
+import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.category.AddCategoryUseCase
 import com.example.expensetrackerpro.domain.usecase.category.DeleteCategoryUseCase
@@ -87,7 +88,7 @@ class ManageCategoryViewModelTest {
         assertTrue(viewModel.uiState.value.isSheetOpen)
         assertNull(viewModel.uiState.value.categoryToEdit)
 
-        viewModel.onEvent(ManageCategoryEvent.CategorySaved("Gym", "Home", TransactionType.EXPENSE))
+        viewModel.onEvent(ManageCategoryEvent.CategorySaved("Gym", CategoryIcon.HOME, TransactionType.EXPENSE))
         val state = viewModel.uiState.value
 
         assertFalse(state.isSheetOpen)
@@ -105,7 +106,7 @@ class ManageCategoryViewModelTest {
         assertTrue(viewModel.uiState.value.isSheetOpen)
         assertEquals(food, viewModel.uiState.value.categoryToEdit)
 
-        viewModel.onEvent(ManageCategoryEvent.CategorySaved("Groceries", "Shopping", TransactionType.EXPENSE))
+        viewModel.onEvent(ManageCategoryEvent.CategorySaved("Groceries", CategoryIcon.SHOPPING_BAG, TransactionType.EXPENSE))
         val state = viewModel.uiState.value
 
         assertFalse(state.isSheetOpen)
@@ -113,7 +114,7 @@ class ManageCategoryViewModelTest {
         assertEquals(3, repository.current.size)
         val edited = repository.current.first { it.id == food.id }
         assertEquals("Groceries", edited.name)
-        assertEquals("Shopping", edited.iconName)
+        assertEquals(CategoryIcon.SHOPPING_BAG, edited.icon)
     }
 
     @Test
@@ -138,7 +139,7 @@ class ManageCategoryViewModelTest {
         viewModel.onEvent(ManageCategoryEvent.EditClicked(food))
         viewModel.onEvent(ManageCategoryEvent.SheetDismissed)
         viewModel.onEvent(ManageCategoryEvent.AddClicked)
-        viewModel.onEvent(ManageCategoryEvent.CategorySaved("Gym", "Home", TransactionType.EXPENSE))
+        viewModel.onEvent(ManageCategoryEvent.CategorySaved("Gym", CategoryIcon.HOME, TransactionType.EXPENSE))
 
         assertEquals(4, repository.current.size)
         assertEquals("Food", repository.current.first { it.id == food.id }.name)

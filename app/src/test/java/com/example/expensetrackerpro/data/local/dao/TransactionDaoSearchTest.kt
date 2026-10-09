@@ -7,6 +7,7 @@ import com.example.expensetrackerpro.data.local.entity.CategoryEntity
 import com.example.expensetrackerpro.data.local.entity.TransactionEntity
 import com.example.expensetrackerpro.data.local.expenseDatabase.AppDatabase
 import com.example.expensetrackerpro.data.repository.TransactionRepositoryImpl
+import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.TransactionType
 import kotlinx.coroutines.flow.first
@@ -38,7 +39,7 @@ class TransactionDaoSearchTest {
 
         dao.insertCategory(category(id = 1, name = "Food"))
         // Renamed since its transactions were saved: they still carry the old name
-        dao.insertCategory(category(id = 2, name = "Commute"))
+        dao.insertCategory(category(id = 2, name = "Commute", icon = CategoryIcon.TRAIN))
 
         dao.insertTransaction(transaction(1, title = "Team Lunch", note = "Paid for Riya", categoryId = 1, day = 5))
         dao.insertTransaction(transaction(2, title = "Metro card", note = "", categoryId = 2, day = 4, categoryName = "Transport"))
@@ -52,8 +53,42 @@ class TransactionDaoSearchTest {
         database.close()
     }
 
-    private fun category(id: Int, name: String) =
-        CategoryEntity(id = id, name = name, type = TransactionType.EXPENSE, iconName = name)
+    // --- The category's icon, read through the join
+
+    @Test
+    fun everyRead_carriesItsCategorysIcon() = runTest {
+        val listed = repository.getTransactions(RECENT).first().associate { it.id to it.categoryIcon }
+
+        assertEquals(
+            mapOf(
+                1 to CategoryIcon.RESTAURANT,
+                2 to CategoryIcon.TRAIN,
+                3 to CategoryIcon.RESTAURANT,
+                4 to CategoryIcon.RESTAURANT
+            ),
+            listed
+        )
+        assertEquals(CategoryIcon.TRAIN, repository.getTransactionById(2)?.categoryIcon)
+        assertEquals(CategoryIcon.TRAIN, repository.getAllTransactions().first().single { it.id == 2 }.categoryIcon)
+        assertEquals(listOf(CategoryIcon.TRAIN), repository.getTransactions(RECENT, "metro").first().map { it.categoryIcon })
+    }
+
+    @Test
+    fun changingACategorysIcon_changesItOnItsTransactions() = runTest {
+        database.transactionDao().updateCategory(category(id = 2, name = "Commute", icon = CategoryIcon.DIRECTIONS_BUS))
+
+        assertEquals(CategoryIcon.DIRECTIONS_BUS, repository.getTransactionById(2)?.categoryIcon)
+    }
+
+    @Test
+    fun anIconKeyThisVersionDoesNotKnow_isReadAsTheDefault() = runTest {
+        database.openHelper.writableDatabase.execSQL("UPDATE categories SET icon = 'hoverboard' WHERE id = 2")
+
+        assertEquals(CategoryIcon.DEFAULT, repository.getTransactionById(2)?.categoryIcon)
+    }
+
+    private fun category(id: Int, name: String, icon: CategoryIcon = CategoryIcon.RESTAURANT) =
+        CategoryEntity(id = id, name = name, type = TransactionType.EXPENSE, icon = icon)
 
     private fun transaction(
         id: Int,

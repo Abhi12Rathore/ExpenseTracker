@@ -38,6 +38,8 @@ android {
     }
     buildFeatures {
         compose = true
+        // For BuildConfig.DEBUG, which keeps the developer options out of release builds
+        buildConfig = true
     }
     testOptions {
         unitTests {

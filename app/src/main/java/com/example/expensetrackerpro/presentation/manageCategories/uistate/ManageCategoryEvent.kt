@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.presentation.manageCategories.uistate
 
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.TransactionType
 
 sealed interface ManageCategoryEvent {
@@ -11,7 +12,7 @@ sealed interface ManageCategoryEvent {
     data object SheetDismissed : ManageCategoryEvent
     data class CategorySaved(
         val name: String,
-        val iconName: String,
+        val icon: CategoryIcon,
         val type: TransactionType
     ) : ManageCategoryEvent
     data class DeleteClicked(val category: Category) : ManageCategoryEvent

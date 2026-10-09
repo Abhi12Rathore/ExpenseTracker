@@ -7,7 +7,7 @@ fun CategoryEntity.toDomain(): Category = Category(
     id = id,
     name = name,
     type = type,
-    iconName = iconName,
+    icon = icon,
     isCustom = isCustom
 )
 
@@ -15,6 +15,6 @@ fun Category.toEntity(): CategoryEntity = CategoryEntity(
     id = id,
     name = name,
     type = type,
-    iconName = iconName,
+    icon = icon,
     isCustom = isCustom
 )

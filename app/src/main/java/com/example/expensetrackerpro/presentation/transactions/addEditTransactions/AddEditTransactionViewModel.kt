@@ -7,6 +7,7 @@ import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.DateChoice
 import com.example.expensetrackerpro.domain.models.DateSelection
 import com.example.expensetrackerpro.domain.models.Transaction
+import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.category.AddCategoryUseCase
 import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesByTypeUseCase
@@ -97,7 +98,7 @@ class AddEditTransactionViewModel @Inject constructor(
             AddEditTransactionEvent.CategorySheetDismissed ->
                 updateForm { it.copy(isCategorySheetVisible = false) }
             is AddEditTransactionEvent.CategoryAdded ->
-                onCategoryAdded(event.name, event.iconName, event.type)
+                onCategoryAdded(event.name, event.icon, event.type)
             AddEditTransactionEvent.SaveClicked -> save()
             AddEditTransactionEvent.DeleteClicked ->
                 updateForm { it.copy(transactionToDelete = original) }
@@ -158,11 +159,11 @@ class AddEditTransactionViewModel @Inject constructor(
         updateForm { it.withDate(selection) }
     }
 
-    private fun onCategoryAdded(name: String, icon: String, type: TransactionType) {
+    private fun onCategoryAdded(name: String, icon: CategoryIcon, type: TransactionType) {
         updateForm { it.copy(isCategorySheetVisible = false) }
         viewModelScope.launch {
             val newId = addCategory(
-                Category(name = name.trim(), iconName = icon, type = type, isCustom = true)
+                Category(name = name.trim(), icon = icon, type = type, isCustom = true)
             )
             updateForm {
                 if (it.transactionType == type) it.copy(selectedCategoryId = newId) else it
@@ -188,7 +189,8 @@ class AddEditTransactionViewModel @Inject constructor(
                     dateMillis = state.dateMillis,
                     categoryId = category.id,
                     categoryName = category.name,
-                    transactionType = state.transactionType
+                    transactionType = state.transactionType,
+                    categoryIcon = category.icon
                 )
             )
 
