@@ -12,16 +12,18 @@ import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.DayPeriod
 
 @Composable
-fun DashboardHeader(userName: String, dayPeriod: DayPeriod) {
+fun DashboardHeader(userName: String, dayPeriod: DayPeriod?) {
+    // Blank for the moment before the time of day is known, so the line keeps its height
     val greeting = when (dayPeriod) {
-        DayPeriod.MORNING -> R.string.greeting_morning
-        DayPeriod.AFTERNOON -> R.string.greeting_afternoon
-        DayPeriod.EVENING -> R.string.greeting_evening
+        DayPeriod.MORNING -> stringResource(R.string.greeting_morning, userName)
+        DayPeriod.AFTERNOON -> stringResource(R.string.greeting_afternoon, userName)
+        DayPeriod.EVENING -> stringResource(R.string.greeting_evening, userName)
+        null -> ""
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = stringResource(greeting, userName),
+            text = greeting,
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )

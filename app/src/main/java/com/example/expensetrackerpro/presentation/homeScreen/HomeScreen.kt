@@ -31,7 +31,8 @@ import com.example.expensetrackerpro.presentation.homeScreen.component.HomeEmpty
 import com.example.expensetrackerpro.presentation.homeScreen.component.InsightSection
 import com.example.expensetrackerpro.presentation.homeScreen.component.RecentActivityTile
 import com.example.expensetrackerpro.presentation.homeScreen.component.charts.CategorySpendingCard
-import com.example.expensetrackerpro.presentation.homeScreen.component.charts.MonthlyTrendBarChart
+import com.example.expensetrackerpro.presentation.homeScreen.component.charts.NetSavingsCard
+import com.example.expensetrackerpro.presentation.homeScreen.component.charts.SpendingPaceCard
 import com.example.expensetrackerpro.presentation.homeScreen.component.charts.SpendingCard
 import com.example.expensetrackerpro.domain.models.BucketSize
 import com.example.expensetrackerpro.domain.models.DateFilter
@@ -73,8 +74,9 @@ fun HomeContent(
     onTransactionClick: (Int) -> Unit,
     onOpenHistory: (HistoryFilter) -> Unit
 ) {
-    val summary = uiState.financialSummary
-    val recentTransactions = uiState.recentTransactions
+    val dashboard = uiState.dashboard
+    val recentTransactions = dashboard.recentTransactions
+    val granularity = (uiState.filter.filter as? DateFilter.Period)?.granularity
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
@@ -90,7 +92,7 @@ fun HomeContent(
             item {
                 DashboardHeader(
                     userName = "Abhishek",
-                    dayPeriod = uiState.dayPeriod
+                    dayPeriod = dashboard.dayPeriod
                 )
             }
 
@@ -104,28 +106,35 @@ fun HomeContent(
             // 2. Hero Card Layer
             item {
                 FinancialSummaryCard(
-                    data = summary,
+                    data = dashboard.summary,
                     periodLabel = uiState.filter.shortLabel(),
-                    comparison = uiState.periodComparison,
-                    balanceTrend = uiState.balanceTrend
+                    comparison = dashboard.comparison,
+                    balanceTrend = dashboard.balanceTrend
                 )
             }
 
             item {
                 SpendingCard(
-                    chart = uiState.spending,
+                    chart = dashboard.spending,
                     isLoading = uiState.isLoading,
                     onBucketClick = { bucket ->
                         onOpenHistory(
-                            HistoryFilter(bucket.toDateFilter(uiState.spending.bucketSize, uiState.filter.filter))
+                            HistoryFilter(bucket.toDateFilter(dashboard.spending.bucketSize, uiState.filter.filter))
                         )
                     }
                 )
             }
 
+            // A day-by-day pace only says something within a week or a month
+            if (granularity == PeriodGranularity.WEEK || granularity == PeriodGranularity.MONTH) {
+                item {
+                    SpendingPaceCard(pace = dashboard.pace, isLoading = uiState.isLoading)
+                }
+            }
+
             item {
                 CategorySpendingCard(
-                    ranking = uiState.categoryRanking,
+                    ranking = dashboard.categoryRanking,
                     isLoading = uiState.isLoading,
                     onCategoryClick = { category ->
                         onOpenHistory(
@@ -139,15 +148,19 @@ fun HomeContent(
             }
 
             // Comparing months only says something across a year
-            if ((uiState.filter.filter as? DateFilter.Period)?.granularity == PeriodGranularity.YEAR) {
+            if (granularity == PeriodGranularity.YEAR) {
                 item {
-                    MonthlyTrendBarChart(uiState.monthlyTrend)
+                    NetSavingsCard(
+                        months = dashboard.netSavings,
+                        isLoading = uiState.isLoading,
+                        onMonthClick = { onEvent(HomeEvent.MonthSelected(it)) }
+                    )
                 }
             }
 
             item {
                 InsightSection(
-                    insights = uiState.insights
+                    insights = dashboard.insights
                 )
             }
 
@@ -238,16 +251,7 @@ fun InsightCard(message: String) {
 private fun HomeContentPreview() {
     ExpenseTrackerProTheme {
         HomeContent(
-            uiState = HomeUiState(
-                financialSummary = PreviewData.financialSummary,
-                periodComparison = PreviewData.periodComparison,
-                balanceTrend = PreviewData.balanceTrend,
-                spending = PreviewData.dailySpending,
-                categoryRanking = PreviewData.categoryRanking,
-                monthlyTrend = PreviewData.monthlyTrend,
-                recentTransactions = PreviewData.transactions,
-                insights = PreviewData.insights
-            ),
+            uiState = HomeUiState(dashboard = PreviewData.dashboard),
             onEvent = {},
             onViewAllTransactions = {},
             onTransactionClick = {},

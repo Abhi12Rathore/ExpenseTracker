@@ -12,7 +12,7 @@ Goal: production-quality portfolio project.
 ## Tech stack
 - Kotlin 2.0.21, Jetpack Compose (Material 3), minSdk 24, targetSdk 35
 - Room 2.6.1 (KSP), Navigation Compose, Hilt 2.56.1
-- Charts: MPAndroidChart (View-based, wrapped in Compose) in `presentation/homeScreen/component/charts/`
+- Charts: custom Compose Canvas components (no chart library) in `presentation/homeScreen/component/charts/`; shared drawing helpers in `ChartDrawing.kt`
 - Dependencies are declared in `gradle/libs.versions.toml`. Add new ones there, never hardcode versions in `app/build.gradle.kts`.
 
 ## Package structure (`com.example.expensetrackerpro`)
@@ -50,7 +50,7 @@ Apply these to all new and changed code. Existing violations are tracked under K
 ## Conventions
 - Money: format only through the shared en-IN currency formatter, `utils/CurrencyFormatter` (e.g. `-₹1,00,000.00`). Never use string concatenation like `"₹$amount"`.
 - Dates: format via the shared date utility, `utils/DateFormatter`. Never show raw millis.
-- Colors: no Color literals outside `ui/theme`; use `MaterialTheme.colorScheme` or `MaterialTheme.extendedColors` (income/expense, chart and category palette colors). `Color.Transparent` is fine. Charts get theme colors as ARGB via `toArgb()`.
+- Colors: no Color literals outside `ui/theme`; use `MaterialTheme.colorScheme` or `MaterialTheme.extendedColors` (income/expense, chart and category palette colors). `Color.Transparent` is fine. Charts take theme colors directly as `Color`.
 - UI strings go in `strings.xml`.
 - No `!!`. Handle nulls explicitly.
 - Every new ViewModel or use case gets unit tests in `app/src/test`.
@@ -65,9 +65,7 @@ Planned for the `refactor/lld` branch:
 - `TransactionDao` has 19 methods covering transactions, categories and dashboard queries. Split it per aggregate.
 - Money is `Double` in entities and domain models. Migrate to `Money` (paise as `Long`) with a Room `Migration`.
 - `Transaction` stores `categoryName` alongside `categoryId`, so a category rename leaves stale names. Read it via JOIN/`@Relation` and drop the column (migration).
-- `HomeViewModel` has 11 constructor dependencies. Introduce `GetDashboardUseCase`.
 - No shared error model. Introduce `DomainError` + `Result`.
-- `DateFormatter.hourOfDay` and `HomeViewModel` (greeting) read the system clock directly. Use `TimeProvider`.
 - `Category.iconName` is a free string. Replace with a `CategoryIcon` enum.
 
 ## Workflow

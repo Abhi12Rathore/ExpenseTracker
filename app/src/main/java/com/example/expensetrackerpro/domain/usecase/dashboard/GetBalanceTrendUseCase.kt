@@ -5,7 +5,6 @@ import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.time.TimeProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import java.util.Calendar
 import javax.inject.Inject
 
 /**
@@ -23,21 +22,13 @@ class GetBalanceTrendUseCase @Inject constructor(
 
     private fun cumulativeBalance(range: DateRange, points: List<CashFlowPoint>): List<Double> {
         val nowMillis = timeProvider.now().timeInMillis
-        val cursor = timeProvider.now().apply { timeInMillis = range.startMillis }
+        var balance = 0.0
 
-        return buildList {
-            var balance = 0.0
-            var dayStart = range.startMillis
-            while (dayStart < range.endMillis && dayStart <= nowMillis) {
-                cursor.add(Calendar.DAY_OF_MONTH, 1)
-                val dayEnd = cursor.timeInMillis
-
-                balance += points
-                    .filter { it.dateMillis >= dayStart && it.dateMillis < dayEnd }
-                    .sumOf { it.income - it.expense }
-                add(balance)
-                dayStart = dayEnd
+        return timeProvider.now().dayRanges(range)
+            .filter { it.startMillis <= nowMillis }
+            .map { day ->
+                balance += points.filter { it.dateMillis in day }.sumOf { it.income - it.expense }
+                balance
             }
-        }
     }
 }

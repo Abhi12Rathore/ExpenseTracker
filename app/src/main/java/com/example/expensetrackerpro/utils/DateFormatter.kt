@@ -32,6 +32,9 @@ object DateFormatter {
     /** Day of the month without padding, e.g. `8` */
     fun formatDayOfMonth(millis: Long): String = format("d", millis)
 
+    /** e.g. `9 Oct` */
+    fun formatDayMonth(millis: Long): String = format("d MMM", millis)
+
     /** e.g. `Fri, 17 Oct` */
     fun formatWeekdayDayMonth(millis: Long): String = format("EEE, d MMM", millis)
 
@@ -58,10 +61,6 @@ object DateFormatter {
         }
         return if (withYear) "$days ${formatYear(endMillis)}" else days
     }
-
-    /** Hour of the day (0-23) in the device time zone. */
-    fun hourOfDay(millis: Long): Int =
-        Calendar.getInstance().apply { timeInMillis = millis }.get(Calendar.HOUR_OF_DAY)
 
     // SimpleDateFormat is not thread-safe, so a new one is created per call
     private fun format(pattern: String, millis: Long): String =

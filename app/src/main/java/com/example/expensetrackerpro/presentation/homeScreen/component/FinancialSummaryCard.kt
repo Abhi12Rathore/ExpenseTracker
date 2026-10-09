@@ -36,7 +36,7 @@ import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.domain.models.FinancialSummary
 import com.example.expensetrackerpro.domain.models.PeriodComparison
-import com.example.expensetrackerpro.domain.models.PeriodGranularity
+import com.example.expensetrackerpro.presentation.common.filter.comparedWithLabel
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.presentation.homeScreen.component.charts.BalanceSparkline
 import com.example.expensetrackerpro.utils.CurrencyFormatter
@@ -93,14 +93,14 @@ fun FinancialSummaryCard(
     }
 }
 
-/** e.g. `▲ ₹3,200 more saved than Sep`, against the period before the selected one. */
+/** e.g. `▲ ₹3,200 more saved than this time last month`, against the period before the selected one. */
 @Composable
 private fun ComparisonChip(comparison: PeriodComparison) {
-    val previousPeriod = when (comparison.granularity) {
-        PeriodGranularity.WEEK -> stringResource(R.string.comparison_last_week)
-        PeriodGranularity.MONTH -> DateFormatter.formatShortMonth(comparison.previousRange.startMillis)
-        PeriodGranularity.YEAR -> stringResource(R.string.comparison_last_year)
-    }
+    val previousPeriod = comparedWithLabel(
+        granularity = comparison.granularity,
+        previousStartMillis = comparison.previousRange.startMillis,
+        isPartial = comparison.isPartial
+    )
     val difference = comparison.balanceDifference
     val amount = CurrencyFormatter.formatWhole(abs(difference))
     val text = when {

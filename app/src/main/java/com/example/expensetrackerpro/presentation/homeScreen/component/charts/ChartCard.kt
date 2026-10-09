@@ -129,6 +129,17 @@ internal fun SpendingBarsShimmer(modifier: Modifier = Modifier) {
     }
 }
 
+/** One block the size of a chart, for charts whose shape a few bars wouldn't suggest. */
+@Composable
+internal fun ChartBlockShimmer(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(180.dp)
+            .background(rememberShimmerBrush(), RoundedCornerShape(12.dp))
+    )
+}
+
 @Composable
 internal fun CategoryListShimmer(modifier: Modifier = Modifier) {
     val brush = rememberShimmerBrush()

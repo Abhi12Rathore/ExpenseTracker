@@ -3,32 +3,32 @@ package com.example.expensetrackerpro.domain.usecase.dashboard
 import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.FinancialSummary
 import com.example.expensetrackerpro.domain.models.PeriodComparison
+import com.example.expensetrackerpro.domain.usecase.filter.GetComparableRangeUseCase
 import com.example.expensetrackerpro.domain.usecase.filter.GetDateRangeUseCase
-import com.example.expensetrackerpro.domain.usecase.filter.StepPeriodUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 
 /**
- * Compares the balance of a week, month or year with the whole period before it. Emits null
+ * Compares the balance of a week, month or year with the period before it, like for like: a
+ * period still under way is measured against the previous one up to the same day. Emits null
  * for a custom range, which has no previous period of the same kind, and when neither period
  * has any income or expense.
  */
 class GetPeriodComparisonUseCase @Inject constructor(
     private val getFinancialSummary: GetFinancialSummaryUseCase,
     private val getDateRange: GetDateRangeUseCase,
-    private val stepPeriod: StepPeriodUseCase
+    private val getComparableRange: GetComparableRangeUseCase
 ) {
 
     operator fun invoke(filter: DateFilter): Flow<PeriodComparison?> {
         val period = filter as? DateFilter.Period ?: return flowOf(null)
-        val previous = stepPeriod(period, forward = false) ?: return flowOf(null)
-        val previousRange = getDateRange(previous)
+        val comparable = getComparableRange(period) ?: return flowOf(null)
 
         return combine(
             getFinancialSummary(getDateRange(period)),
-            getFinancialSummary(previousRange)
+            getFinancialSummary(comparable.range)
         ) { current, before ->
             // With nothing recorded in either period there is nothing worth comparing
             if (current.isEmpty() && before.isEmpty()) {
@@ -36,8 +36,9 @@ class GetPeriodComparisonUseCase @Inject constructor(
             } else {
                 PeriodComparison(
                     granularity = period.granularity,
-                    previousRange = previousRange,
-                    balanceDifference = current.totalBalance - before.totalBalance
+                    previousRange = comparable.range,
+                    balanceDifference = current.totalBalance - before.totalBalance,
+                    isPartial = comparable.isPartial
                 )
             }
         }
