@@ -1,152 +1,122 @@
-package com.example.expensetrackerpro.presentation.transactions
+package com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-
-
+import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.utils.CategoryIcons
 
-@OptIn(ExperimentalLayoutApi::class)
+private const val COLUMNS = 4
+private val TileShape = RoundedCornerShape(16.dp)
+
+/** Icon tiles, four to a row, ending with a tile that adds a new category. */
 @Composable
 fun CategorySection(
-    categories: List<Category>, // Updated from List<String>
-    selectedCategory: String,
-    onCategorySelected: (String) -> Unit,
+    categories: List<Category>,
+    selectedCategoryId: Int?,
+    onCategorySelected: (Int) -> Unit,
     onAddCategoryClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val outlineVariant = MaterialTheme.colorScheme.outlineVariant
-    val primaryColor = MaterialTheme.colorScheme.primary
-
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = "Category",
-            style = MaterialTheme.typography.labelLarge,
-            color = primaryColor,
-            fontWeight = FontWeight.SemiBold
-        )
+        SectionLabel(text = stringResource(R.string.transaction_category))
 
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            categories.forEach { category ->
-                val isSelected = category.name == selectedCategory
-
-                // 1. Get the specific icon and its persistent color
-                val icon = CategoryIcons.icons[category.iconName] ?: Icons.Default.Category
-                val iconColor = CategoryIcons.color(category.iconName) ?: primaryColor
-
-                FilterChip(
-                    selected = isSelected,
-                    onClick = { onCategorySelected(category.name) },
-                    label = {
-                        Text(
-                            text = category.name,
-                            style = MaterialTheme.typography.bodySmall
+        // null stands for the "New" tile, which always comes last
+        (categories + null).chunked(COLUMNS).forEach { rowTiles ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                rowTiles.forEach { category ->
+                    if (category != null) {
+                        val color = CategoryIcons.color(category.iconName)
+                            ?: MaterialTheme.colorScheme.primary
+                        CategoryTile(
+                            label = category.name,
+                            icon = CategoryIcons.icons[category.iconName] ?: Icons.Default.Category,
+                            color = color,
+                            isSelected = category.id == selectedCategoryId,
+                            onClick = { onCategorySelected(category.id) },
+                            modifier = Modifier.weight(1f)
                         )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            // 2. Apply the persistent category color here
-                            tint = iconColor
+                    } else {
+                        CategoryTile(
+                            label = stringResource(R.string.transaction_category_new),
+                            icon = Icons.Default.Add,
+                            color = MaterialTheme.colorScheme.primary,
+                            isSelected = false,
+                            onClick = onAddCategoryClicked,
+                            modifier = Modifier.weight(1f)
                         )
-                    },
-                    shape = RoundedCornerShape(14.dp),
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                        selectedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        selectedLeadingIconColor = iconColor,
-                        containerColor = Color.Transparent,
-                        labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        iconColor = iconColor
-                    ),
-                    border = FilterChipDefaults.filterChipBorder(
-                        enabled = true,
-                        selected = isSelected,
-                        borderColor = outlineVariant,
-                        selectedBorderColor = Color.Transparent,
-                        borderWidth = 1.dp
-                    )
-                )
+                    }
+                }
+                // Keeps the tiles of a short last row the same width as the rest
+                repeat(COLUMNS - rowTiles.size) { Spacer(modifier = Modifier.weight(1f)) }
             }
-
-            // Custom "Add New" with Dotted Border
-            AddNewCategoryChip(onClick = onAddCategoryClicked)
         }
     }
 }
 
 @Composable
-fun AddNewCategoryChip(onClick: () -> Unit) {
-    val primary = MaterialTheme.colorScheme.primary
-    val cornerRadius = 14.dp
-
-    // We use a Box with a minimum touch target to match FilterChip's behavior
-    Box(
-        modifier = Modifier
-            .height(32.dp) // Visual height of the chip
-            .fillMaxWidth()
-            .drawWithContent {
-                drawContent()
-                // Dotted border logic
-                drawRoundRect(
-                    color = primary,
-                    style = Stroke(
-                        width = 3f,
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(15f, 15f), 0f)
-                    ),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius.toPx())
-                )
-            }
+private fun CategoryTile(
+    label: String,
+    icon: ImageVector,
+    color: Color,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        selected = isSelected,
+        onClick = onClick,
+        modifier = modifier,
+        shape = TileShape,
+        color = if (isSelected) color.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceContainerLow,
+        border = if (isSelected) BorderStroke(1.5.dp, color) else null
     ) {
-        Surface(
-            onClick = onClick,
-            color = Color.Transparent,
-            shape = RoundedCornerShape(cornerRadius),
-            modifier = Modifier.fillMaxSize()
+        Column(
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = primary
-                )
-                Spacer(Modifier.width(6.dp))
-
-                Text(
-                    text = "Add Category",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = primary,
-                    fontWeight = FontWeight.Medium
-                )
-            }
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = color
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
-

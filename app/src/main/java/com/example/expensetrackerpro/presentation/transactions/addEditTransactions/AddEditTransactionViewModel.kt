@@ -1,35 +1,51 @@
 package com.example.expensetrackerpro.presentation.transactions.addEditTransactions
 
-
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.DateChoice
+import com.example.expensetrackerpro.domain.models.DateSelection
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.category.AddCategoryUseCase
 import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesByTypeUseCase
-import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesUseCase
-import com.example.expensetrackerpro.domain.usecase.transaction.AddTransactionUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.DeleteTransactionUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.FormatAmountInputUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionByIdUseCase
-import com.example.expensetrackerpro.domain.usecase.transaction.UpdateTransactionUseCase
-import com.example.expensetrackerpro.domain.usecase.transaction.ValidateTransactionInputUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.ResolveTransactionDateUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.SanitizeAmountInputUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.SaveTransactionUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.ValidateTransactionDraftUseCase
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEffect
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionError
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEvent
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionUiState
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class AddEditTransactionViewModel @Inject constructor(
     private val getTransactionById: GetTransactionByIdUseCase,
-    private val getCategories: GetCategoriesUseCase,
     getCategoriesByType: GetCategoriesByTypeUseCase,
-    private val addTransaction: AddTransactionUseCase,
-    private val updateTransaction: UpdateTransactionUseCase,
-    private val validateTransactionInput: ValidateTransactionInputUseCase,
+    private val saveTransaction: SaveTransactionUseCase,
+    private val deleteTransaction: DeleteTransactionUseCase,
+    private val validateTransactionDraft: ValidateTransactionDraftUseCase,
+    private val sanitizeAmountInput: SanitizeAmountInputUseCase,
+    private val formatAmountInput: FormatAmountInputUseCase,
+    private val resolveTransactionDate: ResolveTransactionDateUseCase,
     private val addCategory: AddCategoryUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -38,33 +54,21 @@ class AddEditTransactionViewModel @Inject constructor(
     private val transactionId: Int? =
         savedStateHandle.get<Int>("transactionId")?.takeIf { it != -1 }
 
-    private val isEditMode = transactionId != null
+    // The stored transaction being edited, once it has loaded
+    private var original: Transaction? = null
 
-    // Everything the form owns; availableCategories is merged in below
-    private val formState = MutableStateFlow(AddEditTransactionUiState(isEditMode = isEditMode))
+    private val _uiState = MutableStateFlow(
+        AddEditTransactionUiState(isEditMode = transactionId != null)
+            .withDate(DateSelection.Today)
+    )
+    val uiState: StateFlow<AddEditTransactionUiState> = _uiState.asStateFlow()
 
-    /**
-     * SENIOR ARCHITECTURE: Reactive Category Stream
-     * This observes the transactionType in formState. Whenever it changes,
-     * flatMapLatest triggers a new Room query to fetch the correct categories.
-     */
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val availableCategories: Flow<List<Category>> = formState
-        .map { it.transactionType }
-        .distinctUntilChanged()
-        .flatMapLatest { type -> getCategoriesByType(type) }
-        .onStart { emit(emptyList()) }
-
-    val uiState: StateFlow<AddEditTransactionUiState> =
-        combine(formState, availableCategories) { form, categories ->
-            form.copy(availableCategories = categories)
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = formState.value
-        )
+    // A Channel, not state: each effect is handled once, and waits if nobody is collecting yet
+    private val _effects = Channel<AddEditTransactionEffect>(Channel.BUFFERED)
+    val effects: Flow<AddEditTransactionEffect> = _effects.receiveAsFlow()
 
     init {
+        observeCategories(getCategoriesByType)
         if (transactionId != null) {
             loadExistingTransaction(transactionId)
         }
@@ -73,125 +77,174 @@ class AddEditTransactionViewModel @Inject constructor(
     fun onEvent(event: AddEditTransactionEvent) {
         when (event) {
             is AddEditTransactionEvent.TypeChanged -> onTypeChange(event.type)
-            is AddEditTransactionEvent.AmountChanged -> onAmountChange(event.amount)
-            is AddEditTransactionEvent.NoteChanged -> onNoteChange(event.note)
-            is AddEditTransactionEvent.CategorySelected -> onCategorySelect(event.category)
-            is AddEditTransactionEvent.DateSelected -> onDateSelected(event.millis)
-            is AddEditTransactionEvent.DatePickerToggled ->
-                formState.update { it.copy(isDatePickerVisible = event.show) }
+            is AddEditTransactionEvent.AmountChanged ->
+                updateForm { it.copy(amount = sanitizeAmountInput(it.amount, event.amount)) }
+            is AddEditTransactionEvent.TitleChanged ->
+                updateForm { it.copy(title = event.title, isTitleErrorVisible = event.title.isBlank()) }
+            is AddEditTransactionEvent.NoteChanged ->
+                // Longer text, such as a paste, is cut at the limit
+                updateForm { it.copy(note = event.note.take(NOTE_MAX_LENGTH)) }
+            AddEditTransactionEvent.NoteExpanded -> updateForm { it.copy(isNoteExpanded = true) }
+            AddEditTransactionEvent.NoteRemoved ->
+                updateForm { it.copy(note = "", isNoteExpanded = false) }
+            is AddEditTransactionEvent.CategorySelected ->
+                updateForm { it.copy(selectedCategoryId = event.categoryId) }
+            is AddEditTransactionEvent.DateChoiceSelected -> onDateChoice(event.choice)
+            is AddEditTransactionEvent.DatePicked ->
+                updateForm { it.withDate(DateSelection.Picked(event.utcDayMillis)) }
             AddEditTransactionEvent.CategorySheetOpened ->
-                formState.update { it.copy(isCategorySheetVisible = true) }
+                updateForm { it.copy(isCategorySheetVisible = true) }
             AddEditTransactionEvent.CategorySheetDismissed ->
-                formState.update { it.copy(isCategorySheetVisible = false) }
+                updateForm { it.copy(isCategorySheetVisible = false) }
             is AddEditTransactionEvent.CategoryAdded ->
                 onCategoryAdded(event.name, event.iconName, event.type)
-            AddEditTransactionEvent.SaveClicked -> saveTransaction()
+            AddEditTransactionEvent.SaveClicked -> save()
+            AddEditTransactionEvent.DeleteClicked ->
+                updateForm { it.copy(transactionToDelete = original) }
+            AddEditTransactionEvent.DeleteDismissed ->
+                updateForm { it.copy(transactionToDelete = null) }
+            AddEditTransactionEvent.DeleteConfirmed -> delete()
+        }
+    }
+
+    /** Whenever the type changes, a new query fetches the categories of that type. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun observeCategories(getCategoriesByType: GetCategoriesByTypeUseCase) {
+        viewModelScope.launch {
+            _uiState
+                .map { it.transactionType }
+                .distinctUntilChanged()
+                .flatMapLatest { type -> getCategoriesByType(type) }
+                .collect { categories -> updateForm { it.copy(availableCategories = categories) } }
         }
     }
 
     private fun loadExistingTransaction(id: Int) {
         viewModelScope.launch {
             val transaction = getTransactionById(id) ?: return@launch
-            // We need to fetch the category object because transaction only stores categoryId
-            val category = getCategories().first().find { it.id == transaction.categoryId }
+            original = transaction
 
-            formState.update { it.copy(
-                amount = transaction.amount.toString(),
-                note = transaction.note,
-                transactionType = transaction.transactionType,
-                selectedCategory = category,
-                dateMillis = transaction.dateMillis
-            )}
-            validate()
-        }
-    }
-
-    private fun onTypeChange(newType: TransactionType) {
-        formState.update {
-            it.copy(
-                transactionType = newType,
-                selectedCategory = null // Reset category to prevent Income cat in Expense trans
-            )
-        }
-        validate()
-    }
-
-    private fun onAmountChange(newAmount: String) {
-        // Only allow numeric input
-        if (newAmount.isEmpty() || newAmount.toDoubleOrNull() != null) {
-            formState.update { it.copy(amount = newAmount) }
-            validate()
-        }
-    }
-
-    private fun onNoteChange(newNote: String) {
-        formState.update { it.copy(note = newNote) }
-        validate()
-    }
-
-    private fun onCategorySelect(category: Category) {
-        formState.update { it.copy(selectedCategory = category) }
-        validate()
-    }
-
-    private fun onDateSelected(millis: Long?) {
-        millis?.let { selectedDate ->
-            formState.update { it.copy(dateMillis = selectedDate, isDatePickerVisible = false) }
-        }
-    }
-
-    private fun validate() {
-        val state = formState.value
-        val isValid = validateTransactionInput(
-            amount = state.amount,
-            note = state.note,
-            hasCategory = state.selectedCategory != null
-        )
-
-        formState.update { it.copy(isSaveEnabled = isValid) }
-    }
-
-    private fun saveTransaction() {
-        val currentState = formState.value
-        val category = currentState.selectedCategory
-        if (currentState.isSaveEnabled && category != null) {
-            viewModelScope.launch {
-                val transaction = Transaction(
-                    id = transactionId ?: 0,
-                    amount = currentState.amount.toDoubleOrNull() ?: 0.0,
-                    note = currentState.note,
-                    dateMillis = currentState.dateMillis,
-                    categoryId = category.id,
-                    transactionType = currentState.transactionType,
-                    title = currentState.note,
-                    categoryName = category.name
-                )
-
-                if (isEditMode) {
-                    updateTransaction(transaction)
-                } else {
-                    addTransaction(transaction)
-                }
-                onSuccess()
+            updateForm {
+                it.copy(
+                    title = transaction.title,
+                    amount = formatAmountInput(transaction.amount),
+                    note = transaction.note,
+                    isNoteExpanded = transaction.note.isNotEmpty(),
+                    transactionType = transaction.transactionType,
+                    selectedCategoryId = transaction.categoryId
+                ).withDate(DateSelection.Stored(transaction.dateMillis))
             }
         }
     }
 
-    private fun onCategoryAdded(name: String, icon: String, type: TransactionType) {
-        formState.update { it.copy(isCategorySheetVisible = false) }
-        viewModelScope.launch {
-            val newCategory = Category(
-                name = name,
-                iconName = icon,
-                type = type, // Now passing the type from the UI context
-                isCustom = true
+    private fun onTypeChange(newType: TransactionType) {
+        updateForm {
+            it.copy(
+                transactionType = newType,
+                // An expense category can't stay on an income, and the other way round
+                selectedCategoryId = it.selectedCategoryId
+                    .takeIf { _ -> it.selectedCategory?.type == newType }
             )
-            addCategory(newCategory)
         }
     }
 
-    private fun onSuccess() {
-        // Reset state for new entry
-        formState.update { AddEditTransactionUiState(isEditMode = isEditMode) }
+    private fun onDateChoice(choice: DateChoice) {
+        val selection = when (choice) {
+            DateChoice.TODAY -> DateSelection.Today
+            DateChoice.YESTERDAY -> DateSelection.Yesterday
+            // Any other date comes from the picker, as DatePicked
+            DateChoice.OTHER -> return
+        }
+        updateForm { it.withDate(selection) }
+    }
+
+    private fun onCategoryAdded(name: String, icon: String, type: TransactionType) {
+        updateForm { it.copy(isCategorySheetVisible = false) }
+        viewModelScope.launch {
+            val newId = addCategory(
+                Category(name = name.trim(), iconName = icon, type = type, isCustom = true)
+            )
+            updateForm {
+                if (it.transactionType == type) it.copy(selectedCategoryId = newId) else it
+            }
+        }
+    }
+
+    private fun save() {
+        val state = _uiState.value
+        val category = state.selectedCategory
+        val amount = state.validAmount
+        if (!state.isSaveEnabled || category == null || amount == null) return
+
+        // Also disables Save, so a second tap can't store the transaction twice
+        updateForm { it.copy(isSaving = true) }
+        viewModelScope.launch {
+            val saved = saveTransaction(
+                Transaction(
+                    id = transactionId ?: 0,
+                    title = state.title.trim(),
+                    amount = amount,
+                    note = state.note.trim(),
+                    dateMillis = state.dateMillis,
+                    categoryId = category.id,
+                    categoryName = category.name,
+                    transactionType = state.transactionType
+                )
+            )
+
+            if (saved) {
+                _effects.send(AddEditTransactionEffect.NavigateBack)
+            } else {
+                updateForm { it.copy(isSaving = false) }
+                _effects.send(AddEditTransactionEffect.ShowError(AddEditTransactionError.SAVE_FAILED))
+            }
+        }
+    }
+
+    private fun delete() {
+        val transaction = _uiState.value.transactionToDelete ?: return
+
+        updateForm { it.copy(transactionToDelete = null) }
+        viewModelScope.launch {
+            if (deleteTransaction(transaction)) {
+                _effects.send(AddEditTransactionEffect.NavigateBack)
+            } else {
+                _effects.send(AddEditTransactionEffect.ShowError(AddEditTransactionError.DELETE_FAILED))
+            }
+        }
+    }
+
+    /** Applies [change], then re-derives what depends on the whole form. */
+    private fun updateForm(change: (AddEditTransactionUiState) -> AddEditTransactionUiState) {
+        _uiState.update { change(it).validated() }
+    }
+
+    private fun AddEditTransactionUiState.validated(): AddEditTransactionUiState {
+        val validation = validateTransactionDraft(
+            amount = amount,
+            title = title,
+            note = note,
+            hasCategory = selectedCategory != null
+        )
+
+        return copy(
+            validAmount = validation.amount?.toDouble(),
+            isSaveEnabled = validation.isValid && !isSaving
+        )
+    }
+
+    private fun AddEditTransactionUiState.withDate(selection: DateSelection): AddEditTransactionUiState {
+        val date = resolveTransactionDate(selection)
+
+        return copy(
+            dateMillis = date.millis,
+            dateChoice = date.choice,
+            pickerUtcMillis = date.pickerUtcMillis,
+            maxPickerUtcMillis = date.maxPickerUtcMillis
+        )
+    }
+
+    private companion object {
+        const val NOTE_MAX_LENGTH = ValidateTransactionDraftUseCase.NOTE_MAX_LENGTH
     }
 }
