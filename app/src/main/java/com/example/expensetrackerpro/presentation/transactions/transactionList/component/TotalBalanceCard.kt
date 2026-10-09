@@ -48,7 +48,7 @@ fun TotalBalanceCard(
                 text = "Total Balance",
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = CurrencyFormatter.format(totalBalance),
@@ -80,7 +80,7 @@ fun TotalBalanceCard(
                     amount = totalExpense,
                     icon = Icons.Default.ArrowDownward,
                     // Financial Red (from your theme error color)
-                    tint = Color.Red,
+                    tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -110,7 +110,7 @@ fun BalanceSummaryItem(
         }
         Spacer(modifier = Modifier.width(8.dp))
         Column {
-            Text(label, style = MaterialTheme.typography.labelSmall, color = Color.Black)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(CurrencyFormatter.format(amount), style = MaterialTheme.typography.titleMedium, color =tint, fontWeight = FontWeight.Bold)
         }
     }

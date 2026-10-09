@@ -43,7 +43,7 @@ fun TransactionTypeToggle(
             val activeColor = if (type == TransactionType.INCOME) incomeColor else expenseColor
 
             val contentColor by animateColorAsState(
-                targetValue = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                 label = "color"
             )
             val containerColor by animateColorAsState(

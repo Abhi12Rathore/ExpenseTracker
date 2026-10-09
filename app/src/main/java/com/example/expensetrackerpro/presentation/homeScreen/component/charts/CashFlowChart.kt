@@ -1,6 +1,5 @@
 package com.example.expensetrackerpro.presentation.homeScreen.component.charts
 
-import android.graphics.Color
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -24,6 +23,7 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 fun CashFlowChart(
     data: List<CashFlowPoint>
 ) {
+    val colors = chartColors()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -94,14 +94,13 @@ fun CashFlowChart(
                                 "Income"
                             ).apply {
 
-                                color = Color.parseColor("#4CAF50")
+                                color = colors.income
 
-                                valueTextColor =
-                                    Color.parseColor("#4CAF50")
+                                valueTextColor = colors.income
 
                                 lineWidth = 3f
 
-                                setCircleColor(Color.parseColor("#4CAF50"))
+                                setCircleColor(colors.income)
 
                                 circleRadius = 4f
 
@@ -112,8 +111,7 @@ fun CashFlowChart(
 
                                 setDrawFilled(true)
 
-                                fillColor =
-                                    Color.parseColor("#A5D6A7")
+                                fillColor = colors.income
 
                             }
 
@@ -127,14 +125,13 @@ fun CashFlowChart(
                                 "Expense"
                             ).apply {
 
-                                color = Color.parseColor("#F44336")
+                                color = colors.expense
 
-                                valueTextColor =
-                                    Color.parseColor("#F44336")
+                                valueTextColor = colors.expense
 
                                 lineWidth = 3f
 
-                                setCircleColor(Color.parseColor("#F44336"))
+                                setCircleColor(colors.expense)
 
                                 circleRadius = 4f
 
@@ -145,8 +142,7 @@ fun CashFlowChart(
 
                                 setDrawFilled(true)
 
-                                fillColor =
-                                    Color.parseColor("#EF9A9A")
+                                fillColor = colors.expense
 
                             }
 
@@ -177,6 +173,10 @@ fun CashFlowChart(
 
                             setDrawGridLines(false)
 
+                            textColor = colors.axisText
+
+                            axisLineColor = colors.grid
+
                         }
 
                         //--------------------------------------------------
@@ -188,6 +188,12 @@ fun CashFlowChart(
                             setDrawGridLines(true)
 
                             axisMinimum = 0f
+
+                            textColor = colors.axisText
+
+                            gridColor = colors.grid
+
+                            axisLineColor = colors.grid
 
                         }
 
@@ -202,6 +208,8 @@ fun CashFlowChart(
                             isEnabled = true
 
                             textSize = 12f
+
+                            textColor = colors.axisText
 
                             verticalAlignment =
                                 Legend.LegendVerticalAlignment.TOP

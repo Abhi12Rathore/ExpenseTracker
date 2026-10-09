@@ -17,7 +17,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.presentation.common.filter.components.PeriodFilter
@@ -27,6 +26,9 @@ import com.example.expensetrackerpro.presentation.transactions.transactionList.c
 import com.example.expensetrackerpro.presentation.transactions.transactionList.uistate.TransactionListEvent
 import com.example.expensetrackerpro.presentation.transactions.transactionList.uistate.TransactionListUiState
 import com.example.expensetrackerpro.presentation.transactions.transactionList.viewmodel.TransactionListViewModel
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.example.expensetrackerpro.ExpenseTrackerProTheme
+import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 
 @Composable
 fun TransactionListScreen(
@@ -73,7 +75,7 @@ fun TransactionListContent(
             FloatingActionButton(
                 onClick = { onAddExpenseClick()}, // Opens the menu
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Color.White,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape
             ) {
                 Icon(
@@ -173,5 +175,19 @@ fun TransactionListContent(
 
             item { Spacer(modifier = Modifier.height(80.dp)) } // Space for FAB
         }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun TransactionListContentPreview() {
+    ExpenseTrackerProTheme {
+        TransactionListContent(
+            uiState = TransactionListUiState(transactions = PreviewData.transactions),
+            onEvent = {},
+            onAddExpenseClick = {},
+            onEditExpenseClick = {},
+            onNavigateToManageCategories = {}
+        )
     }
 }

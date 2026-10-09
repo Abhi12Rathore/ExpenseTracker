@@ -30,7 +30,7 @@ import com.example.expensetrackerpro.domain.models.TransactionType
 @Composable
 fun ExpenseDetailCard(title:String,amount:String, onTitleChange:(String)->Unit,onAmountChange:(String)->Unit,selectedType: TransactionType){
     Surface(
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(8.dp),
         shadowElevation = 1.dp,
         modifier = Modifier.fillMaxWidth()
@@ -84,7 +84,7 @@ fun LabeledInputField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(placeholder, color = Color.LightGray) },
+            placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant) },
             leadingIcon = {
                 // The Colored Badge Container remains as per previous requirement
                 Surface(

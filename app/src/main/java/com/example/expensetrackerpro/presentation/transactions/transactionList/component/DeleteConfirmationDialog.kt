@@ -12,7 +12,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -43,7 +42,7 @@ fun DeleteConfirmationDialog(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f)), // Guaranteed dark background
+                .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.4f)), // Guaranteed dark background
             contentAlignment = Alignment.Center
         ) {
             // 2. The Dialog Card
@@ -52,7 +51,7 @@ fun DeleteConfirmationDialog(
                     .fillMaxWidth(0.85f) // Dialog width
                     .wrapContentHeight(),
                 shape = RoundedCornerShape(28.dp),
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 tonalElevation = 6.dp
             ) {
                 Column(
@@ -154,7 +153,7 @@ fun DeleteConfirmationDialog(
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.error,
-                                contentColor = Color.White
+                                contentColor = MaterialTheme.colorScheme.onError
                             ),
                             contentPadding = PaddingValues(vertical = 12.dp)
                         ) {

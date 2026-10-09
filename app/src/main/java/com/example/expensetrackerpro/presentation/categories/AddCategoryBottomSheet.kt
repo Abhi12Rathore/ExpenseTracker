@@ -9,7 +9,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.domain.models.Category
@@ -88,7 +87,7 @@ fun AddCategoryBottomSheet(
                     Icon(
                         imageVector = CategoryIcons.icons[selectedIconName] ?: Icons.Default.Category,
                         contentDescription = null,
-                        tint = CategoryIcons.iconColors[categoryName] ?: MaterialTheme.colorScheme.primary
+                        tint = CategoryIcons.color(categoryName) ?: MaterialTheme.colorScheme.primary
                     )
                 }
             )
@@ -110,7 +109,7 @@ fun AddCategoryBottomSheet(
 
                     // FETCH THE COLOR: Pull the specific color for this category name
                     // If name is not found in the map, it defaults to VeridianGreenPrimary
-                    val categoryColor = CategoryIcons.iconColors[name] ?: MaterialTheme.colorScheme.primary
+                    val categoryColor = CategoryIcons.color(name) ?: MaterialTheme.colorScheme.primary
 
                     Surface(
                         onClick = { selectedIconName = name },
@@ -145,7 +144,7 @@ fun AddCategoryBottomSheet(
                 enabled = categoryName.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
                 Text(if (isEditMode) "Update Category" else "Add Category")

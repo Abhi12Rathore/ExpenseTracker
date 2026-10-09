@@ -13,7 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.domain.models.Transaction
@@ -29,7 +28,7 @@ fun ExpenseTile(
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val categoryColor = CategoryIcons.iconColors[transaction.categoryName]
+    val categoryColor = CategoryIcons.color(transaction.categoryName)
         ?: MaterialTheme.colorScheme.primary
     val categoryIcon = CategoryIcons.icons[transaction.categoryName]
         ?: Icons.Default.Category
@@ -37,7 +36,7 @@ fun ExpenseTile(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = RoundedCornerShape(16.dp),
         shadowElevation = 2.dp
     ) {
@@ -99,7 +98,7 @@ fun ExpenseTile(
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = "Edit",
-                        tint = Color.Black.copy(alpha = 0.5f),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp)
                     )
                 }

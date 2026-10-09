@@ -23,31 +23,42 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Subscriptions
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Work
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
+import com.example.expensetrackerpro.ui.theme.CategoryPalette
+import com.example.expensetrackerpro.ui.theme.extendedColors
 
 object CategoryIcons {
-    val iconColors = mapOf(
-        "Shopping" to Color(0xFF5C6BC0),      // Indigo
-        "Food" to Color(0xFFFF7043),          // Deep Orange
-        "Transport" to Color(0xFF26A69A),     // Teal
-        "Bills" to Color(0xFFEF5350),         // Red
-        "Health" to Color(0xFF66BB6A),        // Green
-        "Education" to Color(0xFF42A5F5),     // Blue
-        "Entertainment" to Color(0xFFAB47BC), // Purple
-        "Gift" to Color(0xFFEC407A),          // Pink
-        "Home" to Color(0xFF795548),          // Brown
-        "Work" to Color(0xFF607D8B),          // Blue Grey
-        "Travel" to Color(0xFF00BCD4),        // Cyan
-        "Pets" to Color(0xFFFFB300),          // Amber
-        "Subscriptions" to Color(0xFF3F51B5), // Indigo Dark
-        "Fitness" to Color(0xFF8BC34A),
-        "Payments" to Color(0xFFEF5350),
-        "Work" to Color(0xFF42A5F5),
-        "TrendingUp" to Color(0xFF795548),
-        "RealEstateAgent" to Color(0xFFEF5350),
-        "AccountBalance" to Color(0xFFEC407A),
-        "Savings" to Color(0xFF607D8B),
+    // Which hue of the theme's category palette each icon uses
+    private val iconHues: Map<String, (CategoryPalette) -> Color> = mapOf(
+        "Shopping" to CategoryPalette::indigo,
+        "Food" to CategoryPalette::deepOrange,
+        "Transport" to CategoryPalette::teal,
+        "Bills" to CategoryPalette::red,
+        "Health" to CategoryPalette::green,
+        "Education" to CategoryPalette::blue,
+        "Entertainment" to CategoryPalette::purple,
+        "Gift" to CategoryPalette::pink,
+        "Home" to CategoryPalette::brown,
+        "Travel" to CategoryPalette::cyan,
+        "Pets" to CategoryPalette::amber,
+        "Subscriptions" to CategoryPalette::deepIndigo,
+        "Fitness" to CategoryPalette::lightGreen,
+        "Payments" to CategoryPalette::red,
+        "Work" to CategoryPalette::blue,
+        "TrendingUp" to CategoryPalette::brown,
+        "RealEstateAgent" to CategoryPalette::red,
+        "AccountBalance" to CategoryPalette::pink,
+        "Savings" to CategoryPalette::blueGrey,
     )
+
+    /** The icon's identity color in the current theme, or null when the icon has none. */
+    @Composable
+    @ReadOnlyComposable
+    fun color(iconName: String): Color? =
+        iconHues[iconName]?.invoke(MaterialTheme.extendedColors.categoryPalette)
 
     val icons = mapOf(
         "Shopping" to Icons.Default.ShoppingCart,

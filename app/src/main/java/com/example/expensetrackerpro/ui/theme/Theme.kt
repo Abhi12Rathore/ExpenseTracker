@@ -6,59 +6,50 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import com.example.expensetrackerpro.ui.theme.CharcoalBackgroundDark
-import com.example.expensetrackerpro.ui.theme.CharcoalSurfaceDark
-import com.example.expensetrackerpro.ui.theme.CharcoalSurfaceVariantDark
-import com.example.expensetrackerpro.ui.theme.FinancialRedError
-import com.example.expensetrackerpro.ui.theme.OnSecondaryContainerDark
-import com.example.expensetrackerpro.ui.theme.OnSecondaryContainerLight
-import com.example.expensetrackerpro.ui.theme.OutlineVariantDark
-import com.example.expensetrackerpro.ui.theme.OutlineVariantLight
-import com.example.expensetrackerpro.ui.theme.SecondaryContainerDark
-import com.example.expensetrackerpro.ui.theme.SecondaryContainerLight
-import com.example.expensetrackerpro.ui.theme.SlateSecondary
-import com.example.expensetrackerpro.ui.theme.SurfaceContainerDark
-import com.example.expensetrackerpro.ui.theme.SurfaceContainerHighDark
-import com.example.expensetrackerpro.ui.theme.SurfaceContainerHighLight
-import com.example.expensetrackerpro.ui.theme.SurfaceContainerHighestDark
-import com.example.expensetrackerpro.ui.theme.SurfaceContainerHighestLight
-import com.example.expensetrackerpro.ui.theme.SurfaceContainerLight
-import com.example.expensetrackerpro.ui.theme.SurfaceContainerLowDark
-import com.example.expensetrackerpro.ui.theme.SurfaceContainerLowLight
-import com.example.expensetrackerpro.ui.theme.SurfaceContainerLowestDark
-import com.example.expensetrackerpro.ui.theme.SurfaceContainerLowestLight
-import com.example.expensetrackerpro.ui.theme.SurfaceLight
-import com.example.expensetrackerpro.ui.theme.Typography
-import com.example.expensetrackerpro.ui.theme.VeridianGreenPrimary
-import com.example.expensetrackerpro.ui.theme.VeridianGreenPrimaryDark
-import com.example.expensetrackerpro.ui.theme.VeridianOnPrimary
-import com.example.expensetrackerpro.ui.theme.VeridianOnPrimaryContainer
-import com.example.expensetrackerpro.ui.theme.VeridianOnPrimaryDark
-import com.example.expensetrackerpro.ui.theme.VeridianPrimaryContainer
-import com.example.expensetrackerpro.ui.theme.VeridianPrimaryContainerDark
+import com.example.expensetrackerpro.ui.theme.*
 
+// Every role is set explicitly: anything left out falls back to the Material baseline purple
 private val DarkColorScheme = darkColorScheme(
     primary = VeridianGreenPrimaryDark,
     onPrimary = VeridianOnPrimaryDark,
     primaryContainer = VeridianPrimaryContainerDark,
+    onPrimaryContainer = VeridianOnPrimaryContainerDark,
+    inversePrimary = VeridianGreenPrimary,
+    secondary = SlateSecondaryDark,
+    onSecondary = SlateOnSecondaryDark,
+    secondaryContainer = SecondaryContainerDark,
+    onSecondaryContainer = OnSecondaryContainerDark,
+    tertiary = TertiaryDark,
+    onTertiary = OnTertiaryDark,
+    tertiaryContainer = TertiaryContainerDark,
+    onTertiaryContainer = OnTertiaryContainerDark,
     background = CharcoalBackgroundDark,
+    onBackground = OnBackgroundDark,
     surface = CharcoalSurfaceDark,
-    onSurface = Color.White,
+    onSurface = OnSurfaceDark,
     surfaceVariant = CharcoalSurfaceVariantDark,
+    onSurfaceVariant = OnSurfaceVariantDark,
+    surfaceTint = VeridianGreenPrimaryDark,
+    inverseSurface = InverseSurfaceDark,
+    inverseOnSurface = InverseOnSurfaceDark,
+    error = FinancialRedErrorDark,
+    onError = OnErrorDark,
+    errorContainer = ErrorContainerDark,
+    onErrorContainer = OnErrorContainerDark,
+    outline = OutlineDark,
+    outlineVariant = OutlineVariantDark,
+    scrim = Scrim,
+    surfaceBright = SurfaceBrightDark,
+    surfaceDim = CharcoalSurfaceDark,
     surfaceContainerLowest = SurfaceContainerLowestDark,
     surfaceContainerLow = SurfaceContainerLowDark,
     surfaceContainer = SurfaceContainerDark,
     surfaceContainerHigh = SurfaceContainerHighDark,
-    surfaceContainerHighest = SurfaceContainerHighestDark,
-    outlineVariant = OutlineVariantDark,
-    secondaryContainer = SecondaryContainerDark,
-    onSecondaryContainer = OnSecondaryContainerDark,
-    error = Color(0xFFFFB4AB)
+    surfaceContainerHighest = SurfaceContainerHighestDark
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -66,19 +57,38 @@ private val LightColorScheme = lightColorScheme(
     onPrimary = VeridianOnPrimary,
     primaryContainer = VeridianPrimaryContainer,
     onPrimaryContainer = VeridianOnPrimaryContainer,
-    background = SurfaceLight,
-    surface = SurfaceLight,
-    onSurface = Color(0xFF191C19),
+    inversePrimary = VeridianGreenPrimaryDark,
     secondary = SlateSecondary,
+    onSecondary = SlateOnSecondary,
+    secondaryContainer = SecondaryContainerLight,
+    onSecondaryContainer = OnSecondaryContainerLight,
+    tertiary = TertiaryLight,
+    onTertiary = OnTertiaryLight,
+    tertiaryContainer = TertiaryContainerLight,
+    onTertiaryContainer = OnTertiaryContainerLight,
+    background = SurfaceLight,
+    onBackground = OnSurfaceLight,
+    surface = SurfaceLight,
+    onSurface = OnSurfaceLight,
+    surfaceVariant = SurfaceVariantLight,
+    onSurfaceVariant = OnSurfaceVariantLight,
+    surfaceTint = VeridianGreenPrimary,
+    inverseSurface = InverseSurfaceLight,
+    inverseOnSurface = InverseOnSurfaceLight,
+    error = FinancialRedError,
+    onError = OnErrorLight,
+    errorContainer = ErrorContainerLight,
+    onErrorContainer = OnErrorContainerLight,
+    outline = OutlineLight,
+    outlineVariant = OutlineVariantLight,
+    scrim = Scrim,
+    surfaceBright = SurfaceLight,
+    surfaceDim = SurfaceDimLight,
     surfaceContainerLowest = SurfaceContainerLowestLight,
     surfaceContainerLow = SurfaceContainerLowLight,
     surfaceContainer = SurfaceContainerLight,
     surfaceContainerHigh = SurfaceContainerHighLight,
-    surfaceContainerHighest = SurfaceContainerHighestLight,
-    outlineVariant = OutlineVariantLight,
-    secondaryContainer = SecondaryContainerLight,
-    onSecondaryContainer = OnSecondaryContainerLight,
-    error = FinancialRedError
+    surfaceContainerHighest = SurfaceContainerHighestLight
 )
 
 // The palette is fixed: wallpaper-based dynamic color is deliberately not used
@@ -96,14 +106,21 @@ fun ExpenseTrackerProTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.background.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            // Edge-to-edge: the bars are transparent, so only their icon contrast is set here
+            WindowCompat.getInsetsController(window, view).apply {
+                isAppearanceLightStatusBars = !darkTheme
+                isAppearanceLightNavigationBars = !darkTheme
+            }
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    val extendedColors = if (darkTheme) DarkExtendedColors else LightExtendedColors
+
+    CompositionLocalProvider(LocalExtendedColors provides extendedColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

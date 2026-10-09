@@ -15,6 +15,9 @@ import com.example.expensetrackerpro.presentation.transactions.CategorySection
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.*
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEvent
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionUiState
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.example.expensetrackerpro.ExpenseTrackerProTheme
+import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -135,5 +138,24 @@ fun AddEditTransactionContent(
 
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun AddEditTransactionContentPreview() {
+    ExpenseTrackerProTheme {
+        AddEditTransactionContent(
+            state = AddEditTransactionUiState(
+                amount = "1850",
+                note = "Groceries",
+                selectedCategory = PreviewData.categories.first(),
+                dateMillis = PreviewData.DATE_MILLIS,
+                isSaveEnabled = true,
+                availableCategories = PreviewData.categories
+            ),
+            onEvent = {},
+            onNavigateBack = {}
+        )
     }
 }
