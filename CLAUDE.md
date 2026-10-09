@@ -59,7 +59,7 @@ Apply these to all new and changed code. Existing violations are tracked under K
 - Every new ViewModel or use case gets unit tests in `app/src/test`.
 
 ## Database
-- Pre-release: schema/data changes may reset the database (uninstall or Clear data). From the first public release every schema change needs a version bump and a tested Migration; remove `fallbackToDestructiveMigration` then.
+- Pre-release: every schema change bumps the version; `fallbackToDestructiveMigration` resets the data. From the first public release, write a tested Migration instead.
 - Default categories (`domain/models/DefaultCategories`) are seeded in `AppDatabase` `onCreate`.
 - Debug builds have Settings → Developer → "Load sample data" / "Clear all data" (`data/sample/`), gated by `BuildInfo.isDebug`.
 
