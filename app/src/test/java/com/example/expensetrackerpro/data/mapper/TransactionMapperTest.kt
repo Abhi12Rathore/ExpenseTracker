@@ -41,6 +41,19 @@ class TransactionMapperTest {
     }
 
     @Test
+    fun noteThatOnlyRepeatsTheTitle_isReadAsNoNote() {
+        val legacy = entity.copy(note = "Lunch")
+
+        assertEquals("", legacy.toDomain().note)
+        assertEquals("Lunch", legacy.toDomain().title)
+    }
+
+    @Test
+    fun emptyNote_staysEmpty() {
+        assertEquals("", entity.copy(note = "").toDomain().note)
+    }
+
+    @Test
     fun roundTrip_preservesIncomeType() {
         val income = entity.copy(transactionType = TransactionType.INCOME)
 

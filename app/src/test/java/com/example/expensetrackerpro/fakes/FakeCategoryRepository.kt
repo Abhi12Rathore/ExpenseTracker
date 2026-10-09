@@ -23,8 +23,11 @@ class FakeCategoryRepository(
     override fun getCategoriesByType(type: TransactionType): Flow<List<Category>> =
         categories.map { list -> list.filter { it.type == type } }
 
-    override suspend fun insertCategory(category: Category) {
-        categories.update { list -> list.filterNot { it.id == category.id } + category }
+    // Like Room, a category without an id is given the next free one
+    override suspend fun insertCategory(category: Category): Int {
+        val id = if (category.id != 0) category.id else (categories.value.maxOfOrNull { it.id } ?: 0) + 1
+        categories.update { list -> list.filterNot { it.id == id } + category.copy(id = id) }
+        return id
     }
 
     override suspend fun updateCategory(category: Category) {

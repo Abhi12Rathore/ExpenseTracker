@@ -21,9 +21,8 @@ class CategoryRepositoryImpl @Inject constructor(
     override fun getCategoriesByType(type: TransactionType): Flow<List<Category>> =
         transactionDao.getCategoriesByType(type).map { list -> list.map { it.toDomain() } }
 
-    override suspend fun insertCategory(category: Category) {
-        transactionDao.insertCategory(category.toEntity())
-    }
+    override suspend fun insertCategory(category: Category): Int =
+        transactionDao.insertCategory(category.toEntity()).toInt()
 
     override suspend fun updateCategory(category: Category) {
         transactionDao.updateCategory(category.toEntity())

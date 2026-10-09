@@ -39,6 +39,11 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
 }
 
 dependencies {
@@ -53,6 +58,9 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    // Runs Room against a real SQLite on the JVM, for DAO query tests
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

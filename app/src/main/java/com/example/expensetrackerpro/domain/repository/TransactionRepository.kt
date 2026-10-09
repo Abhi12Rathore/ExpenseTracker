@@ -7,11 +7,16 @@ import kotlinx.coroutines.flow.Flow
 
 interface TransactionRepository {
 
-    suspend fun saveTransaction(transaction: Transaction)
+    /** Each transaction as it is deleted. Nothing is replayed to late collectors. */
+    val deletions: Flow<Transaction>
 
-    suspend fun updateTransaction(transaction: Transaction)
+    // The writes return false when the database rejects them
 
-    suspend fun deleteTransaction(transaction: Transaction)
+    suspend fun saveTransaction(transaction: Transaction): Boolean
+
+    suspend fun updateTransaction(transaction: Transaction): Boolean
+
+    suspend fun deleteTransaction(transaction: Transaction): Boolean
 
     suspend fun getTransactionById(id: Int): Transaction?
 
@@ -19,6 +24,9 @@ interface TransactionRepository {
 
     fun getTransactionsByType(type: TransactionType): Flow<List<Transaction>>
 
-    /** Transactions dated within [range], newest first. */
-    fun getTransactions(range: DateRange): Flow<List<Transaction>>
+    /**
+     * Transactions dated within [range], newest first. A non-blank [query] keeps only those
+     * whose title, note or category name contains it, ignoring case.
+     */
+    fun getTransactions(range: DateRange, query: String = ""): Flow<List<Transaction>>
 }

@@ -5,6 +5,7 @@ import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.repository.TransactionRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -18,18 +19,31 @@ class FakeTransactionRepository(
 
     val current: List<Transaction> get() = transactions.value
 
-    override suspend fun saveTransaction(transaction: Transaction) {
+    /** While true every write is rejected, as a failing database would. */
+    var failWrites = false
+
+    private val _deletions = MutableSharedFlow<Transaction>(extraBufferCapacity = 16)
+    override val deletions: Flow<Transaction> = _deletions
+
+    override suspend fun saveTransaction(transaction: Transaction): Boolean {
+        if (failWrites) return false
         transactions.update { list -> list.filterNot { it.id == transaction.id } + transaction }
+        return true
     }
 
-    override suspend fun updateTransaction(transaction: Transaction) {
+    override suspend fun updateTransaction(transaction: Transaction): Boolean {
+        if (failWrites) return false
         transactions.update { list ->
             list.map { if (it.id == transaction.id) transaction else it }
         }
+        return true
     }
 
-    override suspend fun deleteTransaction(transaction: Transaction) {
+    override suspend fun deleteTransaction(transaction: Transaction): Boolean {
+        if (failWrites) return false
         transactions.update { list -> list.filterNot { it.id == transaction.id } }
+        _deletions.tryEmit(transaction)
+        return true
     }
 
     override suspend fun getTransactionById(id: Int): Transaction? =
@@ -41,8 +55,12 @@ class FakeTransactionRepository(
     override fun getTransactionsByType(type: TransactionType): Flow<List<Transaction>> =
         getAllTransactions().map { list -> list.filter { it.transactionType == type } }
 
-    override fun getTransactions(range: DateRange): Flow<List<Transaction>> =
+    override fun getTransactions(range: DateRange, query: String): Flow<List<Transaction>> =
         getAllTransactions().map { list ->
             list.filter { it.dateMillis >= range.startMillis && it.dateMillis < range.endMillis }
+                .filter { it.matches(query.trim()) }
         }
+
+    private fun Transaction.matches(query: String): Boolean =
+        query.isEmpty() || listOf(title, note, categoryName).any { it.contains(query, ignoreCase = true) }
 }

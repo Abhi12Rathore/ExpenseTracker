@@ -18,7 +18,9 @@ class CategoryWriteUseCasesTest {
     fun addCategory_storesIt() = runTest {
         val repository = FakeCategoryRepository()
 
-        AddCategoryUseCase(repository)(food)
+        val id = AddCategoryUseCase(repository)(food)
+
+        assertEquals(food.id, id)
 
         assertEquals(listOf(food), repository.current)
     }

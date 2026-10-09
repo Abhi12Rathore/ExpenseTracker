@@ -9,10 +9,11 @@ fun transaction(
     amount: Double = 100.0,
     type: TransactionType = TransactionType.EXPENSE,
     dateMillis: Long = 0L,
-    note: String = "note"
+    note: String = "note",
+    title: String = note
 ) = Transaction(
     id = id,
-    title = note,
+    title = title,
     amount = amount,
     note = note,
     dateMillis = dateMillis,
