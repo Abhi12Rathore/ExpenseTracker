@@ -92,9 +92,6 @@ val ChartGridLight = Color(0xFFDFE4DE)
 val ChartGridDark = Color(0xFF3F493F)
 val ChartAxisTextLight = Color(0xFF414941)
 val ChartAxisTextDark = Color(0xFFC1C9BE)
-val ChartSliceValueLight = Color(0xFFFFFFFF)
-val ChartSliceLabelLight = Color(0xFF000000)
-val ChartSliceTextDark = Color(0xFF0C0F0C)
 
 // Category identity palette: the dark variants are lighter tones that stay legible on dark surfaces
 val CategoryIndigoLight = Color(0xFF5C6BC0)

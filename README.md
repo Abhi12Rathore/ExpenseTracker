@@ -35,7 +35,7 @@ Built with **Kotlin** and **Jetpack Compose**, following **Clean Architecture** 
 | Persistence | Room (KSP) |
 | Async | Kotlin Coroutines & Flow |
 | Navigation | Navigation Compose |
-| Charts | MPAndroidChart *(migrating to Vico)* |
+| Charts | Custom Compose Canvas components (no chart library) |
 | Splash | AndroidX Core SplashScreen |
 | Testing | JUnit 4, kotlinx-coroutines-test, hand-written fakes |
 

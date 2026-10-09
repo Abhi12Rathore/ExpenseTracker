@@ -3,14 +3,18 @@ package com.example.expensetrackerpro.presentation.common.preview
 import com.example.expensetrackerpro.domain.models.BucketSize
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
+import com.example.expensetrackerpro.domain.models.Dashboard
 import com.example.expensetrackerpro.domain.models.DateRange
+import com.example.expensetrackerpro.domain.models.DayPeriod
 import com.example.expensetrackerpro.domain.models.FinancialSummary
-import com.example.expensetrackerpro.domain.models.MonthlyTrend
+import com.example.expensetrackerpro.domain.models.MonthlyNet
+import com.example.expensetrackerpro.domain.models.PacePoint
 import com.example.expensetrackerpro.domain.models.PeriodComparison
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
 import com.example.expensetrackerpro.domain.models.SmartInsight
 import com.example.expensetrackerpro.domain.models.SpendingBucket
 import com.example.expensetrackerpro.domain.models.SpendingChart
+import com.example.expensetrackerpro.domain.models.SpendingPace
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.dashboard.RankCategorySpendingUseCase
@@ -102,17 +106,62 @@ internal object PreviewData {
     val periodComparison = PeriodComparison(
         granularity = PeriodGranularity.MONTH,
         previousRange = DateRange(MONTH_START_MILLIS - 30 * DAY_MILLIS, MONTH_START_MILLIS),
-        balanceDifference = 3200.0
+        balanceDifference = 3200.0,
+        isPartial = true
     )
 
-    val monthlyTrend = listOf(
-        MonthlyTrend(2025, 8, 82000.0, 41000.0),
-        MonthlyTrend(2025, 9, 85000.0, 38500.0),
-        MonthlyTrend(2025, 10, 85000.0, 4650.0)
+    // Nine days into October against the whole of September
+    private val septemberTotals = List(30) { day -> 1150.0 * (day + 1) + if (day >= 1) 4000.0 else 0.0 }
+
+    val ongoingPace = SpendingPace(
+        granularity = PeriodGranularity.MONTH,
+        current = dailyAmounts.runningFold(0.0) { total, amount -> total + amount }.drop(1)
+            .mapIndexed { day, total -> PacePoint(MONTH_START_MILLIS + day * DAY_MILLIS, total) },
+        previous = septemberTotals
+            .mapIndexed { day, total -> PacePoint(MONTH_START_MILLIS + (day - 30) * DAY_MILLIS, total) },
+        dayCount = 31,
+        difference = -2540.0,
+        isPartial = true
     )
+
+    // September seen once it is over, against August
+    val finishedPace = SpendingPace(
+        granularity = PeriodGranularity.MONTH,
+        current = septemberTotals
+            .mapIndexed { day, total -> PacePoint(MONTH_START_MILLIS + (day - 30) * DAY_MILLIS, total) },
+        previous = List(31) { day -> PacePoint(MONTH_START_MILLIS + (day - 61) * DAY_MILLIS, 1320.0 * (day + 1)) },
+        dayCount = 31,
+        difference = -2420.0,
+        isPartial = false
+    )
+
+    // 2025 as seen in October: two overspent months, two still to come
+    private val monthlyNets =
+        listOf(18400.0, 22100.0, -6200.0, 15800.0, 9300.0, -14750.0, 20500.0, 12900.0, 17600.0, 3200.0)
+
+    val netSavings = List(12) { month ->
+        val start = YEAR_START_MILLIS + month * 30 * DAY_MILLIS
+        MonthlyNet(
+            range = DateRange(start, start + 30 * DAY_MILLIS),
+            net = monthlyNets.getOrElse(month) { 0.0 },
+            isFuture = month >= monthlyNets.size
+        )
+    }
 
     val insights = listOf(
         SmartInsight.Saved(80350.0),
         SmartInsight.HighestSpending("Bills")
+    )
+
+    val dashboard = Dashboard(
+        dayPeriod = DayPeriod.EVENING,
+        summary = financialSummary,
+        comparison = periodComparison,
+        balanceTrend = balanceTrend,
+        spending = dailySpending,
+        categoryRanking = categoryRanking,
+        pace = ongoingPace,
+        recentTransactions = transactions,
+        insights = insights
     )
 }

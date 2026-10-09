@@ -173,13 +173,14 @@ ORDER BY dayMillis
     fun getDailyExpense(startMillis: Long, endMillis: Long): Flow<List<DailyExpenseEntity>>
 
 
+    // The casts matter: read as text, "08" and "09" are taken for bad octal numbers and become 0
     @Query(
         """
 SELECT
 
-strftime('%Y', datetime(dateMillis / 1000, 'unixepoch', 'localtime')) AS year,
+CAST(strftime('%Y', datetime(dateMillis / 1000, 'unixepoch', 'localtime')) AS INTEGER) AS year,
 
-strftime('%m', datetime(dateMillis / 1000, 'unixepoch', 'localtime')) AS month,
+CAST(strftime('%m', datetime(dateMillis / 1000, 'unixepoch', 'localtime')) AS INTEGER) AS month,
 
 
 SUM(

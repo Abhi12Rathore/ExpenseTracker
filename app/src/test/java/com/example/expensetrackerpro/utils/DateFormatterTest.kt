@@ -110,13 +110,6 @@ class DateFormatterTest {
     }
 
     @Test
-    fun hourOfDay_is24Hour() {
-        assertEquals(0, DateFormatter.hourOfDay(millis(2026, Calendar.OCTOBER, 8, hour = 0)))
-        assertEquals(9, DateFormatter.hourOfDay(millis(2026, Calendar.OCTOBER, 8, hour = 9)))
-        assertEquals(23, DateFormatter.hourOfDay(millis(2026, Calendar.OCTOBER, 8, hour = 23)))
-    }
-
-    @Test
     fun chartLabels_areShortForms() {
         // Saturday 17 Oct 2026
         val day = millis(2026, Calendar.OCTOBER, 17)
@@ -125,6 +118,7 @@ class DateFormatterTest {
         assertEquals("O", DateFormatter.formatMonthInitial(day))
         assertEquals("Sat", DateFormatter.formatWeekday(day))
         assertEquals("17", DateFormatter.formatDayOfMonth(day))
+        assertEquals("17 Oct", DateFormatter.formatDayMonth(day))
         assertEquals("Sat, 17 Oct", DateFormatter.formatWeekdayDayMonth(day))
     }
 

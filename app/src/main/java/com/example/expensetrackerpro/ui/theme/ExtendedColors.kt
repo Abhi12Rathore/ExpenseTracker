@@ -37,9 +37,6 @@ data class ExtendedColors(
     val expense: Color,
     val chartGrid: Color,
     val chartAxisText: Color,
-    // Text drawn on top of a pie slice
-    val chartSliceValue: Color,
-    val chartSliceLabel: Color,
     val categoryPalette: CategoryPalette
 )
 
@@ -48,8 +45,6 @@ val LightExtendedColors = ExtendedColors(
     expense = ExpenseLight,
     chartGrid = ChartGridLight,
     chartAxisText = ChartAxisTextLight,
-    chartSliceValue = ChartSliceValueLight,
-    chartSliceLabel = ChartSliceLabelLight,
     categoryPalette = CategoryPalette(
         indigo = CategoryIndigoLight,
         deepOrange = CategoryDeepOrangeLight,
@@ -73,8 +68,6 @@ val DarkExtendedColors = ExtendedColors(
     expense = ExpenseDark,
     chartGrid = ChartGridDark,
     chartAxisText = ChartAxisTextDark,
-    chartSliceValue = ChartSliceTextDark,
-    chartSliceLabel = ChartSliceTextDark,
     categoryPalette = CategoryPalette(
         indigo = CategoryIndigoDark,
         deepOrange = CategoryDeepOrangeDark,

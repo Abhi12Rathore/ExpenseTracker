@@ -8,8 +8,12 @@ import com.example.expensetrackerpro.domain.models.MonthlyTrend
 import com.example.expensetrackerpro.domain.repository.DashboardRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 
-/** Serves whatever the test sets, and records the range each chart was last asked for. */
+/**
+ * Serves whatever the test sets, and records the range each chart was last asked for. Daily
+ * expenses are narrowed to the range asked for, since two periods are read side by side.
+ */
 class FakeDashboardRepository : DashboardRepository {
 
     val categoryBreakdown = MutableStateFlow<List<CategoryBreakdown>>(emptyList())
@@ -38,7 +42,9 @@ class FakeDashboardRepository : DashboardRepository {
 
     override fun getDailyExpenses(range: DateRange): Flow<List<DailyExpense>> {
         dailyExpensesRange = range
-        return dailyExpenses
+        return dailyExpenses.map { list ->
+            list.filter { it.dateMillis >= range.startMillis && it.dateMillis < range.endMillis }
+        }
     }
 
     override fun getMonthlyTrend(range: DateRange): Flow<List<MonthlyTrend>> {

@@ -23,8 +23,11 @@
     <string name="comparison_more_saved">▲ %1$s more saved than %2$s</string>
     <string name="comparison_less_saved">▼ %1$s less saved than %2$s</string>
     <string name="comparison_same_saved">Saved the same as %1$s</string>
-    <string name="comparison_last_week">last week</string>
-    <string name="comparison_last_year">last year</string>
+    <!-- What a period is compared with; each completes "… than" -->
+    <string name="compared_with_this_time_last_week">this time last week</string>
+    <string name="compared_with_this_time_last_month">this time last month</string>
+    <string name="compared_with_this_time_last_year">this time last year</string>
+    <string name="compared_with_week_before">the week before</string>
 
     <!-- Dashboard spending bars -->
     <string name="spending_daily_title">Daily spending</string>
@@ -41,6 +44,28 @@
         <item quantity="one">%1$d transaction</item>
         <item quantity="other">%1$d transactions</item>
     </plurals>
+
+    <!-- Dashboard spending pace -->
+    <string name="pace_title">Spending pace</string>
+    <string name="pace_less">%1$s less than %2$s</string>
+    <string name="pace_more">%1$s more than %2$s</string>
+    <string name="pace_same">Spending the same as %1$s</string>
+    <string name="pace_legend_current">This period</string>
+    <string name="pace_legend_previous">Previous period</string>
+    <!-- Date, then what had been spent by then -->
+    <string name="pace_tooltip_value">%1$s %2$s</string>
+    <!-- The selected period's value, then the previous period's -->
+    <string name="pace_tooltip_both">%1$s · %2$s</string>
+    <string name="pace_empty">Nothing spent in this period or the one before. Your pace will show up here.</string>
+
+    <!-- Dashboard net savings by month -->
+    <string name="net_savings_title">Net savings by month</string>
+    <string name="net_savings_legend_saved">Saved</string>
+    <string name="net_savings_legend_overspent">Overspent</string>
+    <!-- Read out for each bar: month, then amount -->
+    <string name="net_savings_bar_saved">%1$s: saved %2$s</string>
+    <string name="net_savings_bar_overspent">%1$s: overspent %2$s</string>
+    <string name="net_savings_empty">No income or expenses this year yet. Monthly savings will show up here.</string>
 
     <!-- Dashboard category ranking -->
     <string name="category_spending_title">Where your money went</string>

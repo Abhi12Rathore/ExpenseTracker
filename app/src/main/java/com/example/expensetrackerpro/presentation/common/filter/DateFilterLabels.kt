@@ -1,6 +1,8 @@
 package com.example.expensetrackerpro.presentation.common.filter
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
@@ -46,4 +48,32 @@ fun PeriodFilterState.shortLabel(): String = when (val filter = filter) {
         PeriodGranularity.MONTH -> DateFormatter.formatShortMonthYear(dateRange.startMillis)
         PeriodGranularity.YEAR -> DateFormatter.formatYear(dateRange.startMillis)
     }
+}
+
+/**
+ * What a period is compared with, worded to follow "… than": `this time last month` while the
+ * period is under way ([isPartial]), otherwise the previous period itself: `Aug`, `2025` or
+ * `the week before`.
+ */
+@Composable
+fun comparedWithLabel(
+    granularity: PeriodGranularity,
+    previousStartMillis: Long,
+    isPartial: Boolean
+): String = when (granularity) {
+    PeriodGranularity.WEEK -> stringResource(
+        if (isPartial) R.string.compared_with_this_time_last_week else R.string.compared_with_week_before
+    )
+    PeriodGranularity.MONTH ->
+        if (isPartial) {
+            stringResource(R.string.compared_with_this_time_last_month)
+        } else {
+            DateFormatter.formatShortMonth(previousStartMillis)
+        }
+    PeriodGranularity.YEAR ->
+        if (isPartial) {
+            stringResource(R.string.compared_with_this_time_last_year)
+        } else {
+            DateFormatter.formatYear(previousStartMillis)
+        }
 }

@@ -31,9 +31,7 @@ class GetSpendingBucketsUseCase @Inject constructor(
         val nowMillis = timeProvider.now().timeInMillis
 
         val buckets = bucketRanges(range, bucketSize).map { bucket ->
-            val spent = days.filter {
-                it.dateMillis >= bucket.startMillis && it.dateMillis < bucket.endMillis
-            }
+            val spent = days.filter { it.dateMillis in bucket }
             SpendingBucket(
                 range = bucket,
                 amount = spent.sumOf { it.amount },
@@ -59,20 +57,21 @@ class GetSpendingBucketsUseCase @Inject constructor(
     }
 
     // Stepping a calendar rather than adding fixed millis keeps days and months their real length
-    private fun bucketRanges(range: DateRange, bucketSize: BucketSize): List<DateRange> {
+    private fun bucketRanges(range: DateRange, bucketSize: BucketSize): List<DateRange> =
+        when (bucketSize) {
+            BucketSize.DAY -> timeProvider.now().dayRanges(range)
+            BucketSize.MONTH -> monthRanges(range)
+        }
+
+    private fun monthRanges(range: DateRange): List<DateRange> {
         val cursor = timeProvider.now().apply { timeInMillis = range.startMillis }
 
         return buildList {
             var startMillis = range.startMillis
             while (startMillis < range.endMillis) {
-                when (bucketSize) {
-                    BucketSize.DAY -> cursor.add(Calendar.DAY_OF_MONTH, 1)
-                    BucketSize.MONTH -> {
-                        // A range may start mid-month: its first bucket still ends with the month
-                        cursor.set(Calendar.DAY_OF_MONTH, 1)
-                        cursor.add(Calendar.MONTH, 1)
-                    }
-                }
+                // A range may start mid-month: its first bucket still ends with the month
+                cursor.set(Calendar.DAY_OF_MONTH, 1)
+                cursor.add(Calendar.MONTH, 1)
                 val endMillis = minOf(cursor.timeInMillis, range.endMillis)
                 add(DateRange(startMillis, endMillis))
                 startMillis = endMillis
