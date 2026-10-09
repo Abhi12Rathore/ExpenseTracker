@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.fakes
 
+import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
@@ -25,5 +26,6 @@ fun transaction(
 fun category(
     id: Int = 1,
     name: String = "Food",
-    type: TransactionType = TransactionType.EXPENSE
-) = Category(id = id, name = name, type = type, iconName = name)
+    type: TransactionType = TransactionType.EXPENSE,
+    icon: CategoryIcon = CategoryIcon.DEFAULT
+) = Category(id = id, name = name, type = type, icon = icon)

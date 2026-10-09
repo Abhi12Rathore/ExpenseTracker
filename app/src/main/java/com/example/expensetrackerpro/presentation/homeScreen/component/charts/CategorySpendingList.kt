@@ -50,12 +50,13 @@ import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
 import com.example.expensetrackerpro.domain.models.CategoryRanking
 import com.example.expensetrackerpro.domain.models.CategoryShare
+import com.example.expensetrackerpro.presentation.common.category.CategoryIconTile
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
-import com.example.expensetrackerpro.utils.CategoryIcons
 import com.example.expensetrackerpro.utils.CurrencyFormatter
 import kotlin.math.roundToInt
 
 private val RowShape = RoundedCornerShape(12.dp)
+private val IconTileSize = 40.dp
 private const val ICON_TINT_ALPHA = 0.12f
 private const val SHARE_BAR_MILLIS = 600
 
@@ -108,8 +109,7 @@ fun CategoryRankedList(
 
         if (ranking.others.isNotEmpty()) {
             RankedRow(
-                icon = Icons.Rounded.MoreHoriz,
-                iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
+                leading = { OtherIconTile() },
                 name = stringResource(R.string.category_spending_other),
                 amount = ranking.othersAmount,
                 fraction = ranking.othersFraction,
@@ -140,8 +140,7 @@ private fun CategoryRow(share: CategoryShare, onClick: () -> Unit) {
     val category = share.category
 
     RankedRow(
-        icon = CategoryIcons.icons[category.iconName] ?: Icons.Default.Category,
-        iconTint = CategoryIcons.color(category.iconName) ?: MaterialTheme.colorScheme.primary,
+        leading = { CategoryIconTile(icon = category.icon, size = IconTileSize) },
         name = category.categoryName,
         amount = category.amount,
         fraction = share.fraction,
@@ -149,10 +148,29 @@ private fun CategoryRow(share: CategoryShare, onClick: () -> Unit) {
     )
 }
 
+/** Stands in for a category icon on the row that sums up the rest. */
+@Composable
+private fun OtherIconTile() {
+    val tint = MaterialTheme.colorScheme.onSurfaceVariant
+
+    Box(
+        modifier = Modifier
+            .size(IconTileSize)
+            .background(tint.copy(alpha = ICON_TINT_ALPHA), RowShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.MoreHoriz,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
 @Composable
 private fun RankedRow(
-    icon: ImageVector,
-    iconTint: Color,
+    leading: @Composable () -> Unit,
     name: String,
     amount: Double,
     fraction: Float,
@@ -168,19 +186,7 @@ private fun RankedRow(
             .padding(vertical = 8.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .background(iconTint.copy(alpha = ICON_TINT_ALPHA), RowShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = iconTint,
-                modifier = Modifier.size(20.dp)
-            )
-        }
+        leading()
 
         Spacer(modifier = Modifier.width(12.dp))
 

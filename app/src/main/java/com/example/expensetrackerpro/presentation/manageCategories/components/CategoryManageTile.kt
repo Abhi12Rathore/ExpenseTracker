@@ -24,7 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.domain.models.Category
-import com.example.expensetrackerpro.utils.CategoryIcons
+import com.example.expensetrackerpro.presentation.common.category.CategoryIconTile
 
 @Composable
 fun CategoryManageTile(
@@ -33,9 +33,6 @@ fun CategoryManageTile(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val iconColor = CategoryIcons.color(category.iconName) ?: MaterialTheme.colorScheme.primary
-    val icon = CategoryIcons.icons[category.iconName] ?: Icons.Default.Category
-
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -47,23 +44,7 @@ fun CategoryManageTile(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon Container
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(
-                        iconColor.copy(alpha = 0.1f),
-                        androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = iconColor,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
+            CategoryIconTile(icon = category.icon)
 
             Spacer(modifier = Modifier.width(16.dp))
 

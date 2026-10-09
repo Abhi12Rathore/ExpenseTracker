@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate
 
 import com.example.expensetrackerpro.domain.models.DateChoice
+import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.TransactionType
 
 sealed interface AddEditTransactionEvent {
@@ -21,7 +22,7 @@ sealed interface AddEditTransactionEvent {
     data object CategorySheetDismissed : AddEditTransactionEvent
     data class CategoryAdded(
         val name: String,
-        val iconName: String,
+        val icon: CategoryIcon,
         val type: TransactionType
     ) : AddEditTransactionEvent
     data object SaveClicked : AddEditTransactionEvent

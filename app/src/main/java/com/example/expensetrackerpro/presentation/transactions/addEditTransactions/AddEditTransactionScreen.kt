@@ -143,8 +143,8 @@ private fun AddEditTransactionLayout(
         AddCategoryBottomSheet(
             initialType = state.transactionType,
             onDismiss = { onEvent(AddEditTransactionEvent.CategorySheetDismissed) },
-            onSaveCategory = { name, iconName, type ->
-                onEvent(AddEditTransactionEvent.CategoryAdded(name, iconName, type))
+            onSaveCategory = { name, icon, type ->
+                onEvent(AddEditTransactionEvent.CategoryAdded(name, icon, type))
             }
         )
     }

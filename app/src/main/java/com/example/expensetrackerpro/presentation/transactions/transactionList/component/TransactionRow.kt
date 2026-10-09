@@ -3,18 +3,15 @@ package com.example.expensetrackerpro.presentation.transactions.transactionList.
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -43,13 +40,12 @@ import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.presentation.common.category.CategoryIconTile
 import com.example.expensetrackerpro.presentation.common.text.highlighted
 import com.example.expensetrackerpro.ui.theme.extendedColors
-import com.example.expensetrackerpro.utils.CategoryIcons
 import com.example.expensetrackerpro.utils.CurrencyFormatter
 
 private val CardCorner = 16.dp
-private val IconTileShape = RoundedCornerShape(12.dp)
 
 /** Where a row sits in its day's card, which decides the corners it rounds. */
 enum class RowPosition(val isFirst: Boolean, val isLast: Boolean) {
@@ -156,7 +152,6 @@ fun TransactionRow(
 @Composable
 private fun RowContent(transaction: Transaction, searchQuery: String) {
     val isIncome = transaction.transactionType == TransactionType.INCOME
-    val categoryColor = CategoryIcons.color(transaction.categoryName) ?: MaterialTheme.colorScheme.primary
     val meta = if (transaction.note.isEmpty()) {
         transaction.categoryName
     } else {
@@ -174,19 +169,7 @@ private fun RowContent(transaction: Transaction, searchQuery: String) {
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .background(categoryColor.copy(alpha = 0.15f), IconTileShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = CategoryIcons.icons[transaction.categoryName] ?: Icons.Default.Category,
-                contentDescription = null,
-                tint = categoryColor,
-                modifier = Modifier.size(22.dp)
-            )
-        }
+        CategoryIconTile(icon = transaction.categoryIcon)
 
         Spacer(modifier = Modifier.width(12.dp))
 

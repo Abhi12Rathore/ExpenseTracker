@@ -4,6 +4,7 @@ package com.example.expensetrackerpro.presentation.manageCategories
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.category.AddCategoryUseCase
 import com.example.expensetrackerpro.domain.usecase.category.DeleteCategoryUseCase
@@ -54,23 +55,23 @@ class ManageCategoryViewModel @Inject constructor(
                 screenState.update { it.copy(isSheetOpen = true, categoryToEdit = event.category) }
             ManageCategoryEvent.SheetDismissed -> closeSheet()
             is ManageCategoryEvent.CategorySaved ->
-                saveCategory(event.name, event.iconName, event.type)
+                saveCategory(event.name, event.icon, event.type)
             is ManageCategoryEvent.DeleteClicked -> delete(event.category)
             ManageCategoryEvent.DeleteBlockedMessageShown ->
                 screenState.update { it.copy(deleteBlockedCategoryName = null) }
         }
     }
 
-    private fun saveCategory(name: String, icon: String, type: TransactionType) {
+    private fun saveCategory(name: String, icon: CategoryIcon, type: TransactionType) {
         val categoryToEdit = screenState.value.categoryToEdit
         viewModelScope.launch {
             if (categoryToEdit != null) {
                 // We use the existing ID to ensure Room updates the record instead of inserting a new one
                 updateCategory(
-                    Category(id = categoryToEdit.id, name = name, type = type, iconName = icon, isCustom = true)
+                    Category(id = categoryToEdit.id, name = name, type = type, icon = icon, isCustom = true)
                 )
             } else {
-                addCategory(Category(name = name, iconName = icon, type = type))
+                addCategory(Category(name = name, icon = icon, type = type))
             }
         }
         closeSheet()

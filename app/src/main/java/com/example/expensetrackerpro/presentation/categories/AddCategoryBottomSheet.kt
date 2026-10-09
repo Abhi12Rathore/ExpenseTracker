@@ -13,7 +13,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.TransactionType
-import com.example.expensetrackerpro.utils.CategoryIcons
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.example.expensetrackerpro.ExpenseTrackerProTheme
+import com.example.expensetrackerpro.domain.models.CategoryIcon
+import com.example.expensetrackerpro.domain.models.CategoryIconGroup
+import com.example.expensetrackerpro.presentation.common.category.CategoryIconTile
+import com.example.expensetrackerpro.presentation.common.category.color
+import com.example.expensetrackerpro.presentation.common.category.labelRes
+import com.example.expensetrackerpro.presentation.common.category.ui
 
 
 
@@ -23,12 +36,12 @@ fun AddCategoryBottomSheet(
     initialCategory: Category? = null,
     initialType: TransactionType,
     onDismiss: () -> Unit,
-    onSaveCategory: (String, String, TransactionType) -> Unit // New: Returns the type
+    onSaveCategory: (String, CategoryIcon, TransactionType) -> Unit
 ) {
     // 1. Determine State and Mode
     val isEditMode = initialCategory != null
     var categoryName by remember { mutableStateOf(initialCategory?.name ?: "") }
-    var selectedIconName by remember { mutableStateOf(initialCategory?.iconName ?: "Shopping") }
+    var selectedIcon by remember { mutableStateOf(initialCategory?.icon ?: CategoryIcon.DEFAULT) }
 
     // The type is fixed based on the context it was opened in (Income or Expense)
     val categoryType = initialCategory?.type ?: initialType
@@ -85,9 +98,9 @@ fun AddCategoryBottomSheet(
                 ),
                 leadingIcon = {
                     Icon(
-                        imageVector = CategoryIcons.icons[selectedIconName] ?: Icons.Default.Category,
+                        imageVector = selectedIcon.ui.imageVector,
                         contentDescription = null,
-                        tint = CategoryIcons.color(categoryName) ?: MaterialTheme.colorScheme.primary
+                        tint = selectedIcon.color
                     )
                 }
             )
@@ -99,44 +112,18 @@ fun AddCategoryBottomSheet(
                 color = MaterialTheme.colorScheme.primary
             )
 
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                CategoryIcons.icons.forEach { (name, icon) ->
-                    val isSelected = selectedIconName == name
-
-                    // FETCH THE COLOR: Pull the specific color for this category name
-                    // If name is not found in the map, it defaults to VeridianGreenPrimary
-                    val categoryColor = CategoryIcons.color(name) ?: MaterialTheme.colorScheme.primary
-
-                    Surface(
-                        onClick = { selectedIconName = name },
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier.size(44.dp),
-                        // POLISH: Use the category color for background with low alpha when selected
-                        color = if (isSelected) categoryColor.copy(alpha = 0.2f)
-                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                        // POLISH: Border matches the actual category color
-                        border = if (isSelected) BorderStroke(2.dp, categoryColor) else null
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = name,
-                                modifier = Modifier.size(20.dp),
-                                // FIX: Tint the icon with its specific category color
-                                tint = categoryColor
-                            )
-                        }
-                    }
-                }
-            }
+            // The only part that scrolls, so the name and the save button stay in reach
+            IconPicker(
+                selected = selectedIcon,
+                onSelect = { selectedIcon = it },
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .verticalScroll(rememberScrollState())
+            )
 
             // Save Button: Contextual Color
             Button(
-                onClick = { onSaveCategory(categoryName, selectedIconName, categoryType) },
+                onClick = { onSaveCategory(categoryName, selectedIcon, categoryType) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
@@ -149,6 +136,68 @@ fun AddCategoryBottomSheet(
             ) {
                 Text(if (isEditMode) "Update Category" else "Add Category")
             }
+        }
+    }
+}
+
+/** Every icon, a section per [CategoryIconGroup]. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun IconPicker(
+    selected: CategoryIcon,
+    onSelect: (CategoryIcon) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        CategoryIconGroup.entries.forEach { group ->
+            Text(
+                text = stringResource(group.labelRes()),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .padding(top = 4.dp)
+                    .semantics { heading() }
+            )
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                CategoryIcon.inGroup(group).forEach { icon ->
+                    val isSelected = icon == selected
+
+                    Surface(
+                        selected = isSelected,
+                        onClick = { onSelect(icon) },
+                        shape = PickerTileShape,
+                        color = Color.Transparent,
+                        // The tile underneath is the same for every icon; only the ring marks the choice
+                        border = if (isSelected) BorderStroke(2.dp, icon.color) else null
+                    ) {
+                        CategoryIconTile(
+                            icon = icon,
+                            modifier = Modifier.padding(3.dp),
+                            contentDescription = stringResource(icon.ui.labelRes)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+private val PickerTileShape = RoundedCornerShape(15.dp)
+
+@PreviewLightDark
+@Composable
+private fun IconPickerPreview() {
+    ExpenseTrackerProTheme {
+        Surface {
+            IconPicker(
+                selected = CategoryIcon.SHOPPING_BASKET,
+                onSelect = {},
+                modifier = Modifier.padding(16.dp)
+            )
         }
     }
 }

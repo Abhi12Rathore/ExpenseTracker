@@ -9,6 +9,7 @@ import androidx.room.Update
 import com.example.expensetrackerpro.data.local.entity.CategoryEntity
 import com.example.expensetrackerpro.data.local.entity.TransactionEntity
 import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.data.local.model.TransactionWithCategory
 import com.example.expensetrackerpro.data.local.model.DailyCashFlowEntity
 import com.example.expensetrackerpro.data.local.model.DailyExpenseEntity
 import kotlinx.coroutines.flow.Flow
@@ -29,8 +30,10 @@ interface TransactionDao {
     @Delete
     suspend fun deleteTransaction(transaction: TransactionEntity)
 
-    @Query("SELECT * FROM transactions WHERE id = :id")
-    suspend fun getTransactionById(id: Int): TransactionEntity?
+    // Reads join the category for its icon, which is not stored on the transaction
+
+    @Query("SELECT t.*, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId WHERE t.id = :id")
+    suspend fun getTransactionById(id: Int): TransactionWithCategory?
 
     // --- Category CRUD ---
 
@@ -44,21 +47,26 @@ interface TransactionDao {
     suspend fun deleteCategory(category: CategoryEntity)
 
     // --- Existing Queries (Flows) ---
-    @Query("SELECT * FROM transactions ORDER BY dateMillis DESC")
-    fun getAllTransactions(): Flow<List<TransactionEntity>>
+    @Query("SELECT t.*, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId ORDER BY t.dateMillis DESC")
+    fun getAllTransactions(): Flow<List<TransactionWithCategory>>
 
-    @Query("SELECT * FROM transactions WHERE transactionType = :type ORDER BY dateMillis DESC")
-    fun getTransactionsByType(type: TransactionType): Flow<List<TransactionEntity>>
+    @Query("SELECT t.*, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId WHERE t.transactionType = :type ORDER BY t.dateMillis DESC")
+    fun getTransactionsByType(type: TransactionType): Flow<List<TransactionWithCategory>>
 
-    @Query("SELECT * FROM transactions WHERE dateMillis >= :startMillis AND dateMillis < :endMillis ORDER BY dateMillis DESC")
-    fun getTransactionsBetween(startMillis: Long, endMillis: Long): Flow<List<TransactionEntity>>
+    @Query(
+        """
+SELECT t.*, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId
+WHERE t.dateMillis >= :startMillis AND t.dateMillis < :endMillis
+ORDER BY t.dateMillis DESC
+"""
+    )
+    fun getTransactionsBetween(startMillis: Long, endMillis: Long): Flow<List<TransactionWithCategory>>
 
     // :query must already have %, _ and \ escaped with a backslash. The category is matched by
     // its current name, not the copy stored on the transaction.
     @Query(
         """
-SELECT t.* FROM transactions t
-JOIN categories c ON c.id = t.categoryId
+SELECT t.*, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId
 WHERE t.dateMillis >= :startMillis AND t.dateMillis < :endMillis
 AND (
     t.title LIKE '%' || :query || '%' ESCAPE '\'
@@ -72,7 +80,7 @@ ORDER BY t.dateMillis DESC
         startMillis: Long,
         endMillis: Long,
         query: String
-    ): Flow<List<TransactionEntity>>
+    ): Flow<List<TransactionWithCategory>>
 
     @Query("SELECT * FROM categories")
     fun getAllCategories(): Flow<List<CategoryEntity>>
@@ -119,7 +127,7 @@ AND dateMillis BETWEEN :startDate AND :endDate
 SELECT 
  c.id AS categoryId,
  c.name AS categoryName,
- c.iconName AS iconName,
+ c.icon AS icon,
  SUM(t.amount) AS totalAmount
 
 FROM transactions t

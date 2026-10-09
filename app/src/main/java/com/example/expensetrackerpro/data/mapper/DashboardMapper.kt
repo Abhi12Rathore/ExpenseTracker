@@ -12,7 +12,7 @@ import com.example.expensetrackerpro.domain.models.MonthlyTrend
 fun CategoryExpenseEntity.toDomain(): CategoryBreakdown = CategoryBreakdown(
     categoryId = categoryId,
     categoryName = categoryName,
-    iconName = iconName,
+    icon = icon,
     amount = totalAmount
 )
 

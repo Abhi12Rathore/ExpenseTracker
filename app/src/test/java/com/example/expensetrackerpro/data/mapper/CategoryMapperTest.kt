@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.data.mapper
 
 import com.example.expensetrackerpro.data.local.entity.CategoryEntity
+import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.TransactionType
 import org.junit.Assert.assertEquals
@@ -13,7 +14,7 @@ class CategoryMapperTest {
         id = 4,
         name = "Salary",
         type = TransactionType.INCOME,
-        iconName = "Payments",
+        icon = CategoryIcon.PAYMENTS,
         isCustom = false
     )
 
@@ -21,7 +22,7 @@ class CategoryMapperTest {
         id = 4,
         name = "Salary",
         type = TransactionType.INCOME,
-        iconName = "Payments",
+        icon = CategoryIcon.PAYMENTS,
         isCustom = false
     )
 
@@ -40,7 +41,7 @@ class CategoryMapperTest {
         val mapped = Category(
             name = "Gym",
             type = TransactionType.EXPENSE,
-            iconName = "Home"
+            icon = CategoryIcon.HOME
         ).toEntity()
 
         assertEquals(0, mapped.id)

@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.dashboard
 
+import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.CashFlowPoint
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
 import com.example.expensetrackerpro.domain.models.DateRange
@@ -29,8 +30,8 @@ class DashboardChartUseCasesTest {
     @Test
     fun getCategoryBreakdown_returnsRepositoryOrder() = runTest {
         val breakdown = listOf(
-            CategoryBreakdown(categoryId = 2, categoryName = "Bills", iconName = "Bills", amount = 900.0),
-            CategoryBreakdown(categoryId = 1, categoryName = "Food", iconName = "Food", amount = 300.0)
+            CategoryBreakdown(categoryId = 2, categoryName = "Bills", icon = CategoryIcon.RECEIPT_LONG, amount = 900.0),
+            CategoryBreakdown(categoryId = 1, categoryName = "Food", icon = CategoryIcon.RESTAURANT, amount = 300.0)
         )
         repository.categoryBreakdown.value = breakdown
 

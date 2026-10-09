@@ -1,6 +1,8 @@
 package com.example.expensetrackerpro.data.mapper
 
 import com.example.expensetrackerpro.data.local.entity.TransactionEntity
+import com.example.expensetrackerpro.data.local.model.TransactionWithCategory
+import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
 import org.junit.Assert.assertEquals
@@ -27,12 +29,16 @@ class TransactionMapperTest {
         dateMillis = 1_700_000_000_000,
         categoryId = 3,
         categoryName = "Food",
-        transactionType = TransactionType.EXPENSE
+        transactionType = TransactionType.EXPENSE,
+        categoryIcon = CategoryIcon.RESTAURANT
     )
 
+    // As a read returns it: the stored row plus its category's icon
+    private fun TransactionEntity.read() = TransactionWithCategory(this, CategoryIcon.RESTAURANT)
+
     @Test
-    fun entityToDomain_copiesEveryField() {
-        assertEquals(domain, entity.toDomain())
+    fun readToDomain_copiesEveryField_andTakesTheIconFromTheCategory() {
+        assertEquals(domain, entity.read().toDomain())
     }
 
     @Test
@@ -44,20 +50,20 @@ class TransactionMapperTest {
     fun noteThatOnlyRepeatsTheTitle_isReadAsNoNote() {
         val legacy = entity.copy(note = "Lunch")
 
-        assertEquals("", legacy.toDomain().note)
-        assertEquals("Lunch", legacy.toDomain().title)
+        assertEquals("", legacy.read().toDomain().note)
+        assertEquals("Lunch", legacy.read().toDomain().title)
     }
 
     @Test
     fun emptyNote_staysEmpty() {
-        assertEquals("", entity.copy(note = "").toDomain().note)
+        assertEquals("", entity.copy(note = "").read().toDomain().note)
     }
 
     @Test
     fun roundTrip_preservesIncomeType() {
         val income = entity.copy(transactionType = TransactionType.INCOME)
 
-        assertEquals(income, income.toDomain().toEntity())
+        assertEquals(income, income.read().toDomain().toEntity())
     }
 
     @Test

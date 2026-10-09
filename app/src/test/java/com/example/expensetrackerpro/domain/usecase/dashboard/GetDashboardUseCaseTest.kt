@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.dashboard
 
+import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.BucketSize
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
 import com.example.expensetrackerpro.domain.models.CategoryRanking
@@ -122,7 +123,7 @@ class GetDashboardUseCaseTest {
             transaction(id = 8, amount = 1400.0, type = TransactionType.INCOME, dateMillis = october.startMillis + 8)
         )
         val breakdown =
-            listOf(CategoryBreakdown(categoryId = 1, categoryName = "Food", iconName = "Food", amount = 700.0))
+            listOf(CategoryBreakdown(categoryId = 1, categoryName = "Food", icon = CategoryIcon.RESTAURANT, amount = 700.0))
         dashboard.categoryBreakdown.value = breakdown
 
         val state = dashboardFor(thisMonth)
@@ -313,7 +314,7 @@ class GetDashboardUseCaseTest {
             transaction(id = 1, amount = 500.0, type = TransactionType.INCOME, dateMillis = october.startMillis)
         )
         dashboard.categoryBreakdown.value =
-            listOf(CategoryBreakdown(categoryId = 1, categoryName = "Bills", iconName = "Bills", amount = 90.0))
+            listOf(CategoryBreakdown(categoryId = 1, categoryName = "Bills", icon = CategoryIcon.RECEIPT_LONG, amount = 90.0))
 
         assertEquals(
             listOf(SmartInsight.Saved(500.0), SmartInsight.HighestSpending("Bills")),
