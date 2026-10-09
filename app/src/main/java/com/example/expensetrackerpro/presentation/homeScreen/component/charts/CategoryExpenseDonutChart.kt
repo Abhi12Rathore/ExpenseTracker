@@ -1,6 +1,5 @@
 package com.example.expensetrackerpro.presentation.homeScreen.component.charts
 
-import android.graphics.Color
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -20,6 +19,7 @@ import com.github.mikephil.charting.data.PieEntry
 fun CategoryExpenseDonutChart(
     data: List<CategoryBreakdown>
 ) {
+    val chartColors = chartColors()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -81,27 +81,9 @@ fun CategoryExpenseDonutChart(
 
                             valueTextSize = 12f
 
-                            valueTextColor = Color.WHITE
+                            valueTextColor = chartColors.sliceValue
 
-                            colors = listOf(
-
-                                Color.parseColor("#4CAF50"), // Green
-
-                                Color.parseColor("#F44336"), // Red
-
-                                Color.parseColor("#2196F3"), // Blue
-
-                                Color.parseColor("#FF9800"), // Orange
-
-                                Color.parseColor("#9C27B0"), // Purple
-
-                                Color.parseColor("#009688"), // Teal
-
-                                Color.parseColor("#795548"), // Brown
-
-                                Color.parseColor("#607D8B")  // Blue Grey
-
-                            )
+                            colors = chartColors.series
 
                         }
 
@@ -117,7 +99,7 @@ fun CategoryExpenseDonutChart(
 
                         chart.transparentCircleRadius = 66f
 
-                        chart.setHoleColor(Color.TRANSPARENT)
+                        chart.setHoleColor(chartColors.transparent)
 
                         //------------------------
                         // Center Text
@@ -132,7 +114,7 @@ fun CategoryExpenseDonutChart(
 
                         chart.setCenterTextSize(18f)
 
-                        chart.setCenterTextColor(Color.DKGRAY)
+                        chart.setCenterTextColor(chartColors.centerText)
 
                         //------------------------
                         // Description
@@ -159,6 +141,8 @@ fun CategoryExpenseDonutChart(
 
                             textSize = 12f
 
+                            textColor = chartColors.axisText
+
                             formSize = 12f
 
                             xEntrySpace = 8f
@@ -173,7 +157,7 @@ fun CategoryExpenseDonutChart(
                         // Entry Labels
                         //------------------------
 
-                        chart.setEntryLabelColor(Color.BLACK)
+                        chart.setEntryLabelColor(chartColors.sliceLabel)
 
                         chart.setEntryLabelTextSize(11f)
 

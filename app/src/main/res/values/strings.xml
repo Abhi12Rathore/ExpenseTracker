@@ -32,4 +32,12 @@
 
     <!-- Manage categories -->
     <string name="category_delete_blocked">Can\'t delete \"%1$s\" because it still has transactions. Delete or move them first.</string>
+
+    <!-- Settings: theme -->
+    <string name="settings_theme">Theme</string>
+    <string name="theme_dialog_title">Choose theme</string>
+    <string name="theme_system">System default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_dialog_cancel">Cancel</string>
 </resources>

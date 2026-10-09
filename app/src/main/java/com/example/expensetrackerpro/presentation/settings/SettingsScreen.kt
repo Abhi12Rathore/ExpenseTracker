@@ -1,6 +1,5 @@
 package com.example.expensetrackerpro.presentation.settings
 
-import androidx.compose.animation.core.copy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -27,17 +26,53 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.error
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.presentation.settings.components.ThemeDialog
+import com.example.expensetrackerpro.presentation.settings.uistate.SettingsEvent
+import com.example.expensetrackerpro.presentation.settings.uistate.SettingsUiState
+import com.example.expensetrackerpro.ui.theme.extendedColors
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.example.expensetrackerpro.ExpenseTrackerProTheme
+
+@Composable
+fun SettingsScreen(
+    onNavigateToCategories: () -> Unit,
+    viewModel: SettingsViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    SettingsContent(
+        state = uiState,
+        onEvent = viewModel::onEvent,
+        onNavigateToCategories = onNavigateToCategories
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onNavigateToCategories: () -> Unit) {
+fun SettingsContent(
+    state: SettingsUiState,
+    onEvent: (SettingsEvent) -> Unit,
+    onNavigateToCategories: () -> Unit
+) {
+    if (state.isThemeDialogOpen) {
+        ThemeDialog(
+            selectedMode = state.themeMode,
+            onModeSelected = { onEvent(SettingsEvent.ThemeModeSelected(it)) },
+            onDismiss = { onEvent(SettingsEvent.ThemeDialogDismissed) }
+        )
+    }
+
     Scaffold(
     ) { padding ->
         Column(
@@ -64,10 +99,10 @@ fun SettingsScreen(onNavigateToCategories: () -> Unit) {
             SettingsSection(title = "Appearance") {
                 SettingsItem(
                     icon = Icons.Default.DarkMode,
-                    title = "Theme",
-                    subtitle = "System default",
-                    iconTint =  Color(0xFFFFB300),
-                    onClick = { /* Implement Theme Toggle */ }
+                    title = stringResource(R.string.settings_theme),
+                    subtitle = stringResource(state.themeMode.labelRes()),
+                    iconTint = MaterialTheme.extendedColors.categoryPalette.amber,
+                    onClick = { onEvent(SettingsEvent.ThemeClicked) }
                 )
             }
 
@@ -77,7 +112,7 @@ fun SettingsScreen(onNavigateToCategories: () -> Unit) {
                     title = "Manage Categories",
                     subtitle = "Add, edit or delete categories",
                     onClick = onNavigateToCategories,
-                    iconTint =  Color(0xFF607D8B),
+                    iconTint = MaterialTheme.extendedColors.categoryPalette.blueGrey,
                 )
             }
 
@@ -88,7 +123,7 @@ fun SettingsScreen(onNavigateToCategories: () -> Unit) {
                     subtitle = "Permanently delete all transactions",
                     titleColor = MaterialTheme.colorScheme.error,
                     onClick = { /* Show Confirmation Dialog */ },
-                    iconTint =  Color.Red,
+                    iconTint = MaterialTheme.colorScheme.error,
                 )
             }
 
@@ -98,7 +133,7 @@ fun SettingsScreen(onNavigateToCategories: () -> Unit) {
                     title = "Version",
                     subtitle = "1.0.0 (Stable)",
                     onClick = {},
-                    iconTint =  Color(0xFFAB47BC),
+                    iconTint = MaterialTheme.extendedColors.categoryPalette.purple,
                 )
                 Box(
                     modifier = Modifier
@@ -160,5 +195,17 @@ fun SettingsItem(
                 Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
             }
         }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun SettingsContentPreview() {
+    ExpenseTrackerProTheme {
+        SettingsContent(
+            state = SettingsUiState(),
+            onEvent = {},
+            onNavigateToCategories = {}
+        )
     }
 }

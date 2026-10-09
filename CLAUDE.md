@@ -50,6 +50,7 @@ Apply these to all new and changed code. Existing violations are tracked under K
 ## Conventions
 - Money: format only through the shared en-IN currency formatter, `utils/CurrencyFormatter` (e.g. `-₹1,00,000.00`). Never use string concatenation like `"₹$amount"`.
 - Dates: format via the shared date utility, `utils/DateFormatter`. Never show raw millis.
+- Colors: no Color literals outside `ui/theme`; use `MaterialTheme.colorScheme` or `MaterialTheme.extendedColors` (income/expense, chart and category palette colors). `Color.Transparent` is fine. Charts get theme colors as ARGB via `toArgb()`.
 - UI strings go in `strings.xml`.
 - No `!!`. Handle nulls explicitly.
 - Every new ViewModel or use case gets unit tests in `app/src/test`.

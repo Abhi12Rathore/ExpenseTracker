@@ -23,6 +23,7 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 fun MonthlyTrendBarChart(
     data: List<MonthlyTrend>
 ) {
+    val colors = chartColors()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -88,9 +89,8 @@ fun MonthlyTrendBarChart(
                             "Income"
                         ).apply {
 
-                            color = android.graphics.Color.parseColor("#4CAF50")
-                            valueTextColor =
-                                android.graphics.Color.parseColor("#4CAF50")
+                            color = colors.income
+                            valueTextColor = colors.income
 
                             valueTextSize = 10f
 
@@ -101,9 +101,8 @@ fun MonthlyTrendBarChart(
                             "Expense"
                         ).apply {
 
-                            color = android.graphics.Color.parseColor("#F44336")
-                            valueTextColor =
-                                android.graphics.Color.parseColor("#F44336")
+                            color = colors.expense
+                            valueTextColor = colors.expense
 
                             valueTextSize = 10f
 
@@ -139,6 +138,10 @@ fun MonthlyTrendBarChart(
 
                             axisMinimum = 0f
 
+                            textColor = colors.axisText
+
+                            axisLineColor = colors.grid
+
                         }
 
                         //----------------------------
@@ -164,7 +167,15 @@ fun MonthlyTrendBarChart(
                         // Y Axis
                         //----------------------------
 
-                        chart.axisLeft.setDrawGridLines(false)
+                        chart.axisLeft.apply {
+
+                            setDrawGridLines(false)
+
+                            textColor = colors.axisText
+
+                            axisLineColor = colors.grid
+
+                        }
 
                         chart.axisRight.isEnabled = false
 
@@ -177,6 +188,8 @@ fun MonthlyTrendBarChart(
                             isEnabled = true
 
                             textSize = 12f
+
+                            textColor = colors.axisText
 
                             verticalAlignment =
                                 Legend.LegendVerticalAlignment.TOP

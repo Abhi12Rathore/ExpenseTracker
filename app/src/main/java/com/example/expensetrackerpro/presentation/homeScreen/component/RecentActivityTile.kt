@@ -15,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.domain.models.Transaction
@@ -23,6 +22,7 @@ import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.utils.CategoryIcons
 import com.example.expensetrackerpro.utils.CurrencyFormatter
 import com.example.expensetrackerpro.utils.DateFormatter
+import com.example.expensetrackerpro.ui.theme.extendedColors
 
 @Composable
 fun RecentActivityTile(
@@ -50,7 +50,7 @@ fun RecentActivityTile(
             Icon(
                 imageVector = CategoryIcons.icons[transaction.categoryName] ?: Icons.Default.Category,
                 contentDescription = null,
-                tint = CategoryIcons.iconColors[transaction.categoryName] ?: MaterialTheme.colorScheme.primary,
+                tint = CategoryIcons.color(transaction.categoryName) ?: MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -82,7 +82,7 @@ fun RecentActivityTile(
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 color = if (transaction.transactionType == TransactionType.INCOME)
-                    Color(0xFF4CAF50)
+                    MaterialTheme.extendedColors.income
                 else
                     MaterialTheme.colorScheme.onSurface
             )

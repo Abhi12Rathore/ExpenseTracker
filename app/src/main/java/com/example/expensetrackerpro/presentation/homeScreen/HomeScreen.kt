@@ -36,6 +36,9 @@ import com.example.expensetrackerpro.presentation.homeScreen.component.charts.Mo
 import com.example.expensetrackerpro.presentation.homeScreen.uistate.HomeEvent
 import com.example.expensetrackerpro.presentation.homeScreen.uistate.HomeUiState
 import com.example.expensetrackerpro.presentation.homeScreen.viewmodels.HomeViewModel
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.example.expensetrackerpro.ExpenseTrackerProTheme
+import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 
 
 @Composable
@@ -180,5 +183,25 @@ fun InsightCard(message: String) {
                 color = MaterialTheme.colorScheme.onTertiaryContainer
             )
         }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun HomeContentPreview() {
+    ExpenseTrackerProTheme {
+        HomeContent(
+            uiState = HomeUiState(
+                financialSummary = PreviewData.financialSummary,
+                categoryExpense = PreviewData.categoryExpense,
+                dailyCashFlow = PreviewData.dailyCashFlow,
+                monthlyTrend = PreviewData.monthlyTrend,
+                recentTransactions = PreviewData.transactions,
+                insights = PreviewData.insights
+            ),
+            onEvent = {},
+            onViewAllTransactions = {},
+            onTransactionClick = {}
+        )
     }
 }

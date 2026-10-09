@@ -123,7 +123,7 @@ No API keys or extra setup needed. All data is stored locally on the device.
 - [x] Unit tests for use cases, mappers and ViewModels
 - [x] Native splash screen with branding
 - [x] Week / Month / Year period filter with custom range
-- [ ] Light / Dark / System theme toggle (DataStore)
+- [x] Light / Dark / System theme toggle (DataStore)
 - [ ] Redesigned, interactive charts (daily spending, category ranking, spending pace, yearly savings)
 - [ ] Improved add/edit transaction screen
 - [ ] Biometric app lock

@@ -52,7 +52,7 @@ fun CategorySection(
 
                 // 1. Get the specific icon and its persistent color
                 val icon = CategoryIcons.icons[category.iconName] ?: Icons.Default.Category
-                val iconColor = CategoryIcons.iconColors[category.iconName] ?: primaryColor
+                val iconColor = CategoryIcons.color(category.iconName) ?: primaryColor
 
                 FilterChip(
                     selected = isSelected,

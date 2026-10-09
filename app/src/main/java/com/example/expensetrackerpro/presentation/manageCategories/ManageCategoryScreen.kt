@@ -53,7 +53,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -65,6 +64,10 @@ import com.example.expensetrackerpro.presentation.categories.AddCategoryBottomSh
 import com.example.expensetrackerpro.presentation.manageCategories.components.CategoryManageTile
 import com.example.expensetrackerpro.presentation.manageCategories.uistate.ManageCategoryEvent
 import com.example.expensetrackerpro.presentation.manageCategories.uistate.ManageCategoryUiState
+import com.example.expensetrackerpro.ui.theme.extendedColors
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import com.example.expensetrackerpro.ExpenseTrackerProTheme
+import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -128,7 +131,7 @@ fun ManageCategoryContent(
             FloatingActionButton(
                 onClick = { onEvent(ManageCategoryEvent.AddClicked) },
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Color.White,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Category")
@@ -249,7 +252,7 @@ fun ManageCategoryContent(
                                 },
                                 leadingIcon = {
                                     val icon = if (type == TransactionType.INCOME) Icons.Default.TrendingUp else Icons.Default.TrendingDown
-                                    Icon(icon, contentDescription = null, tint = if (type == TransactionType.INCOME) Color(0xFF4CAF50) else Color.Red)
+                                    Icon(icon, contentDescription = null, tint = if (type == TransactionType.INCOME) MaterialTheme.extendedColors.income else MaterialTheme.extendedColors.expense)
                                 }
                             )
                         }
@@ -293,5 +296,17 @@ fun ManageCategoryContent(
                 }
             }
         }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ManageCategoryContentPreview() {
+    ExpenseTrackerProTheme {
+        ManageCategoryContent(
+            uiState = ManageCategoryUiState(categories = PreviewData.categories),
+            onEvent = {},
+            onNavigateBack = {}
+        )
     }
 }
