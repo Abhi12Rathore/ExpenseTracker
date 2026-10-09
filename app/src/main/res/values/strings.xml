@@ -20,6 +20,44 @@
     <!-- Dashboard balance card -->
     <string name="balance_label">Balance · %1$s</string>
 
+    <string name="comparison_more_saved">▲ %1$s more saved than %2$s</string>
+    <string name="comparison_less_saved">▼ %1$s less saved than %2$s</string>
+    <string name="comparison_same_saved">Saved the same as %1$s</string>
+    <string name="comparison_last_week">last week</string>
+    <string name="comparison_last_year">last year</string>
+
+    <!-- Dashboard spending bars -->
+    <string name="spending_daily_title">Daily spending</string>
+    <string name="spending_monthly_title">Monthly spending</string>
+    <string name="spending_average_per_day">avg %1$s/day</string>
+    <string name="spending_average_per_month">avg %1$s/month</string>
+    <!-- Amount · date · transaction count -->
+    <string name="spending_tooltip">%1$s · %2$s · %3$s</string>
+    <string name="spending_tooltip_open_history">Show these transactions in History</string>
+    <!-- Read out for each bar: date, then amount -->
+    <string name="spending_bar_description">%1$s: %2$s</string>
+    <string name="spending_empty">Nothing spent in this period yet. Expenses you add will show up here.</string>
+    <plurals name="transaction_count">
+        <item quantity="one">%1$d transaction</item>
+        <item quantity="other">%1$d transactions</item>
+    </plurals>
+
+    <!-- Dashboard category ranking -->
+    <string name="category_spending_title">Where your money went</string>
+    <plurals name="category_spending_subtitle">
+        <item quantity="one">%1$s across %2$d category</item>
+        <item quantity="other">%1$s across %2$d categories</item>
+    </plurals>
+    <string name="category_spending_other">Other</string>
+    <string name="category_spending_expand_other">Show the other categories</string>
+    <string name="category_spending_collapse_other">Hide the other categories</string>
+    <string name="category_spending_empty">No expenses to break down yet. Add one to see where your money goes.</string>
+    <string name="percent_value">%1$d%%</string>
+    <string name="percent_below_one" formatted="false">&lt;1%</string>
+
+    <!-- History -->
+    <string name="history_clear_category_filter">Clear category filter</string>
+
     <!-- Dashboard smart insights -->
     <string name="insight_saved_title">Great Saving! 🎉</string>
     <string name="insight_saved_description">You saved %1$s in this period</string>

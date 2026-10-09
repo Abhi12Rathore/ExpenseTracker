@@ -30,9 +30,15 @@ import com.example.expensetrackerpro.presentation.homeScreen.component.Financial
 import com.example.expensetrackerpro.presentation.homeScreen.component.HomeEmptyState
 import com.example.expensetrackerpro.presentation.homeScreen.component.InsightSection
 import com.example.expensetrackerpro.presentation.homeScreen.component.RecentActivityTile
-import com.example.expensetrackerpro.presentation.homeScreen.component.charts.CashFlowChart
-import com.example.expensetrackerpro.presentation.homeScreen.component.charts.CategoryExpenseDonutChart
+import com.example.expensetrackerpro.presentation.homeScreen.component.charts.CategorySpendingCard
 import com.example.expensetrackerpro.presentation.homeScreen.component.charts.MonthlyTrendBarChart
+import com.example.expensetrackerpro.presentation.homeScreen.component.charts.SpendingCard
+import com.example.expensetrackerpro.domain.models.BucketSize
+import com.example.expensetrackerpro.domain.models.DateFilter
+import com.example.expensetrackerpro.domain.models.PeriodGranularity
+import com.example.expensetrackerpro.domain.models.SpendingBucket
+import com.example.expensetrackerpro.presentation.navigation.CategoryFilter
+import com.example.expensetrackerpro.presentation.navigation.HistoryFilter
 import com.example.expensetrackerpro.presentation.homeScreen.uistate.HomeEvent
 import com.example.expensetrackerpro.presentation.homeScreen.uistate.HomeUiState
 import com.example.expensetrackerpro.presentation.homeScreen.viewmodels.HomeViewModel
@@ -45,6 +51,7 @@ import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 fun HomeScreen(
     onViewAllTransactions: () -> Unit,
     onTransactionClick: (Int) -> Unit,
+    onOpenHistory: (HistoryFilter) -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -53,7 +60,8 @@ fun HomeScreen(
         uiState = uiState,
         onEvent = viewModel::onEvent,
         onViewAllTransactions = onViewAllTransactions,
-        onTransactionClick = onTransactionClick
+        onTransactionClick = onTransactionClick,
+        onOpenHistory = onOpenHistory
     )
 }
 
@@ -62,7 +70,8 @@ fun HomeContent(
     uiState: HomeUiState,
     onEvent: (HomeEvent) -> Unit,
     onViewAllTransactions: () -> Unit,
-    onTransactionClick: (Int) -> Unit
+    onTransactionClick: (Int) -> Unit,
+    onOpenHistory: (HistoryFilter) -> Unit
 ) {
     val summary = uiState.financialSummary
     val recentTransactions = uiState.recentTransactions
@@ -94,19 +103,46 @@ fun HomeContent(
 
             // 2. Hero Card Layer
             item {
-                FinancialSummaryCard(data = summary, periodLabel = uiState.filter.shortLabel())
+                FinancialSummaryCard(
+                    data = summary,
+                    periodLabel = uiState.filter.shortLabel(),
+                    comparison = uiState.periodComparison,
+                    balanceTrend = uiState.balanceTrend
+                )
             }
 
             item {
-                CashFlowChart(uiState.dailyCashFlow)
+                SpendingCard(
+                    chart = uiState.spending,
+                    isLoading = uiState.isLoading,
+                    onBucketClick = { bucket ->
+                        onOpenHistory(
+                            HistoryFilter(bucket.toDateFilter(uiState.spending.bucketSize, uiState.filter.filter))
+                        )
+                    }
+                )
             }
 
-            // NEW: 5. Spending Breakdown (Donut)
             item {
-                CategoryExpenseDonutChart(uiState.categoryExpense)
+                CategorySpendingCard(
+                    ranking = uiState.categoryRanking,
+                    isLoading = uiState.isLoading,
+                    onCategoryClick = { category ->
+                        onOpenHistory(
+                            HistoryFilter(
+                                dateFilter = uiState.filter.filter,
+                                category = CategoryFilter(category.categoryId, category.categoryName)
+                            )
+                        )
+                    }
+                )
             }
-            item {
-                MonthlyTrendBarChart(uiState.monthlyTrend)
+
+            // Comparing months only says something across a year
+            if ((uiState.filter.filter as? DateFilter.Period)?.granularity == PeriodGranularity.YEAR) {
+                item {
+                    MonthlyTrendBarChart(uiState.monthlyTrend)
+                }
             }
 
             item {
@@ -138,6 +174,17 @@ fun HomeContent(
         }
     }
 }
+
+/**
+ * What History is filtered to for a tapped bar. A month of a year view opens as that month, so
+ * it can be stepped from there; anything else opens as exactly the days the bar covers.
+ */
+private fun SpendingBucket.toDateFilter(bucketSize: BucketSize, selected: DateFilter): DateFilter =
+    if (bucketSize == BucketSize.MONTH && selected is DateFilter.Period) {
+        DateFilter.Period(PeriodGranularity.MONTH, range.startMillis)
+    } else {
+        DateFilter.Custom(range)
+    }
 
 @Composable
 fun InsightsPager() {
@@ -193,15 +240,18 @@ private fun HomeContentPreview() {
         HomeContent(
             uiState = HomeUiState(
                 financialSummary = PreviewData.financialSummary,
-                categoryExpense = PreviewData.categoryExpense,
-                dailyCashFlow = PreviewData.dailyCashFlow,
+                periodComparison = PreviewData.periodComparison,
+                balanceTrend = PreviewData.balanceTrend,
+                spending = PreviewData.dailySpending,
+                categoryRanking = PreviewData.categoryRanking,
                 monthlyTrend = PreviewData.monthlyTrend,
                 recentTransactions = PreviewData.transactions,
                 insights = PreviewData.insights
             ),
             onEvent = {},
             onViewAllTransactions = {},
-            onTransactionClick = {}
+            onTransactionClick = {},
+            onOpenHistory = {}
         )
     }
 }

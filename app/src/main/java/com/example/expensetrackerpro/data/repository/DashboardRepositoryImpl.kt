@@ -4,6 +4,7 @@ import com.example.expensetrackerpro.data.local.dao.TransactionDao
 import com.example.expensetrackerpro.data.mapper.toDomain
 import com.example.expensetrackerpro.domain.models.CashFlowPoint
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
+import com.example.expensetrackerpro.domain.models.DailyExpense
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
 import com.example.expensetrackerpro.domain.repository.DashboardRepository
@@ -21,6 +22,10 @@ class DashboardRepositoryImpl @Inject constructor(
 
     override fun getCashFlow(range: DateRange): Flow<List<CashFlowPoint>> =
         transactionDao.getDailyCashFlow(range.startMillis, range.endMillis)
+            .map { list -> list.map { it.toDomain() } }
+
+    override fun getDailyExpenses(range: DateRange): Flow<List<DailyExpense>> =
+        transactionDao.getDailyExpense(range.startMillis, range.endMillis)
             .map { list -> list.map { it.toDomain() } }
 
     override fun getMonthlyTrend(range: DateRange): Flow<List<MonthlyTrend>> =

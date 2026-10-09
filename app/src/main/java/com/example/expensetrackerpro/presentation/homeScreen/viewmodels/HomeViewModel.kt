@@ -2,15 +2,22 @@ package com.example.expensetrackerpro.presentation.homeScreen.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.expensetrackerpro.domain.models.CategoryBreakdown
 import com.example.expensetrackerpro.domain.models.DateFilter
+import com.example.expensetrackerpro.domain.models.DateRange
+import com.example.expensetrackerpro.domain.models.PeriodComparison
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
+import com.example.expensetrackerpro.domain.models.SpendingChart
 import com.example.expensetrackerpro.domain.usecase.dashboard.GenerateSmartInsightsUseCase
-import com.example.expensetrackerpro.domain.usecase.dashboard.GetCashFlowUseCase
+import com.example.expensetrackerpro.domain.usecase.dashboard.GetBalanceTrendUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetCategoryBreakdownUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetDayPeriodUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetFinancialSummaryUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetMonthlyTrendUseCase
+import com.example.expensetrackerpro.domain.usecase.dashboard.GetPeriodComparisonUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetRecentTransactionsUseCase
+import com.example.expensetrackerpro.domain.usecase.dashboard.GetSpendingBucketsUseCase
+import com.example.expensetrackerpro.domain.usecase.dashboard.RankCategorySpendingUseCase
 import com.example.expensetrackerpro.domain.usecase.filter.GetCurrentPeriodUseCase
 import com.example.expensetrackerpro.domain.usecase.filter.GetCustomDateRangeUseCase
 import com.example.expensetrackerpro.domain.usecase.filter.GetDateRangeUseCase
@@ -22,6 +29,7 @@ import com.example.expensetrackerpro.presentation.homeScreen.uistate.HomeUiState
 import com.example.expensetrackerpro.utils.DateFormatter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -36,8 +44,11 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     getFinancialSummary: GetFinancialSummaryUseCase,
     getRecentTransactions: GetRecentTransactionsUseCase,
-    getCategoryBreakdown: GetCategoryBreakdownUseCase,
-    getCashFlow: GetCashFlowUseCase,
+    private val getCategoryBreakdown: GetCategoryBreakdownUseCase,
+    private val getSpendingBuckets: GetSpendingBucketsUseCase,
+    private val getBalanceTrend: GetBalanceTrendUseCase,
+    private val getPeriodComparison: GetPeriodComparisonUseCase,
+    private val rankCategorySpending: RankCategorySpendingUseCase,
     getMonthlyTrend: GetMonthlyTrendUseCase,
     private val generateSmartInsights: GenerateSmartInsightsUseCase,
     getDayPeriod: GetDayPeriodUseCase,
@@ -59,21 +70,22 @@ class HomeViewModel @Inject constructor(
 
             combine(
                 getFinancialSummary(range),
-                getCategoryBreakdown(range),
-                getCashFlow(range),
+                getRecentTransactions(range),
                 getMonthlyTrend(range),
-                getRecentTransactions(range)
-            ) { summary, categories, cashFlow, monthly, recent ->
+                getCharts(selected, range)
+            ) { summary, recent, monthly, charts ->
 
                 HomeUiState(
                     dayPeriod = dayPeriod,
                     filter = filterState,
                     financialSummary = summary,
-                    categoryExpense = categories,
-                    dailyCashFlow = cashFlow,
+                    periodComparison = charts.comparison,
+                    balanceTrend = charts.balanceTrend,
+                    spending = charts.spending,
+                    categoryRanking = rankCategorySpending(charts.categories),
                     monthlyTrend = monthly,
                     recentTransactions = recent,
-                    insights = generateSmartInsights(summary, categories, monthly)
+                    insights = generateSmartInsights(summary, charts.categories, monthly)
                 )
 
             }
@@ -81,8 +93,25 @@ class HomeViewModel @Inject constructor(
             .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5000),
-                HomeUiState(dayPeriod = dayPeriod, filter = filter.value.toState())
+                HomeUiState(dayPeriod = dayPeriod, filter = filter.value.toState(), isLoading = true)
             )
+
+    // Grouped so the dashboard stays within what a single combine can take
+    private data class Charts(
+        val categories: List<CategoryBreakdown>,
+        val spending: SpendingChart,
+        val balanceTrend: List<Double>,
+        val comparison: PeriodComparison?
+    )
+
+    private fun getCharts(selected: DateFilter, range: DateRange): Flow<Charts> =
+        combine(
+            getCategoryBreakdown(range),
+            getSpendingBuckets(range),
+            getBalanceTrend(range),
+            getPeriodComparison(selected),
+            ::Charts
+        )
 
     fun onEvent(event: HomeEvent) {
         when (event) {

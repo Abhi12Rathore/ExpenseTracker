@@ -14,8 +14,8 @@ class GenerateSmartInsightsUseCaseTest {
     private val generateSmartInsights = GenerateSmartInsightsUseCase()
 
     private val saving = FinancialSummary(totalBalance = 1200.0, totalIncome = 2000.0, totalExpense = 800.0)
-    private val food = CategoryBreakdown(categoryId = 1, categoryName = "Food", amount = 500.0)
-    private val bills = CategoryBreakdown(categoryId = 2, categoryName = "Bills", amount = 300.0)
+    private val food = CategoryBreakdown(categoryId = 1, categoryName = "Food", iconName = "Food", amount = 500.0)
+    private val bills = CategoryBreakdown(categoryId = 2, categoryName = "Bills", iconName = "Bills", amount = 300.0)
 
     private fun month(month: Int, expense: Double) =
         MonthlyTrend(year = 2026, month = month, income = 0.0, expense = expense)

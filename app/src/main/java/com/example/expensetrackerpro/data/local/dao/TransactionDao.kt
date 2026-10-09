@@ -10,6 +10,7 @@ import com.example.expensetrackerpro.data.local.entity.CategoryEntity
 import com.example.expensetrackerpro.data.local.entity.TransactionEntity
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.data.local.model.DailyCashFlowEntity
+import com.example.expensetrackerpro.data.local.model.DailyExpenseEntity
 import kotlinx.coroutines.flow.Flow
 import com.example.expensetrackerpro.data.local.model.CategoryExpenseEntity
 import com.example.expensetrackerpro.data.local.model.MonthlyTrendEntity
@@ -97,6 +98,7 @@ AND dateMillis BETWEEN :startDate AND :endDate
 SELECT 
  c.id AS categoryId,
  c.name AS categoryName,
+ c.iconName AS iconName,
  SUM(t.amount) AS totalAmount
 
 FROM transactions t
@@ -146,6 +148,29 @@ GROUP BY date(dateMillis / 1000,'unixepoch','localtime')
 ORDER BY dateMillis
 """)
     fun getDailyCashFlow(startMillis: Long, endMillis: Long): Flow<List<DailyCashFlowEntity>>
+
+    // Only days that have an expense come back; dayMillis is that day's first expense
+    @Query(
+        """
+SELECT
+
+MIN(dateMillis) AS dayMillis,
+
+SUM(amount) AS amount,
+
+COUNT(*) AS transactionCount
+
+FROM transactions
+
+WHERE transactionType = 'EXPENSE'
+AND dateMillis >= :startMillis AND dateMillis < :endMillis
+
+GROUP BY date(dateMillis / 1000,'unixepoch','localtime')
+
+ORDER BY dayMillis
+"""
+    )
+    fun getDailyExpense(startMillis: Long, endMillis: Long): Flow<List<DailyExpenseEntity>>
 
 
     @Query(

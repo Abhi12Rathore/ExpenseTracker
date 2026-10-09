@@ -1,13 +1,19 @@
 package com.example.expensetrackerpro.presentation.common.preview
 
-import com.example.expensetrackerpro.domain.models.CashFlowPoint
+import com.example.expensetrackerpro.domain.models.BucketSize
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
+import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.FinancialSummary
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
+import com.example.expensetrackerpro.domain.models.PeriodComparison
+import com.example.expensetrackerpro.domain.models.PeriodGranularity
 import com.example.expensetrackerpro.domain.models.SmartInsight
+import com.example.expensetrackerpro.domain.models.SpendingBucket
+import com.example.expensetrackerpro.domain.models.SpendingChart
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.domain.usecase.dashboard.RankCategorySpendingUseCase
 
 /** Sample data for @Preview composables only. */
 internal object PreviewData {
@@ -38,17 +44,65 @@ internal object PreviewData {
         savingsRate = 94f
     )
 
+    // Highest first, as the repository returns them
     val categoryExpense = listOf(
-        CategoryBreakdown(1, "Food", 1850.0),
-        CategoryBreakdown(2, "Transport", 500.0),
-        CategoryBreakdown(4, "Bills", 2300.0)
+        CategoryBreakdown(4, "Bills", "Bills", 9800.0),
+        CategoryBreakdown(1, "Food", "Food", 7450.0),
+        CategoryBreakdown(3, "Shopping", "Shopping", 4900.0),
+        CategoryBreakdown(2, "Transport", "Transport", 2600.0),
+        CategoryBreakdown(6, "Health", "Health", 1500.0),
+        CategoryBreakdown(5, "Pets", "Pets", 800.0),
+        CategoryBreakdown(7, "Gifts", "Gift", 500.0)
     )
 
-    val dailyCashFlow = listOf(
-        CashFlowPoint(DATE_MILLIS - 3 * DAY_MILLIS, 0.0, 2300.0),
-        CashFlowPoint(DATE_MILLIS - 2 * DAY_MILLIS, 0.0, 500.0),
-        CashFlowPoint(DATE_MILLIS - DAY_MILLIS, 85000.0, 0.0),
-        CashFlowPoint(DATE_MILLIS, 0.0, 1850.0)
+    val categoryRanking = RankCategorySpendingUseCase()(categoryExpense)
+
+    // October 2025 as seen on the 9th: nine days of spending, the rest still to come
+    private const val MONTH_START_MILLIS = DATE_MILLIS - 8 * DAY_MILLIS
+    private val dailyAmounts = listOf(1200.0, 0.0, 2340.0, 860.0, 0.0, 3150.0, 450.0, 1980.0, 1850.0)
+
+    val dailySpending = SpendingChart(
+        bucketSize = BucketSize.DAY,
+        buckets = List(31) { day ->
+            val start = MONTH_START_MILLIS + day * DAY_MILLIS
+            val amount = dailyAmounts.getOrElse(day) { 0.0 }
+            SpendingBucket(
+                range = DateRange(start, start + DAY_MILLIS),
+                amount = amount,
+                transactionCount = if (amount > 0) 3 else 0,
+                isFuture = day >= dailyAmounts.size
+            )
+        },
+        average = dailyAmounts.average()
+    )
+
+    // 2025 as seen in October. Thirty-day months are close enough for a preview
+    private const val YEAR_START_MILLIS = 1_735_689_600_000L
+    private val monthlyAmounts =
+        listOf(31200.0, 28400.0, 35900.0, 30100.0, 42600.0, 38800.0, 33500.0, 41000.0, 38500.0, 11830.0)
+
+    val monthlySpending = SpendingChart(
+        bucketSize = BucketSize.MONTH,
+        buckets = List(12) { month ->
+            val start = YEAR_START_MILLIS + month * 30 * DAY_MILLIS
+            val amount = monthlyAmounts.getOrElse(month) { 0.0 }
+            SpendingBucket(
+                range = DateRange(start, start + 30 * DAY_MILLIS),
+                amount = amount,
+                transactionCount = if (amount > 0) 24 else 0,
+                isFuture = month >= monthlyAmounts.size
+            )
+        },
+        average = monthlyAmounts.average()
+    )
+
+    // Salary on the 1st, then spending draws the balance down
+    val balanceTrend = listOf(83800.0, 83800.0, 81460.0, 80600.0, 80600.0, 77450.0, 77000.0, 75020.0, 80350.0)
+
+    val periodComparison = PeriodComparison(
+        granularity = PeriodGranularity.MONTH,
+        previousRange = DateRange(MONTH_START_MILLIS - 30 * DAY_MILLIS, MONTH_START_MILLIS),
+        balanceDifference = 3200.0
     )
 
     val monthlyTrend = listOf(

@@ -20,6 +20,21 @@ object DateFormatter {
     /** e.g. `Oct 2026` */
     fun formatShortMonthYear(millis: Long): String = format("MMM yyyy", millis)
 
+    /** e.g. `Oct` */
+    fun formatShortMonth(millis: Long): String = format("MMM", millis)
+
+    /** The month's first letter, e.g. `O`, for tight chart axes. */
+    fun formatMonthInitial(millis: Long): String = formatShortMonth(millis).take(1)
+
+    /** e.g. `Fri` */
+    fun formatWeekday(millis: Long): String = format("EEE", millis)
+
+    /** Day of the month without padding, e.g. `8` */
+    fun formatDayOfMonth(millis: Long): String = format("d", millis)
+
+    /** e.g. `Fri, 17 Oct` */
+    fun formatWeekdayDayMonth(millis: Long): String = format("EEE, d MMM", millis)
+
     /**
      * Both days inclusive, repeating only what differs: `1 – 31 Oct`, `28 Sep – 4 Oct`, or
      * `8 Oct` for a single day. [withYear] appends the year (`1 – 31 Oct 2026`); a range that
