@@ -55,7 +55,7 @@ fun MainScreen(
                 }
             ) {
                 val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
-                // History's route carries optional arguments, so compare what comes before them
+                // Transactions's route carries optional arguments, so compare what comes before them
                 val currentRoute = navBackStackEntry?.destination?.route?.substringBefore('?')
 
                 val items = listOf(
@@ -133,9 +133,9 @@ fun MainScreen(
                         onTransactionClick = { id ->
                             onNavigateToTransactionForm(id)
                         },
-                        onOpenHistory = { filter ->
-                            // No restoreState: a chart opens History on its own filter, not the last one
-                            bottomNavController.navigate(Screens.History.getRoute(filter)) {
+                        onOpenTransactions = { filter ->
+                            // No restoreState: a chart opens Transactions on its own filter, not the last one
+                            bottomNavController.navigate(Screens.Transactions.getRoute(filter)) {
                                 popUpTo(bottomNavController.graph.findStartDestination().id) {
                                     saveState = true
                                 }
@@ -145,21 +145,21 @@ fun MainScreen(
                     )
                 }
                 composable(
-                    route = Screens.History.route,
+                    route = Screens.Transactions.route,
                     arguments = listOf(
-                        navArgument(Screens.History.ARG_START) {
-                            type = NavType.LongType; defaultValue = Screens.History.NO_VALUE
+                        navArgument(Screens.Transactions.ARG_START) {
+                            type = NavType.LongType; defaultValue = Screens.Transactions.NO_VALUE
                         },
-                        navArgument(Screens.History.ARG_END) {
-                            type = NavType.LongType; defaultValue = Screens.History.NO_VALUE
+                        navArgument(Screens.Transactions.ARG_END) {
+                            type = NavType.LongType; defaultValue = Screens.Transactions.NO_VALUE
                         },
-                        navArgument(Screens.History.ARG_GRANULARITY) {
+                        navArgument(Screens.Transactions.ARG_GRANULARITY) {
                             type = NavType.StringType; nullable = true
                         },
-                        navArgument(Screens.History.ARG_CATEGORY_ID) {
-                            type = NavType.LongType; defaultValue = Screens.History.NO_VALUE
+                        navArgument(Screens.Transactions.ARG_CATEGORY_ID) {
+                            type = NavType.LongType; defaultValue = Screens.Transactions.NO_VALUE
                         },
-                        navArgument(Screens.History.ARG_CATEGORY_NAME) {
+                        navArgument(Screens.Transactions.ARG_CATEGORY_NAME) {
                             type = NavType.StringType; nullable = true
                         }
                     )

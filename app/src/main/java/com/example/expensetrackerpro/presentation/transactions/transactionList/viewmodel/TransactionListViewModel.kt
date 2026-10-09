@@ -17,7 +17,7 @@ import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionLi
 import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionsUseCase
 import com.example.expensetrackerpro.presentation.common.filter.PeriodFilterEvent
 import com.example.expensetrackerpro.presentation.common.filter.PeriodFilterState
-import com.example.expensetrackerpro.presentation.navigation.HistoryFilter
+import com.example.expensetrackerpro.presentation.navigation.TransactionsFilter
 import com.example.expensetrackerpro.presentation.transactions.transactionList.uistate.TransactionListEffect
 import com.example.expensetrackerpro.presentation.transactions.transactionList.uistate.TransactionListEvent
 import com.example.expensetrackerpro.presentation.transactions.transactionList.uistate.TransactionListUiState
@@ -42,8 +42,8 @@ class TransactionListViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    // Set when History was opened from a dashboard chart
-    private val openedWith = HistoryFilter.from(savedStateHandle)
+    // Set when Transactions was opened from a dashboard chart
+    private val openedWith = TransactionsFilter.from(savedStateHandle)
 
     private val filter = MutableStateFlow(
         openedWith?.dateFilter ?: getCurrentPeriod(PeriodGranularity.MONTH)

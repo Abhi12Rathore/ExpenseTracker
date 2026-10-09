@@ -467,8 +467,8 @@ class MainViewModelTest {
     }
 
     @Test
-    fun deleteWithNoHistoryScreenAlive_stillOffersUndo() = runTest {
-        // As when Edit is opened from Home's recent activity: no History view model exists,
+    fun deleteWithNoTransactionsScreenAlive_stillOffersUndo() = runTest {
+        // As when Edit is opened from Home's recent activity: no Transactions view model exists,
         // and the only thing listening for deletions is the app itself
         val repository = FakeTransactionRepository(listOf(lunch, rent))
         val viewModel = mainViewModel(transactionRepository = repository)

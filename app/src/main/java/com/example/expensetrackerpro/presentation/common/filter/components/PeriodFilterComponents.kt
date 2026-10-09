@@ -62,7 +62,7 @@ import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.R
 
 /*
- * Home/History period filter, matching design option C:
+ * Home/Transactions period filter, matching design option C:
  *
  *   [ Week | (Month) | Year ]  [📅]
  *   ┌──────────────────────────────┐

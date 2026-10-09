@@ -224,8 +224,8 @@ class TransactionListViewModelTest {
         val viewModel = viewModel(
             savedStateHandle = SavedStateHandle(
                 mapOf(
-                    Screens.History.ARG_START to secondOfOctober.startMillis,
-                    Screens.History.ARG_END to secondOfOctober.endMillis
+                    Screens.Transactions.ARG_START to secondOfOctober.startMillis,
+                    Screens.Transactions.ARG_END to secondOfOctober.endMillis
                 )
             )
         )
@@ -249,8 +249,8 @@ class TransactionListViewModelTest {
         val viewModel = viewModel(
             savedStateHandle = SavedStateHandle(
                 mapOf(
-                    Screens.History.ARG_START to millisAt(2026, Calendar.SEPTEMBER, 1),
-                    Screens.History.ARG_GRANULARITY to PeriodGranularity.MONTH.name
+                    Screens.Transactions.ARG_START to millisAt(2026, Calendar.SEPTEMBER, 1),
+                    Screens.Transactions.ARG_GRANULARITY to PeriodGranularity.MONTH.name
                 )
             )
         )
@@ -271,10 +271,10 @@ class TransactionListViewModelTest {
             repository = repository,
             savedStateHandle = SavedStateHandle(
                 mapOf(
-                    Screens.History.ARG_START to october.startMillis,
-                    Screens.History.ARG_GRANULARITY to PeriodGranularity.MONTH.name,
-                    Screens.History.ARG_CATEGORY_ID to 7L,
-                    Screens.History.ARG_CATEGORY_NAME to "Travel"
+                    Screens.Transactions.ARG_START to october.startMillis,
+                    Screens.Transactions.ARG_GRANULARITY to PeriodGranularity.MONTH.name,
+                    Screens.Transactions.ARG_CATEGORY_ID to 7L,
+                    Screens.Transactions.ARG_CATEGORY_NAME to "Travel"
                 )
             )
         )
@@ -300,10 +300,10 @@ class TransactionListViewModelTest {
         val viewModel = viewModel(
             savedStateHandle = SavedStateHandle(
                 mapOf(
-                    Screens.History.ARG_START to october.startMillis,
-                    Screens.History.ARG_GRANULARITY to PeriodGranularity.MONTH.name,
-                    Screens.History.ARG_CATEGORY_ID to 1L,
-                    Screens.History.ARG_CATEGORY_NAME to "Food"
+                    Screens.Transactions.ARG_START to october.startMillis,
+                    Screens.Transactions.ARG_GRANULARITY to PeriodGranularity.MONTH.name,
+                    Screens.Transactions.ARG_CATEGORY_ID to 1L,
+                    Screens.Transactions.ARG_CATEGORY_NAME to "Food"
                 )
             )
         )
@@ -316,13 +316,13 @@ class TransactionListViewModelTest {
     }
 
     @Test
-    fun openedWithTheRoutesDefaults_isThePlainHistory() = runTest {
+    fun openedWithTheRoutesDefaults_isThePlainTransactions() = runTest {
         val viewModel = viewModel(
             savedStateHandle = SavedStateHandle(
                 mapOf(
-                    Screens.History.ARG_START to Screens.History.NO_VALUE,
-                    Screens.History.ARG_END to Screens.History.NO_VALUE,
-                    Screens.History.ARG_CATEGORY_ID to Screens.History.NO_VALUE
+                    Screens.Transactions.ARG_START to Screens.Transactions.NO_VALUE,
+                    Screens.Transactions.ARG_END to Screens.Transactions.NO_VALUE,
+                    Screens.Transactions.ARG_CATEGORY_ID to Screens.Transactions.NO_VALUE
                 )
             )
         )
@@ -397,10 +397,10 @@ class TransactionListViewModelTest {
             repository = FakeTransactionRepository(listOf(salary, lunch, travelRefund, travelTaxi, foodTrip, oldTravel)),
             savedStateHandle = SavedStateHandle(
                 mapOf(
-                    Screens.History.ARG_START to october.startMillis,
-                    Screens.History.ARG_GRANULARITY to PeriodGranularity.MONTH.name,
-                    Screens.History.ARG_CATEGORY_ID to 7L,
-                    Screens.History.ARG_CATEGORY_NAME to "Travel"
+                    Screens.Transactions.ARG_START to october.startMillis,
+                    Screens.Transactions.ARG_GRANULARITY to PeriodGranularity.MONTH.name,
+                    Screens.Transactions.ARG_CATEGORY_ID to 7L,
+                    Screens.Transactions.ARG_CATEGORY_NAME to "Travel"
                 )
             )
         )
