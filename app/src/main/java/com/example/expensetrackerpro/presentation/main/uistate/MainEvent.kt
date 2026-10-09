@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.presentation.main.uistate
 
 import com.example.expensetrackerpro.domain.models.AuthResult
+import com.example.expensetrackerpro.domain.models.Transaction
 
 sealed interface MainEvent {
     // The whole app left or returned to the foreground (not a rotation or a dialog)
@@ -9,4 +10,7 @@ sealed interface MainEvent {
     data object UnlockClicked : MainEvent
     data object PromptLaunched : MainEvent
     data class AuthFinished(val result: AuthResult) : MainEvent
+
+    /** Undo tapped on the snackbar shown for a deleted [transaction]. */
+    data class UndoDelete(val transaction: Transaction) : MainEvent
 }

@@ -5,19 +5,26 @@ import androidx.lifecycle.viewModelScope
 import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.AuthResult
 import com.example.expensetrackerpro.domain.models.BiometricStatus
+import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.usecase.applock.GetAppLockSettingsUseCase
 import com.example.expensetrackerpro.domain.usecase.applock.GetBiometricStatusUseCase
 import com.example.expensetrackerpro.domain.usecase.applock.GetCurrentTimeMillisUseCase
 import com.example.expensetrackerpro.domain.usecase.applock.ShouldLockUseCase
 import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesUseCase
 import com.example.expensetrackerpro.domain.usecase.theme.GetThemeModeUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.ObserveDeletedTransactionsUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.RestoreTransactionUseCase
 import com.example.expensetrackerpro.presentation.main.uistate.LockMessage
+import com.example.expensetrackerpro.presentation.main.uistate.MainEffect
 import com.example.expensetrackerpro.presentation.main.uistate.MainEvent
 import com.example.expensetrackerpro.presentation.main.uistate.MainUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -29,10 +36,16 @@ class MainViewModel @Inject constructor(
     getAppLockSettings: GetAppLockSettingsUseCase,
     private val getBiometricStatus: GetBiometricStatusUseCase,
     private val shouldLock: ShouldLockUseCase,
-    private val getCurrentTimeMillis: GetCurrentTimeMillisUseCase
+    private val getCurrentTimeMillis: GetCurrentTimeMillisUseCase,
+    observeDeletedTransactions: ObserveDeletedTransactionsUseCase,
+    private val restoreTransaction: RestoreTransactionUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState = _uiState.asStateFlow()
+
+    // A Channel, not state: each effect is handled once, and waits if nobody is collecting yet
+    private val _effects = Channel<MainEffect>(Channel.BUFFERED)
+    val effects: Flow<MainEffect> = _effects.receiveAsFlow()
 
     private var appLockSettings = AppLockSettings()
 
@@ -61,6 +74,12 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             getAppLockSettings().collect(::onAppLockSettingsChanged)
         }
+        viewModelScope.launch {
+            // Listening for as long as the app runs, so a delete on any screen is offered an Undo
+            observeDeletedTransactions().collect { deleted ->
+                _effects.send(MainEffect.ShowUndoDelete(deleted))
+            }
+        }
     }
 
     fun onEvent(event: MainEvent) {
@@ -73,6 +92,7 @@ class MainViewModel @Inject constructor(
                 _uiState.update { it.copy(isPromptRequested = false) }
             }
             is MainEvent.AuthFinished -> onAuthFinished(event.result)
+            is MainEvent.UndoDelete -> undoDelete(event.transaction)
         }
     }
 
@@ -146,6 +166,14 @@ class MainViewModel @Inject constructor(
                 isPromptRequested = false,
                 lockMessage = null
             )
+        }
+    }
+
+    private fun undoDelete(transaction: Transaction) {
+        viewModelScope.launch {
+            if (!restoreTransaction(transaction)) {
+                _effects.send(MainEffect.ShowRestoreFailed)
+            }
         }
     }
 

@@ -13,14 +13,7 @@ import com.example.expensetrackerpro.domain.usecase.filter.GetDateRangeUseCase
 import com.example.expensetrackerpro.domain.usecase.filter.StepPeriodUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.DeleteTransactionUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionsUseCase
-import com.example.expensetrackerpro.domain.usecase.transaction.ObserveDeletedTransactionsUseCase
-import com.example.expensetrackerpro.domain.usecase.transaction.RestoreTransactionUseCase
-import com.example.expensetrackerpro.presentation.transactions.transactionList.uistate.TransactionListEffect
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import org.junit.Assert.assertTrue
@@ -90,8 +83,6 @@ class TransactionListViewModelTest {
             getCustomDateRange = GetCustomDateRangeUseCase(timeProvider),
             calculateFinancialSummary = CalculateFinancialSummaryUseCase(CalculateSavingsRateUseCase()),
             deleteTransaction = DeleteTransactionUseCase(repository),
-            observeDeletedTransactions = ObserveDeletedTransactionsUseCase(repository),
-            restoreTransaction = RestoreTransactionUseCase(repository),
             savedStateHandle = savedStateHandle
         )
 
@@ -454,64 +445,5 @@ class TransactionListViewModelTest {
         runCurrent()
 
         assertTrue(viewModel.uiState.value.transactions.isEmpty())
-    }
-
-    // --- Undo
-
-    private fun TestScope.effectsOf(viewModel: TransactionListViewModel): List<TransactionListEffect> {
-        val effects = mutableListOf<TransactionListEffect>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
-            viewModel.effects.toList(effects)
-        }
-        return effects
-    }
-
-    @Test
-    fun deleteConfirmed_offersUndo_andUndoRestoresTheTransaction() = runTest {
-        val viewModel = viewModel()
-        subscribe(viewModel.uiState)
-        val effects = effectsOf(viewModel)
-
-        viewModel.onEvent(TransactionListEvent.DeleteRequested(lunch))
-        viewModel.onEvent(TransactionListEvent.DeleteConfirmed)
-
-        assertEquals(listOf<TransactionListEffect>(TransactionListEffect.ShowUndoDelete(lunch)), effects)
-        assertEquals(listOf(salary), viewModel.uiState.value.transactions)
-
-        viewModel.onEvent(TransactionListEvent.UndoDelete(lunch))
-
-        assertEquals(listOf(salary, lunch), viewModel.uiState.value.transactions)
-        assertEquals(250.0, viewModel.uiState.value.totalExpense, 0.001)
-    }
-
-    @Test
-    fun deleteMadeElsewhere_alsoOffersUndo() = runTest {
-        val viewModel = viewModel()
-        val effects = effectsOf(viewModel)
-
-        // As the edit screen does, while History sits behind it
-        repository.deleteTransaction(lunch)
-
-        assertEquals(listOf<TransactionListEffect>(TransactionListEffect.ShowUndoDelete(lunch)), effects)
-    }
-
-    @Test
-    fun deleteMadeBeforeHistoryExists_offersNothing() = runTest {
-        repository.deleteTransaction(lunch)
-
-        assertTrue(effectsOf(viewModel()).isEmpty())
-    }
-
-    @Test
-    fun failedUndo_isReported() = runTest {
-        val viewModel = viewModel()
-        val effects = effectsOf(viewModel)
-        repository.deleteTransaction(lunch)
-        repository.failWrites = true
-
-        viewModel.onEvent(TransactionListEvent.UndoDelete(lunch))
-
-        assertEquals(TransactionListEffect.ShowRestoreFailed, effects.last())
-        assertEquals(2, repository.current.size)
     }
 }

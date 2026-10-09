@@ -10,26 +10,38 @@ import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.repository.AppLockRepository
 import com.example.expensetrackerpro.domain.repository.CategoryRepository
 import com.example.expensetrackerpro.domain.repository.ThemePreferenceRepository
+import com.example.expensetrackerpro.domain.repository.TransactionRepository
 import com.example.expensetrackerpro.domain.usecase.applock.GetAppLockSettingsUseCase
 import com.example.expensetrackerpro.domain.usecase.applock.GetBiometricStatusUseCase
 import com.example.expensetrackerpro.domain.usecase.applock.GetCurrentTimeMillisUseCase
 import com.example.expensetrackerpro.domain.usecase.applock.ShouldLockUseCase
 import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesUseCase
 import com.example.expensetrackerpro.domain.usecase.theme.GetThemeModeUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.DeleteTransactionUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.ObserveDeletedTransactionsUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.RestoreTransactionUseCase
 import com.example.expensetrackerpro.fakes.FakeAppLockRepository
 import com.example.expensetrackerpro.fakes.FakeBiometricAvailability
 import com.example.expensetrackerpro.fakes.FakeCategoryRepository
 import com.example.expensetrackerpro.fakes.FakeThemePreferenceRepository
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
+import com.example.expensetrackerpro.fakes.FakeTransactionRepository
 import com.example.expensetrackerpro.fakes.category
+import com.example.expensetrackerpro.fakes.transaction
 import com.example.expensetrackerpro.presentation.main.MainViewModel
 import com.example.expensetrackerpro.presentation.main.uistate.LockMessage
+import com.example.expensetrackerpro.presentation.main.uistate.MainEffect
 import com.example.expensetrackerpro.presentation.main.uistate.MainEvent
 import com.example.expensetrackerpro.util.MainDispatcherRule
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlin.coroutines.cancellation.CancellationException
 import org.junit.Assert.assertEquals
@@ -39,6 +51,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModelTest {
 
     @get:Rule
@@ -50,14 +63,17 @@ class MainViewModelTest {
     private fun mainViewModel(
         categoryRepository: CategoryRepository = FakeCategoryRepository(),
         themeRepository: ThemePreferenceRepository = FakeThemePreferenceRepository(),
-        appLockRepository: AppLockRepository = FakeAppLockRepository()
+        appLockRepository: AppLockRepository = FakeAppLockRepository(),
+        transactionRepository: TransactionRepository = FakeTransactionRepository()
     ) = MainViewModel(
         GetCategoriesUseCase(categoryRepository),
         GetThemeModeUseCase(themeRepository),
         GetAppLockSettingsUseCase(appLockRepository),
         GetBiometricStatusUseCase(biometricAvailability),
         ShouldLockUseCase(timeProvider),
-        GetCurrentTimeMillisUseCase(timeProvider)
+        GetCurrentTimeMillisUseCase(timeProvider),
+        ObserveDeletedTransactionsUseCase(transactionRepository),
+        RestoreTransactionUseCase(transactionRepository)
     )
 
     private fun lockedViewModel(timeout: LockTimeout = LockTimeout.SECONDS_30) =
@@ -435,6 +451,94 @@ class MainViewModelTest {
 
         assertFalse(viewModel.uiState.value.isLocked)
         assertNull(viewModel.uiState.value.lockMessage)
+    }
+
+    // --- Undo delete
+
+    private val lunch = transaction(id = 2, amount = 250.0)
+    private val rent = transaction(id = 3, amount = 400.0)
+
+    private fun TestScope.effectsOf(viewModel: MainViewModel): List<MainEffect> {
+        val effects = mutableListOf<MainEffect>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effects.toList(effects)
+        }
+        return effects
+    }
+
+    @Test
+    fun deleteWithNoHistoryScreenAlive_stillOffersUndo() = runTest {
+        // As when Edit is opened from Home's recent activity: no History view model exists,
+        // and the only thing listening for deletions is the app itself
+        val repository = FakeTransactionRepository(listOf(lunch, rent))
+        val viewModel = mainViewModel(transactionRepository = repository)
+        val effects = effectsOf(viewModel)
+
+        DeleteTransactionUseCase(repository)(lunch)
+
+        assertEquals(listOf<MainEffect>(MainEffect.ShowUndoDelete(lunch)), effects)
+    }
+
+    @Test
+    fun undoOfferedBeforeAnyoneCollects_waitsForTheCollector() = runTest {
+        // The delete happens on a full screen form, before the snackbar's collector is back
+        val repository = FakeTransactionRepository(listOf(lunch, rent))
+        val viewModel = mainViewModel(transactionRepository = repository)
+
+        repository.deleteTransaction(lunch)
+
+        assertEquals(listOf<MainEffect>(MainEffect.ShowUndoDelete(lunch)), effectsOf(viewModel))
+    }
+
+    @Test
+    fun everyDeleteOffersItsOwnUndo() = runTest {
+        val repository = FakeTransactionRepository(listOf(lunch, rent))
+        val effects = effectsOf(mainViewModel(transactionRepository = repository))
+
+        repository.deleteTransaction(lunch)
+        repository.deleteTransaction(rent)
+
+        assertEquals(
+            listOf<MainEffect>(MainEffect.ShowUndoDelete(lunch), MainEffect.ShowUndoDelete(rent)),
+            effects
+        )
+    }
+
+    @Test
+    fun failedDelete_offersNothing() = runTest {
+        val repository = FakeTransactionRepository(listOf(lunch)).apply { failWrites = true }
+        val effects = effectsOf(mainViewModel(transactionRepository = repository))
+
+        repository.deleteTransaction(lunch)
+
+        assertTrue(effects.isEmpty())
+    }
+
+    @Test
+    fun undoDelete_restoresTheTransaction() = runTest {
+        val repository = FakeTransactionRepository(listOf(lunch, rent))
+        val viewModel = mainViewModel(transactionRepository = repository)
+        val effects = effectsOf(viewModel)
+        repository.deleteTransaction(lunch)
+
+        viewModel.onEvent(MainEvent.UndoDelete(lunch))
+
+        assertEquals(listOf(lunch, rent), repository.current.sortedBy { it.id })
+        assertEquals(listOf<MainEffect>(MainEffect.ShowUndoDelete(lunch)), effects)
+    }
+
+    @Test
+    fun failedUndo_isReported() = runTest {
+        val repository = FakeTransactionRepository(listOf(lunch, rent))
+        val viewModel = mainViewModel(transactionRepository = repository)
+        val effects = effectsOf(viewModel)
+        repository.deleteTransaction(lunch)
+        repository.failWrites = true
+
+        viewModel.onEvent(MainEvent.UndoDelete(lunch))
+
+        assertEquals(MainEffect.ShowRestoreFailed, effects.last())
+        assertEquals(listOf(rent), repository.current)
     }
 }
 

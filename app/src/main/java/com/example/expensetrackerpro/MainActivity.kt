@@ -14,9 +14,13 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -28,8 +32,10 @@ import androidx.navigation.compose.rememberNavController
 import com.example.expensetrackerpro.domain.models.ThemeMode
 import com.example.expensetrackerpro.presentation.lock.LockScreen
 import com.example.expensetrackerpro.presentation.main.MainViewModel
+import com.example.expensetrackerpro.presentation.main.uistate.MainEffect
 import com.example.expensetrackerpro.presentation.main.uistate.MainEvent
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : FragmentActivity() {
@@ -79,6 +85,35 @@ class MainActivity : FragmentActivity() {
                 if (uiState.isLockStateKnown) applyRecentsPrivacy(uiState.isAppLockEnabled)
             }
 
+            // Owned here rather than by a screen, so a message raised while a full screen form is
+            // closing is still there when the tabs come back
+            val snackbarHostState = remember { SnackbarHostState() }
+
+            LaunchedEffect(viewModel) {
+                viewModel.effects.collect { effect ->
+                    // Launched separately so a snackbar on screen doesn't hold up the next effect
+                    launch {
+                        when (effect) {
+                            is MainEffect.ShowUndoDelete -> {
+                                // A newer delete replaces the snackbar of the one before
+                                snackbarHostState.currentSnackbarData?.dismiss()
+                                val result = snackbarHostState.showSnackbar(
+                                    message = getString(R.string.history_transaction_deleted),
+                                    actionLabel = getString(R.string.history_undo),
+                                    duration = SnackbarDuration.Long
+                                )
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    viewModel.onEvent(MainEvent.UndoDelete(effect.transaction))
+                                }
+                            }
+                            MainEffect.ShowRestoreFailed -> snackbarHostState.showSnackbar(
+                                getString(R.string.history_restore_failed)
+                            )
+                        }
+                    }
+                }
+            }
+
             ExpenseTrackerProTheme(darkTheme = darkTheme) {
                 // Both outlive the lock screen, so unlocking returns to the same screen and state
                 val navController = rememberNavController()
@@ -100,7 +135,10 @@ class MainActivity : FragmentActivity() {
                             )
                         } else {
                             appContentState.SaveableStateProvider(APP_CONTENT_KEY) {
-                                AppNavHost(navController = navController)
+                                AppNavHost(
+                                    navController = navController,
+                                    snackbarHostState = snackbarHostState
+                                )
                             }
                         }
                     }

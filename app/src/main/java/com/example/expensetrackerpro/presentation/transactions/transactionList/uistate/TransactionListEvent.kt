@@ -10,7 +10,4 @@ sealed interface TransactionListEvent {
     data class DeleteRequested(val transaction: Transaction) : TransactionListEvent
     data object DeleteConfirmed : TransactionListEvent
     data object DeleteDismissed : TransactionListEvent
-
-    /** Undo tapped on the snackbar shown for a deleted [transaction]. */
-    data class UndoDelete(val transaction: Transaction) : TransactionListEvent
 }
