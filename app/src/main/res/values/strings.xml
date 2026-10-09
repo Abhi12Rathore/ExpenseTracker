@@ -16,6 +16,9 @@
     <string name="filter_custom_range">Choose a custom date range</string>
     <string name="filter_custom_confirm">OK</string>
     <string name="filter_custom_cancel">Cancel</string>
+    <string name="filter_custom">Custom</string>
+    <string name="filter_all_time">All time</string>
+    <string name="filter_choose_granularity">Change the period length</string>
 
     <!-- Dashboard balance card -->
     <string name="balance_label">Balance · %1$s</string>
@@ -36,7 +39,7 @@
     <string name="spending_average_per_month">avg %1$s/month</string>
     <!-- Amount · date · transaction count -->
     <string name="spending_tooltip">%1$s · %2$s · %3$s</string>
-    <string name="spending_tooltip_open_history">Show these transactions in History</string>
+    <string name="spending_tooltip_open_transactions">Show these in Transactions</string>
     <!-- Read out for each bar: date, then amount -->
     <string name="spending_bar_description">%1$s: %2$s</string>
     <string name="spending_empty">Nothing spent in this period yet. Expenses you add will show up here.</string>
@@ -80,17 +83,51 @@
     <string name="percent_value">%1$d%%</string>
     <string name="percent_below_one" formatted="false">&lt;1%</string>
 
-    <!-- History -->
-    <string name="history_clear_category_filter">Clear category filter</string>
-    <string name="history_search_placeholder">Search title, note or category</string>
-    <string name="history_search_clear">Clear search</string>
-    <string name="history_no_matches_title">No matches</string>
-    <string name="history_no_matches_description">Nothing in this period matches \"%1$s\"</string>
-    <string name="history_transaction_deleted">Transaction deleted</string>
-    <string name="history_undo">Undo</string>
-    <string name="history_restore_failed">Couldn\'t restore the transaction</string>
-    <!-- A transaction\'s note, shown under its title -->
-    <string name="transaction_note_preview">📝 %1$s</string>
+    <!-- Bottom navigation -->
+    <string name="nav_insights">Insights</string>
+    <string name="nav_transactions">Transactions</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Transactions -->
+    <string name="transactions_title">Transactions</string>
+    <string name="transactions_search">Search</string>
+    <string name="transactions_search_close">Close search</string>
+    <string name="transactions_search_placeholder">Search title, note or category</string>
+    <string name="transactions_search_all_time">Search all time</string>
+    <string name="transactions_no_matches_title">No matches</string>
+    <string name="transactions_no_matches_description">Nothing in this period matches \"%1$s\"</string>
+    <string name="transactions_no_matches_all_time_description">Nothing matches \"%1$s\"</string>
+    <string name="transactions_clear_category_filter">Clear category filter</string>
+    <string name="transactions_transaction_deleted">Transaction deleted</string>
+    <string name="transactions_undo">Undo</string>
+    <string name="transactions_restore_failed">Couldn\'t restore the transaction</string>
+    <string name="transactions_add">Add</string>
+    <!-- Type chips: name, then how many it lists -->
+    <string name="transactions_filter_all">All</string>
+    <string name="transactions_filter_chip">%1$s %2$d</string>
+    <!-- Summary strip -->
+    <string name="transactions_summary_income">Income</string>
+    <string name="transactions_summary_expense">Expense</string>
+    <string name="transactions_summary_net">Net</string>
+    <string name="transactions_summary_total">Total</string>
+    <string name="transactions_summary_entries">Entries</string>
+    <string name="transactions_summary_biggest">Biggest</string>
+    <string name="transactions_summary_results">Results</string>
+    <string name="transactions_summary_average">Average</string>
+    <!-- Day header: Today or Yesterday, then the date -->
+    <string name="transactions_day_header_named">%1$s · %2$s</string>
+    <!-- Under a transaction\'s title: category, then its note -->
+    <string name="transactions_row_meta_with_note">%1$s · 📝 %2$s</string>
+    <!-- Empty list; the argument is one of the periods below, e.g. "No income this month" -->
+    <string name="transactions_empty_all">No transactions %1$s</string>
+    <string name="transactions_empty_expense">No expenses %1$s</string>
+    <string name="transactions_empty_income">No income %1$s</string>
+    <string name="transactions_empty_this_week">this week</string>
+    <string name="transactions_empty_this_month">this month</string>
+    <string name="transactions_empty_this_year">this year</string>
+    <string name="transactions_empty_in_period">in %1$s</string>
+    <string name="transactions_empty_all_time">yet</string>
+    <string name="transactions_empty_hint">Tap Add to record one</string>
 
     <!-- Add / edit transaction -->
     <string name="transaction_add_expense">Add expense</string>
@@ -132,7 +169,7 @@
     <string name="transaction_save_failed">Couldn\'t save the transaction. Try again.</string>
     <string name="transaction_delete_failed">Couldn\'t delete the transaction. Try again.</string>
     <string name="transaction_delete_dialog_title">Delete transaction?</string>
-    <string name="transaction_delete_dialog_message">It will be removed from your history and totals.</string>
+    <string name="transaction_delete_dialog_message">It will be removed from your transactions and totals.</string>
     <string name="transaction_delete_dialog_cancel">Cancel</string>
     <string name="transaction_delete_dialog_confirm">Delete</string>
 

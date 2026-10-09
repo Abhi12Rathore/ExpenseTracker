@@ -98,8 +98,8 @@ class MainActivity : FragmentActivity() {
                                 // A newer delete replaces the snackbar of the one before
                                 snackbarHostState.currentSnackbarData?.dismiss()
                                 val result = snackbarHostState.showSnackbar(
-                                    message = getString(R.string.history_transaction_deleted),
-                                    actionLabel = getString(R.string.history_undo),
+                                    message = getString(R.string.transactions_transaction_deleted),
+                                    actionLabel = getString(R.string.transactions_undo),
                                     duration = SnackbarDuration.Long
                                 )
                                 if (result == SnackbarResult.ActionPerformed) {
@@ -107,7 +107,7 @@ class MainActivity : FragmentActivity() {
                                 }
                             }
                             MainEffect.ShowRestoreFailed -> snackbarHostState.showSnackbar(
-                                getString(R.string.history_restore_failed)
+                                getString(R.string.transactions_restore_failed)
                             )
                         }
                     }

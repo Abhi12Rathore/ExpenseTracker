@@ -5,6 +5,7 @@ import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
 import com.example.expensetrackerpro.domain.models.Dashboard
 import com.example.expensetrackerpro.domain.models.DateRange
+import com.example.expensetrackerpro.domain.models.DayLabel
 import com.example.expensetrackerpro.domain.models.DayPeriod
 import com.example.expensetrackerpro.domain.models.FinancialSummary
 import com.example.expensetrackerpro.domain.models.MonthlyNet
@@ -16,6 +17,7 @@ import com.example.expensetrackerpro.domain.models.SpendingBucket
 import com.example.expensetrackerpro.domain.models.SpendingChart
 import com.example.expensetrackerpro.domain.models.SpendingPace
 import com.example.expensetrackerpro.domain.models.Transaction
+import com.example.expensetrackerpro.domain.models.TransactionDayGroup
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.dashboard.RankCategorySpendingUseCase
 
@@ -39,6 +41,29 @@ internal object PreviewData {
         Transaction(2, "Salary", 85000.0, "", DATE_MILLIS - DAY_MILLIS, 6, "Payments", TransactionType.INCOME),
         Transaction(3, "Metro card", 500.0, "", DATE_MILLIS - 2 * DAY_MILLIS, 2, "Transport", TransactionType.EXPENSE),
         Transaction(4, "Electricity", 2300.0, "", DATE_MILLIS - 3 * DAY_MILLIS, 4, "Bills", TransactionType.EXPENSE)
+    )
+
+    // The same transactions as the Transactions list groups them, seen on the 9th
+    val transactionDays = listOf(
+        TransactionDayGroup(
+            dayStartMillis = DATE_MILLIS,
+            label = DayLabel.TODAY,
+            net = -1850.0,
+            transactions = listOf(transactions[0])
+        ),
+        TransactionDayGroup(
+            dayStartMillis = DATE_MILLIS - DAY_MILLIS,
+            label = DayLabel.YESTERDAY,
+            net = 85000.0,
+            transactions = listOf(transactions[1])
+        ),
+        TransactionDayGroup(
+            dayStartMillis = DATE_MILLIS - 3 * DAY_MILLIS,
+            label = DayLabel.OTHER,
+            net = -2800.0,
+            // Shown as one day so the preview has a card with more than one row
+            transactions = listOf(transactions[2], transactions[3])
+        )
     )
 
     val financialSummary = FinancialSummary(
