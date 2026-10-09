@@ -13,18 +13,23 @@ import com.example.expensetrackerpro.domain.usecase.filter.GetDateRangeUseCase
 import com.example.expensetrackerpro.domain.usecase.filter.StepPeriodUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.DeleteTransactionUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionsUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.ObserveDeletedTransactionsUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.RestoreTransactionUseCase
 import com.example.expensetrackerpro.presentation.common.filter.PeriodFilterEvent
 import com.example.expensetrackerpro.presentation.common.filter.PeriodFilterState
 import com.example.expensetrackerpro.presentation.navigation.HistoryFilter
+import com.example.expensetrackerpro.presentation.transactions.transactionList.uistate.TransactionListEffect
 import com.example.expensetrackerpro.presentation.transactions.transactionList.uistate.TransactionListEvent
 import com.example.expensetrackerpro.presentation.transactions.transactionList.uistate.TransactionListUiState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
 class TransactionListViewModel @Inject constructor(
     getTransactions: GetTransactionsUseCase,
@@ -34,6 +39,8 @@ class TransactionListViewModel @Inject constructor(
     private val getCustomDateRange: GetCustomDateRangeUseCase,
     private val calculateFinancialSummary: CalculateFinancialSummaryUseCase,
     private val deleteTransaction: DeleteTransactionUseCase,
+    observeDeletedTransactions: ObserveDeletedTransactionsUseCase,
+    private val restoreTransaction: RestoreTransactionUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -50,8 +57,19 @@ class TransactionListViewModel @Inject constructor(
 
     private val transactionToDelete = MutableStateFlow<Transaction?>(null)
 
-    private val transactions = filterState
-        .flatMapLatest { state -> getTransactions(state.dateRange) }
+    private val searchQuery = MutableStateFlow("")
+
+    // Waits for a pause in typing before searching; clearing the field applies at once
+    private val appliedSearchQuery = searchQuery
+        .debounce { query -> if (query.isBlank()) 0L else SEARCH_DEBOUNCE_MILLIS }
+        .distinctUntilChanged()
+
+    // A Channel, not state: each effect is handled once, and waits if nobody is collecting yet
+    private val _effects = Channel<TransactionListEffect>(Channel.BUFFERED)
+    val effects: Flow<TransactionListEffect> = _effects.receiveAsFlow()
+
+    private val transactions = combine(filterState, appliedSearchQuery) { state, query -> state.dateRange to query }
+        .flatMapLatest { (dateRange, query) -> getTransactions(dateRange, query) }
         .combine(categoryFilter) { list, category ->
             if (category == null) list else list.filter { it.categoryId.toLong() == category.id }
         }
@@ -64,14 +82,16 @@ class TransactionListViewModel @Inject constructor(
             transactions,
             filterState,
             categoryFilter,
+            searchQuery,
             transactionToDelete
-        ) { list, filterState, category, toDelete ->
+        ) { list, filterState, category, query, toDelete ->
             val summary = calculateFinancialSummary(list)
 
             TransactionListUiState(
                 transactions = list,
                 filter = filterState,
                 categoryFilter = category,
+                searchQuery = query,
                 totalIncome = summary.totalIncome,
                 totalExpense = summary.totalExpense,
                 totalBalance = summary.totalBalance,
@@ -86,13 +106,24 @@ class TransactionListViewModel @Inject constructor(
             )
         )
 
+    init {
+        viewModelScope.launch {
+            // Also hears about deletes made on the edit screen while this screen is behind it
+            observeDeletedTransactions().collect { deleted ->
+                _effects.send(TransactionListEffect.ShowUndoDelete(deleted))
+            }
+        }
+    }
+
     fun onEvent(event: TransactionListEvent) {
         when (event) {
             is TransactionListEvent.Filter -> onFilterEvent(event.event)
             TransactionListEvent.CategoryFilterCleared -> categoryFilter.value = null
+            is TransactionListEvent.SearchChanged -> searchQuery.value = event.query
             is TransactionListEvent.DeleteRequested -> transactionToDelete.value = event.transaction
             TransactionListEvent.DeleteDismissed -> transactionToDelete.value = null
             TransactionListEvent.DeleteConfirmed -> confirmDelete()
+            is TransactionListEvent.UndoDelete -> undoDelete(event.transaction)
         }
     }
 
@@ -127,5 +158,17 @@ class TransactionListViewModel @Inject constructor(
                 transactionToDelete.value = null
             }
         }
+    }
+
+    private fun undoDelete(transaction: Transaction) {
+        viewModelScope.launch {
+            if (!restoreTransaction(transaction)) {
+                _effects.send(TransactionListEffect.ShowRestoreFailed)
+            }
+        }
+    }
+
+    private companion object {
+        const val SEARCH_DEBOUNCE_MILLIS = 300L
     }
 }

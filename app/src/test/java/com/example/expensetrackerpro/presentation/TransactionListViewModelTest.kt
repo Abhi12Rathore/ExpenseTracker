@@ -13,6 +13,17 @@ import com.example.expensetrackerpro.domain.usecase.filter.GetDateRangeUseCase
 import com.example.expensetrackerpro.domain.usecase.filter.StepPeriodUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.DeleteTransactionUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionsUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.ObserveDeletedTransactionsUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.RestoreTransactionUseCase
+import com.example.expensetrackerpro.presentation.transactions.transactionList.uistate.TransactionListEffect
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
+import org.junit.Assert.assertTrue
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
 import com.example.expensetrackerpro.fakes.FakeTransactionRepository
 import com.example.expensetrackerpro.fakes.millisAt
@@ -34,6 +45,7 @@ import org.junit.Test
 import java.util.Calendar
 import java.util.TimeZone
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class TransactionListViewModelTest {
 
     @get:Rule
@@ -78,6 +90,8 @@ class TransactionListViewModelTest {
             getCustomDateRange = GetCustomDateRangeUseCase(timeProvider),
             calculateFinancialSummary = CalculateFinancialSummaryUseCase(CalculateSavingsRateUseCase()),
             deleteTransaction = DeleteTransactionUseCase(repository),
+            observeDeletedTransactions = ObserveDeletedTransactionsUseCase(repository),
+            restoreTransaction = RestoreTransactionUseCase(repository),
             savedStateHandle = savedStateHandle
         )
 
@@ -343,5 +357,161 @@ class TransactionListViewModelTest {
         viewModel.onEvent(TransactionListEvent.DeleteConfirmed)
 
         assertEquals(3, repository.current.size)
+    }
+
+    // --- Search
+
+    private val teamLunch = lunch.copy(title = "Team lunch", note = "Paid for Riya", categoryName = "Food")
+    private val pay = salary.copy(title = "October pay", note = "", categoryName = "Salary")
+    private val searchable get() = FakeTransactionRepository(listOf(pay, teamLunch, oldRent))
+
+    private fun TransactionListViewModel.search(query: String) =
+        onEvent(TransactionListEvent.SearchChanged(query))
+
+    @Test
+    fun search_showsTheQueryAtOnce_andFiltersAfterThreeHundredMillis() = runTest {
+        val viewModel = viewModel(searchable)
+        subscribe(viewModel.uiState)
+
+        viewModel.search("lunch")
+        advanceTimeBy(299)
+        runCurrent()
+
+        assertEquals("lunch", viewModel.uiState.value.searchQuery)
+        assertEquals(listOf(pay, teamLunch), viewModel.uiState.value.transactions)
+
+        advanceTimeBy(2)
+        runCurrent()
+
+        assertEquals(listOf(teamLunch), viewModel.uiState.value.transactions)
+        assertEquals(250.0, viewModel.uiState.value.totalExpense, 0.001)
+        assertEquals(0.0, viewModel.uiState.value.totalIncome, 0.001)
+    }
+
+    @Test
+    fun search_waitsForTypingToPause() = runTest {
+        val viewModel = viewModel(searchable)
+        subscribe(viewModel.uiState)
+
+        viewModel.search("p")
+        advanceTimeBy(200)
+        viewModel.search("pa")
+        advanceTimeBy(200)
+        runCurrent()
+
+        // 400ms since the first letter, but only 200ms since the last
+        assertEquals(listOf(pay, teamLunch), viewModel.uiState.value.transactions)
+
+        advanceTimeBy(101)
+        runCurrent()
+
+        // "pa" is in "October pay" and in the note "Paid for Riya"
+        assertEquals(listOf(pay, teamLunch), viewModel.uiState.value.transactions)
+
+        viewModel.search("pay")
+        advanceTimeBy(301)
+        runCurrent()
+
+        assertEquals(listOf(pay), viewModel.uiState.value.transactions)
+    }
+
+    @Test
+    fun search_matchesTitleNoteAndCategory_ignoringCase() = runTest {
+        val viewModel = viewModel(searchable)
+        subscribe(viewModel.uiState)
+
+        mapOf("TEAM" to teamLunch, "riya" to teamLunch, "salary" to pay).forEach { (query, expected) ->
+            viewModel.search(query)
+            advanceTimeBy(301)
+            runCurrent()
+
+            assertEquals(query, listOf(expected), viewModel.uiState.value.transactions)
+        }
+    }
+
+    @Test
+    fun clearingTheSearch_bringsEverythingBackWithoutWaiting() = runTest {
+        val viewModel = viewModel(searchable)
+        subscribe(viewModel.uiState)
+        viewModel.search("lunch")
+        advanceTimeBy(301)
+        runCurrent()
+
+        viewModel.search("")
+        runCurrent()
+
+        assertEquals(listOf(pay, teamLunch), viewModel.uiState.value.transactions)
+    }
+
+    @Test
+    fun search_staysWithinThePeriodAndCategoryFilter() = runTest {
+        val viewModel = viewModel(searchable)
+        subscribe(viewModel.uiState)
+
+        // oldRent is in September
+        viewModel.search(oldRent.title)
+        advanceTimeBy(301)
+        runCurrent()
+
+        assertTrue(viewModel.uiState.value.transactions.isEmpty())
+    }
+
+    // --- Undo
+
+    private fun TestScope.effectsOf(viewModel: TransactionListViewModel): List<TransactionListEffect> {
+        val effects = mutableListOf<TransactionListEffect>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.effects.toList(effects)
+        }
+        return effects
+    }
+
+    @Test
+    fun deleteConfirmed_offersUndo_andUndoRestoresTheTransaction() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        val effects = effectsOf(viewModel)
+
+        viewModel.onEvent(TransactionListEvent.DeleteRequested(lunch))
+        viewModel.onEvent(TransactionListEvent.DeleteConfirmed)
+
+        assertEquals(listOf<TransactionListEffect>(TransactionListEffect.ShowUndoDelete(lunch)), effects)
+        assertEquals(listOf(salary), viewModel.uiState.value.transactions)
+
+        viewModel.onEvent(TransactionListEvent.UndoDelete(lunch))
+
+        assertEquals(listOf(salary, lunch), viewModel.uiState.value.transactions)
+        assertEquals(250.0, viewModel.uiState.value.totalExpense, 0.001)
+    }
+
+    @Test
+    fun deleteMadeElsewhere_alsoOffersUndo() = runTest {
+        val viewModel = viewModel()
+        val effects = effectsOf(viewModel)
+
+        // As the edit screen does, while History sits behind it
+        repository.deleteTransaction(lunch)
+
+        assertEquals(listOf<TransactionListEffect>(TransactionListEffect.ShowUndoDelete(lunch)), effects)
+    }
+
+    @Test
+    fun deleteMadeBeforeHistoryExists_offersNothing() = runTest {
+        repository.deleteTransaction(lunch)
+
+        assertTrue(effectsOf(viewModel()).isEmpty())
+    }
+
+    @Test
+    fun failedUndo_isReported() = runTest {
+        val viewModel = viewModel()
+        val effects = effectsOf(viewModel)
+        repository.deleteTransaction(lunch)
+        repository.failWrites = true
+
+        viewModel.onEvent(TransactionListEvent.UndoDelete(lunch))
+
+        assertEquals(TransactionListEffect.ShowRestoreFailed, effects.last())
+        assertEquals(2, repository.current.size)
     }
 }
