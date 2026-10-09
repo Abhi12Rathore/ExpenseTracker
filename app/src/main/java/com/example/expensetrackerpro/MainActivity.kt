@@ -4,7 +4,7 @@ import AppNavHost
 import android.app.UiModeManager
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -17,17 +17,32 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.navigation.compose.rememberNavController
 import com.example.expensetrackerpro.domain.models.ThemeMode
+import com.example.expensetrackerpro.presentation.lock.LockScreen
 import com.example.expensetrackerpro.presentation.main.MainViewModel
+import com.example.expensetrackerpro.presentation.main.uistate.MainEvent
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
+
+    // Follows the whole app rather than this activity, so rotation and dialogs never count as
+    // leaving. Registering replays ON_START, which is harmless: nothing has been backgrounded yet.
+    private val appVisibilityObserver = object : DefaultLifecycleObserver {
+        override fun onStart(owner: LifecycleOwner) = viewModel.onEvent(MainEvent.AppForegrounded)
+
+        override fun onStop(owner: LifecycleOwner) = viewModel.onEvent(MainEvent.AppBackgrounded)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
@@ -46,6 +61,7 @@ class MainActivity : ComponentActivity() {
         }
 
         enableEdgeToEdge()
+        ProcessLifecycleOwner.get().lifecycle.addObserver(appVisibilityObserver)
 
         setContent {
             val uiState by viewModel.uiState.collectAsState()
@@ -59,8 +75,14 @@ class MainActivity : ComponentActivity() {
                 if (uiState.isThemeLoaded) applyNightMode(uiState.themeMode)
             }
 
+            LaunchedEffect(uiState.isAppLockEnabled, uiState.isLockStateKnown) {
+                if (uiState.isLockStateKnown) applyRecentsPrivacy(uiState.isAppLockEnabled)
+            }
+
             ExpenseTrackerProTheme(darkTheme = darkTheme) {
+                // Both outlive the lock screen, so unlocking returns to the same screen and state
                 val navController = rememberNavController()
+                val appContentState = rememberSaveableStateHolder()
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     // The system bar insets are applied here once; consuming them stops the
@@ -70,10 +92,42 @@ class MainActivity : ComponentActivity() {
                             .padding(innerPadding)
                             .consumeWindowInsets(innerPadding)
                     ) {
-                        AppNavHost(navController = navController)
+                        if (uiState.isLocked) {
+                            LockScreen(
+                                isPromptRequested = uiState.isPromptRequested,
+                                message = uiState.lockMessage,
+                                onEvent = viewModel::onEvent
+                            )
+                        } else {
+                            appContentState.SaveableStateProvider(APP_CONTENT_KEY) {
+                                AppNavHost(navController = navController)
+                            }
+                        }
                     }
                 }
             }
+        }
+    }
+
+    override fun onDestroy() {
+        ProcessLifecycleOwner.get().lifecycle.removeObserver(appVisibilityObserver)
+        super.onDestroy()
+    }
+
+    /**
+     * Keeps the app's content out of the Recents screen while the app lock is on.
+     *
+     * Android 13+ can hide just the Recents thumbnail. Older versions only offer FLAG_SECURE,
+     * which also blocks screenshots, screen recording and casting of the app. That is the
+     * accepted cost of not showing balances in Recents on those versions.
+     */
+    private fun applyRecentsPrivacy(hideContent: Boolean) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            setRecentsScreenshotEnabled(!hideContent)
+        } else if (hideContent) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
     }
 
@@ -86,5 +140,9 @@ class MainActivity : ComponentActivity() {
             ThemeMode.DARK -> UiModeManager.MODE_NIGHT_YES
         }
         getSystemService(UiModeManager::class.java).setApplicationNightMode(nightMode)
+    }
+
+    private companion object {
+        const val APP_CONTENT_KEY = "app_content"
     }
 }

@@ -21,9 +21,9 @@ fun millisAt(
     set(year, month, day, hour, minute)
 }.timeInMillis
 
-/** A clock stopped at [nowMillis], independent of the machine's zone and locale. */
+/** A clock stopped at [nowMillis] until a test moves it, independent of the machine's zone and locale. */
 class FakeTimeProvider(
-    private val nowMillis: Long,
+    var nowMillis: Long,
     private val timeZone: TimeZone = KOLKATA,
     private val firstDayOfWeek: Int = Calendar.SUNDAY
 ) : TimeProvider {

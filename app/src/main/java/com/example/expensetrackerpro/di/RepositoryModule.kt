@@ -1,9 +1,11 @@
 package com.example.expensetrackerpro.di
 
+import com.example.expensetrackerpro.data.preferences.AppLockRepositoryImpl
 import com.example.expensetrackerpro.data.preferences.ThemePreferenceRepositoryImpl
 import com.example.expensetrackerpro.data.repository.CategoryRepositoryImpl
 import com.example.expensetrackerpro.data.repository.DashboardRepositoryImpl
 import com.example.expensetrackerpro.data.repository.TransactionRepositoryImpl
+import com.example.expensetrackerpro.domain.repository.AppLockRepository
 import com.example.expensetrackerpro.domain.repository.CategoryRepository
 import com.example.expensetrackerpro.domain.repository.DashboardRepository
 import com.example.expensetrackerpro.domain.repository.ThemePreferenceRepository
@@ -35,4 +37,8 @@ abstract class RepositoryModule {
     abstract fun bindThemePreferenceRepository(
         impl: ThemePreferenceRepositoryImpl
     ): ThemePreferenceRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAppLockRepository(impl: AppLockRepositoryImpl): AppLockRepository
 }
