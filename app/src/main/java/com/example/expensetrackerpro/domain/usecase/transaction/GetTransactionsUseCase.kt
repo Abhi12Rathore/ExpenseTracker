@@ -10,7 +10,10 @@ class GetTransactionsUseCase @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) {
 
-    /** Transactions dated within [range], newest first. */
-    operator fun invoke(range: DateRange = DateRange.ALL): Flow<List<Transaction>> =
-        transactionRepository.getTransactions(range)
+    /**
+     * Transactions dated within [range], newest first. A non-blank [query] keeps only those
+     * whose title, note or category name contains it, ignoring case.
+     */
+    operator fun invoke(range: DateRange = DateRange.ALL, query: String = ""): Flow<List<Transaction>> =
+        transactionRepository.getTransactions(range, query)
 }

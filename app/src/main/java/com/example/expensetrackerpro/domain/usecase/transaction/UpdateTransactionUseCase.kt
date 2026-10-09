@@ -8,7 +8,7 @@ class UpdateTransactionUseCase @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) {
 
-    suspend operator fun invoke(transaction: Transaction) {
+    /** Returns false when the transaction could not be written. */
+    suspend operator fun invoke(transaction: Transaction): Boolean =
         transactionRepository.updateTransaction(transaction)
-    }
 }

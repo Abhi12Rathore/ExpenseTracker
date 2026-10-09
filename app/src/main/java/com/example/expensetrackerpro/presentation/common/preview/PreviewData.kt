@@ -35,10 +35,10 @@ internal object PreviewData {
     )
 
     val transactions = listOf(
-        Transaction(1, "Groceries", 1850.0, "Groceries", DATE_MILLIS, 1, "Food", TransactionType.EXPENSE),
-        Transaction(2, "Salary", 85000.0, "Salary", DATE_MILLIS - DAY_MILLIS, 6, "Payments", TransactionType.INCOME),
-        Transaction(3, "Metro card", 500.0, "Metro card", DATE_MILLIS - 2 * DAY_MILLIS, 2, "Transport", TransactionType.EXPENSE),
-        Transaction(4, "Electricity", 2300.0, "Electricity", DATE_MILLIS - 3 * DAY_MILLIS, 4, "Bills", TransactionType.EXPENSE)
+        Transaction(1, "Groceries", 1850.0, "Weekly shop, plus the cake for Sunday", DATE_MILLIS, 1, "Food", TransactionType.EXPENSE),
+        Transaction(2, "Salary", 85000.0, "", DATE_MILLIS - DAY_MILLIS, 6, "Payments", TransactionType.INCOME),
+        Transaction(3, "Metro card", 500.0, "", DATE_MILLIS - 2 * DAY_MILLIS, 2, "Transport", TransactionType.EXPENSE),
+        Transaction(4, "Electricity", 2300.0, "", DATE_MILLIS - 3 * DAY_MILLIS, 4, "Bills", TransactionType.EXPENSE)
     )
 
     val financialSummary = FinancialSummary(

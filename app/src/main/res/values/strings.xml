@@ -82,6 +82,59 @@
 
     <!-- History -->
     <string name="history_clear_category_filter">Clear category filter</string>
+    <string name="history_search_placeholder">Search title, note or category</string>
+    <string name="history_search_clear">Clear search</string>
+    <string name="history_no_matches_title">No matches</string>
+    <string name="history_no_matches_description">Nothing in this period matches \"%1$s\"</string>
+    <string name="history_transaction_deleted">Transaction deleted</string>
+    <string name="history_undo">Undo</string>
+    <string name="history_restore_failed">Couldn\'t restore the transaction</string>
+    <!-- A transaction\'s note, shown under its title -->
+    <string name="transaction_note_preview">📝 %1$s</string>
+
+    <!-- Add / edit transaction -->
+    <string name="transaction_add_expense">Add expense</string>
+    <string name="transaction_add_income">Add income</string>
+    <string name="transaction_edit_expense">Edit expense</string>
+    <string name="transaction_edit_income">Edit income</string>
+    <string name="transaction_close">Close</string>
+    <string name="transaction_back">Back</string>
+    <string name="transaction_delete">Delete</string>
+    <string name="transaction_type_expense">Expense</string>
+    <string name="transaction_type_income">Income</string>
+    <string name="transaction_amount">Amount</string>
+    <string name="transaction_amount_placeholder">0</string>
+    <!-- Shown in place of the amount while the keyboard is open: amount · category · date -->
+    <string name="transaction_summary">%1$s · %2$s · %3$s</string>
+    <string name="transaction_summary_no_category">No category</string>
+    <string name="transaction_summary_edit_amount">Edit amount</string>
+    <string name="transaction_category">Category</string>
+    <string name="transaction_category_new">New</string>
+    <string name="transaction_title">Title</string>
+    <string name="transaction_title_placeholder_expense">What did you spend on?</string>
+    <string name="transaction_title_placeholder_income">Where did this income come from?</string>
+    <string name="transaction_title_required">Enter a title</string>
+    <string name="transaction_date">Date</string>
+    <string name="transaction_date_today">Today</string>
+    <string name="transaction_date_yesterday">Yesterday</string>
+    <string name="transaction_date_pick">Pick date</string>
+    <string name="transaction_date_confirm">OK</string>
+    <string name="transaction_date_cancel">Cancel</string>
+    <string name="transaction_note_add">📝 Add a note · optional</string>
+    <string name="transaction_note">Note</string>
+    <string name="transaction_note_remove">Remove note</string>
+    <!-- Characters used, then the limit -->
+    <string name="transaction_note_counter">%1$d/%2$d</string>
+    <string name="transaction_save">Save</string>
+    <string name="transaction_save_amount">Save %1$s</string>
+    <string name="transaction_update">Update</string>
+    <string name="transaction_update_amount">Update %1$s</string>
+    <string name="transaction_save_failed">Couldn\'t save the transaction. Try again.</string>
+    <string name="transaction_delete_failed">Couldn\'t delete the transaction. Try again.</string>
+    <string name="transaction_delete_dialog_title">Delete transaction?</string>
+    <string name="transaction_delete_dialog_message">It will be removed from your history and totals.</string>
+    <string name="transaction_delete_dialog_cancel">Cancel</string>
+    <string name="transaction_delete_dialog_confirm">Delete</string>
 
     <!-- Dashboard smart insights -->
     <string name="insight_saved_title">Great Saving! 🎉</string>

@@ -9,7 +9,7 @@ import kotlin.math.abs
  */
 object CurrencyFormatter {
 
-    private const val SYMBOL = "₹"
+    const val SYMBOL = "₹"
 
     // Largest first: crore, lakh, thousand
     private val SHORT_UNITS = listOf(10_000_000L to "Cr", 100_000L to "L", 1_000L to "k")
@@ -59,6 +59,16 @@ object CurrencyFormatter {
         val number = if (decimal == 0L) "$whole" else "$whole.$decimal"
 
         return "$sign$SYMBOL$number${SHORT_UNITS[unitIndex].second}"
+    }
+
+    /**
+     * An amount as it is being typed, with only grouping added to its whole part:
+     * `123456.7` becomes `1,23,456.7`. No symbol, and the decimals are left as typed.
+     */
+    fun groupInput(input: String): String {
+        val integerPart = input.substringBefore('.')
+
+        return groupIndian(integerPart) + input.removePrefix(integerPart)
     }
 
     // Last three digits form one group, then groups of two: 12,34,567

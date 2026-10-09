@@ -13,7 +13,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import com.example.expensetrackerpro.R
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.utils.CategoryIcons
@@ -65,12 +68,26 @@ fun ExpenseTile(
             // Center: Vertical Title and Category (Date eliminated as requested)
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = transaction.note,
+                    text = transaction.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+                if (transaction.note.isNotEmpty()) {
+                    Text(
+                        // Line breaks would cut the one-line preview short
+                        text = stringResource(
+                            R.string.transaction_note_preview,
+                            transaction.note.replace('\n', ' ')
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
                 Text(
                     text = DateFormatter.formatDate(transaction.dateMillis),
                     style = MaterialTheme.typography.bodySmall,

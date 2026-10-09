@@ -9,6 +9,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -116,15 +120,33 @@ fun TransactionListContent(
                             color = MaterialTheme.colorScheme.outline
                         )
                     }
-                    Row {
-                        IconButton(onClick = { /* Search logic */ }) {
-                            Icon(Icons.Default.Search, contentDescription = "Search")
-                        }
-                        IconButton(onClick = { /* Filter logic */ }) {
-                            Icon(Icons.Default.FilterList, contentDescription = "Filter")
-                        }
+                    IconButton(onClick = { /* Filter logic */ }) {
+                        Icon(Icons.Default.FilterList, contentDescription = "Filter")
                     }
                 }
+            }
+
+            item {
+                OutlinedTextField(
+                    value = uiState.searchQuery,
+                    onValueChange = { onEvent(TransactionListEvent.SearchChanged(it)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text(stringResource(R.string.history_search_placeholder)) },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    trailingIcon = {
+                        if (uiState.searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { onEvent(TransactionListEvent.SearchChanged("")) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = stringResource(R.string.history_search_clear)
+                                )
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    shape = RoundedCornerShape(12.dp)
+                )
             }
 
             item {
@@ -177,8 +199,12 @@ fun TransactionListContent(
             // 3. Reactive List Logic
             if (expenses.isEmpty()) {
                 item {
-                    // Show Empty UI if no data
-                    EmptyExpenseUI()
+                    if (uiState.searchQuery.isBlank()) {
+                        // Show Empty UI if no data
+                        EmptyExpenseUI()
+                    } else {
+                        NoSearchMatches(query = uiState.searchQuery.trim())
+                    }
                 }
             } else {
                 items(expenses) { expense ->
@@ -194,6 +220,30 @@ fun TransactionListContent(
 
             item { Spacer(modifier = Modifier.height(80.dp)) } // Space for FAB
         }
+    }
+}
+
+@Composable
+private fun NoSearchMatches(query: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.history_no_matches_title),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = stringResource(R.string.history_no_matches_description, query),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.outline,
+            textAlign = TextAlign.Center
+        )
     }
 }
 

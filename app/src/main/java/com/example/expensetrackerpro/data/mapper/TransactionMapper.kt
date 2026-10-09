@@ -7,7 +7,8 @@ fun TransactionEntity.toDomain(): Transaction = Transaction(
     id = id,
     title = title,
     amount = amount,
-    note = note,
+    // Older versions saved the title into the note as well; that copy is not a real note
+    note = note.takeUnless { it == title }.orEmpty(),
     dateMillis = dateMillis,
     categoryId = categoryId,
     categoryName = categoryName,

@@ -1,3 +1,4 @@
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -11,7 +12,8 @@ import com.example.expensetrackerpro.presentation.transactions.addEditTransactio
 
 @Composable
 fun AppNavHost(
-    navController: NavHostController
+    navController: NavHostController,
+    snackbarHostState: SnackbarHostState
 ) {
     NavHost(
         navController = navController,
@@ -20,6 +22,7 @@ fun AppNavHost(
         // Destination 1: The Bottom Nav Shell
         composable("main_shell") {
             MainScreen(
+                snackbarHostState = snackbarHostState,
                 onNavigateToTransactionForm = { id ->
                     navController.navigate(Screens.TransactionForm.getRoute(id ?: -1))
                 },

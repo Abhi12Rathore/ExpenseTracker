@@ -6,7 +6,12 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.LockTimeout
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertThrows
+import java.io.IOException
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -61,6 +66,37 @@ class AppLockRepositoryImplTest {
             AppLockSettings(enabled = true, timeout = LockTimeout.SECONDS_30),
             AppLockRepositoryImpl(dataStore).getSettings().first()
         )
+    }
+
+    @Test
+    fun unreadablePreferences_failClosedWithTheLockOn() = runTest {
+        val unreadable = object : DataStore<Preferences> {
+            override val data: Flow<Preferences> = flow { throw IOException("corrupt file") }
+
+            override suspend fun updateData(
+                transform: suspend (t: Preferences) -> Preferences
+            ): Preferences = throw IOException("corrupt file")
+        }
+
+        assertEquals(
+            AppLockSettings(enabled = true, timeout = LockTimeout.SECONDS_30),
+            AppLockRepositoryImpl(unreadable).getSettings().first()
+        )
+    }
+
+    @Test
+    fun failureThatIsNotAnIoError_isNotSwallowed() = runTest {
+        val broken = object : DataStore<Preferences> {
+            override val data: Flow<Preferences> = flow { throw IllegalStateException("bug") }
+
+            override suspend fun updateData(
+                transform: suspend (t: Preferences) -> Preferences
+            ): Preferences = throw IllegalStateException("bug")
+        }
+
+        assertThrows(IllegalStateException::class.java) {
+            runBlocking { AppLockRepositoryImpl(broken).getSettings().first() }
+        }
     }
 
     @Test

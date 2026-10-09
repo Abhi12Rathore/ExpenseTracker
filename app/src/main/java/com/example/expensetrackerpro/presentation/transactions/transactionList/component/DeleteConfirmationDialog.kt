@@ -12,6 +12,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import com.example.expensetrackerpro.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -77,7 +79,7 @@ fun DeleteConfirmationDialog(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "Delete Expense?",
+                        text = stringResource(R.string.transaction_delete_dialog_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
@@ -86,7 +88,7 @@ fun DeleteConfirmationDialog(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Are you sure you want to delete this Expense? This action cannot be undone.",
+                        text = stringResource(R.string.transaction_delete_dialog_message),
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.outline
@@ -143,7 +145,7 @@ fun DeleteConfirmationDialog(
                             ),
                             contentPadding = PaddingValues(vertical = 12.dp)
                         ) {
-                            Text("Cancel", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.transaction_delete_dialog_cancel), fontWeight = FontWeight.Bold)
                         }
 
                         // Requirement: Primary color with white label + Delete icon
@@ -163,7 +165,7 @@ fun DeleteConfirmationDialog(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Delete", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.transaction_delete_dialog_confirm), fontWeight = FontWeight.Bold)
                         }
                     }
                 }

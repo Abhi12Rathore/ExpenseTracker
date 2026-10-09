@@ -9,6 +9,8 @@ data class TransactionListUiState(
     val filter: PeriodFilterState = PeriodFilterState(),
     // Non-null when only one category's transactions are listed
     val categoryFilter: CategoryFilter? = null,
+    // As typed; the list follows a moment later
+    val searchQuery: String = "",
     val totalIncome: Double = 0.0,
     val totalExpense: Double = 0.0,
     val totalBalance: Double = 0.0, // Income - Expense

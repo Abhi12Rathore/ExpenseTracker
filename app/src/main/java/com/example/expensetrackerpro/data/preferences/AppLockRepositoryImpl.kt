@@ -4,7 +4,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.LockTimeout
@@ -22,13 +21,16 @@ class AppLockRepositoryImpl @Inject constructor(
 
     override fun getSettings(): Flow<AppLockSettings> =
         dataStore.data
-            // An unreadable preferences file falls back to the defaults instead of failing the app
-            .catch { error -> if (error is IOException) emit(emptyPreferences()) else throw error }
             .map { preferences ->
                 AppLockSettings(
                     enabled = preferences[ENABLED] ?: DEFAULTS.enabled,
                     timeout = preferences[TIMEOUT].toLockTimeout()
                 )
+            }
+            // Fails closed: when the preferences can't be read the lock may have been on, so
+            // the app locks rather than open without asking
+            .catch { error ->
+                if (error is IOException) emit(AppLockSettings(enabled = true)) else throw error
             }
             .distinctUntilChanged()
 

@@ -10,7 +10,8 @@ interface CategoryRepository {
 
     fun getCategoriesByType(type: TransactionType): Flow<List<Category>>
 
-    suspend fun insertCategory(category: Category)
+    /** Returns the id the category was stored under. */
+    suspend fun insertCategory(category: Category): Int
 
     suspend fun updateCategory(category: Category)
 

@@ -35,7 +35,7 @@ interface TransactionDao {
     // --- Category CRUD ---
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCategory(category: CategoryEntity)
+    suspend fun insertCategory(category: CategoryEntity): Long
 
     @Update
     suspend fun updateCategory(category: CategoryEntity)
@@ -52,6 +52,27 @@ interface TransactionDao {
 
     @Query("SELECT * FROM transactions WHERE dateMillis >= :startMillis AND dateMillis < :endMillis ORDER BY dateMillis DESC")
     fun getTransactionsBetween(startMillis: Long, endMillis: Long): Flow<List<TransactionEntity>>
+
+    // :query must already have %, _ and \ escaped with a backslash. The category is matched by
+    // its current name, not the copy stored on the transaction.
+    @Query(
+        """
+SELECT t.* FROM transactions t
+JOIN categories c ON c.id = t.categoryId
+WHERE t.dateMillis >= :startMillis AND t.dateMillis < :endMillis
+AND (
+    t.title LIKE '%' || :query || '%' ESCAPE '\'
+    OR t.note LIKE '%' || :query || '%' ESCAPE '\'
+    OR c.name LIKE '%' || :query || '%' ESCAPE '\'
+)
+ORDER BY t.dateMillis DESC
+"""
+    )
+    fun searchTransactionsBetween(
+        startMillis: Long,
+        endMillis: Long,
+        query: String
+    ): Flow<List<TransactionEntity>>
 
     @Query("SELECT * FROM categories")
     fun getAllCategories(): Flow<List<CategoryEntity>>
