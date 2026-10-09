@@ -18,4 +18,10 @@ sealed interface SettingsEvent {
     data object LockAfterClicked : SettingsEvent
     data object LockTimeoutDialogDismissed : SettingsEvent
     data class LockTimeoutSelected(val timeout: LockTimeout) : SettingsEvent
+
+    // Developer section, debug builds only. Both actions ask before they run.
+    data class DeveloperActionClicked(val action: DeveloperAction) : SettingsEvent
+    data object DeveloperActionConfirmed : SettingsEvent
+    data object DeveloperActionDismissed : SettingsEvent
+    data object DeveloperMessageShown : SettingsEvent
 }

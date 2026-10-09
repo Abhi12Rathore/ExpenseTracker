@@ -1,5 +1,13 @@
 package com.example.expensetrackerpro.presentation.settings
 
+import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.Science
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.res.pluralStringResource
+import com.example.expensetrackerpro.presentation.settings.uistate.DeveloperAction
+import com.example.expensetrackerpro.presentation.settings.uistate.DeveloperMessage
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -121,6 +129,30 @@ fun SettingsContent(
         onEvent(SettingsEvent.AppLockErrorShown)
     }
 
+    state.pendingDeveloperAction?.let { action ->
+        DeveloperActionDialog(
+            action = action,
+            onConfirm = { onEvent(SettingsEvent.DeveloperActionConfirmed) },
+            onDismiss = { onEvent(SettingsEvent.DeveloperActionDismissed) }
+        )
+    }
+
+    val developerMessageText = when (val message = state.developerMessage) {
+        is DeveloperMessage.SampleDataLoaded -> pluralStringResource(
+            R.plurals.settings_sample_data_loaded,
+            message.transactionCount,
+            message.transactionCount
+        )
+        DeveloperMessage.AllDataCleared -> stringResource(R.string.settings_all_data_cleared)
+        DeveloperMessage.Failed -> stringResource(R.string.settings_developer_action_failed)
+        null -> null
+    }
+    LaunchedEffect(state.developerMessage) {
+        if (developerMessageText == null) return@LaunchedEffect
+        snackbarHostState.showSnackbar(developerMessageText)
+        onEvent(SettingsEvent.DeveloperMessageShown)
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
@@ -197,6 +229,28 @@ fun SettingsContent(
                 )
             }
 
+            if (state.isDeveloperSectionVisible) {
+                SettingsSection(title = stringResource(R.string.settings_section_developer)) {
+                    SettingsItem(
+                        icon = Icons.Default.Science,
+                        title = stringResource(R.string.settings_load_sample_data),
+                        subtitle = stringResource(R.string.settings_load_sample_data_subtitle),
+                        onClick = { onEvent(SettingsEvent.DeveloperActionClicked(DeveloperAction.LOAD_SAMPLE_DATA)) },
+                        iconTint = MaterialTheme.extendedColors.categoryPalette.green,
+                        enabled = !state.isDeveloperActionRunning
+                    )
+                    SettingsItem(
+                        icon = Icons.Default.DeleteSweep,
+                        title = stringResource(R.string.settings_clear_all_data),
+                        subtitle = stringResource(R.string.settings_clear_all_data_subtitle),
+                        titleColor = MaterialTheme.colorScheme.error,
+                        onClick = { onEvent(SettingsEvent.DeveloperActionClicked(DeveloperAction.CLEAR_ALL_DATA)) },
+                        iconTint = MaterialTheme.colorScheme.error,
+                        enabled = !state.isDeveloperActionRunning
+                    )
+                }
+            }
+
             SettingsSection(title = "About") {
                 SettingsItem(
                     icon = Icons.Default.Info,
@@ -220,6 +274,53 @@ fun SettingsContent(
             }
         }
     }
+}
+
+@Composable
+private fun DeveloperActionDialog(
+    action: DeveloperAction,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val isClear = action == DeveloperAction.CLEAR_ALL_DATA
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                stringResource(
+                    if (isClear) R.string.settings_clear_all_data_dialog_title
+                    else R.string.settings_load_sample_data_dialog_title
+                )
+            )
+        },
+        text = {
+            Text(
+                stringResource(
+                    if (isClear) R.string.settings_clear_all_data_dialog_message
+                    else R.string.settings_load_sample_data_dialog_message
+                )
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text(
+                    stringResource(
+                        if (isClear) R.string.settings_clear_all_data_confirm
+                        else R.string.settings_load_sample_data_confirm
+                    )
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.settings_developer_action_cancel))
+            }
+        }
+    )
 }
 
 @Composable
@@ -325,6 +426,18 @@ private fun SettingsContentAppLockOnPreview() {
     ExpenseTrackerProTheme {
         SettingsContent(
             state = SettingsUiState(appLock = AppLockSettings(enabled = true)),
+            onEvent = {},
+            onNavigateToCategories = {}
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun SettingsContentDeveloperPreview() {
+    ExpenseTrackerProTheme {
+        SettingsContent(
+            state = SettingsUiState(isDeveloperSectionVisible = true),
             onEvent = {},
             onNavigateToCategories = {}
         )

@@ -1,5 +1,10 @@
 package com.example.expensetrackerpro.presentation.settings
 
+import com.example.expensetrackerpro.domain.models.BuildInfo
+import com.example.expensetrackerpro.domain.usecase.sample.ClearAllDataUseCase
+import com.example.expensetrackerpro.domain.usecase.sample.LoadSampleDataUseCase
+import com.example.expensetrackerpro.presentation.settings.uistate.DeveloperAction
+import com.example.expensetrackerpro.presentation.settings.uistate.DeveloperMessage
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.expensetrackerpro.domain.models.AppLockSettings
@@ -31,11 +36,19 @@ class SettingsViewModel @Inject constructor(
     private val setThemeMode: SetThemeModeUseCase,
     private val getAppLockSettings: GetAppLockSettingsUseCase,
     private val setAppLockSettings: SetAppLockSettingsUseCase,
-    private val getBiometricStatus: GetBiometricStatusUseCase
+    private val getBiometricStatus: GetBiometricStatusUseCase,
+    private val loadSampleData: LoadSampleDataUseCase,
+    private val clearAllData: ClearAllDataUseCase,
+    private val buildInfo: BuildInfo
 ) : ViewModel() {
 
     // Dialog and prompt state; the saved theme and app lock settings are merged in below
-    private val screenState = MutableStateFlow(SettingsUiState(biometricStatus = getBiometricStatus()))
+    private val screenState = MutableStateFlow(
+        SettingsUiState(
+            biometricStatus = getBiometricStatus(),
+            isDeveloperSectionVisible = buildInfo.isDebug
+        )
+    )
 
     val uiState: StateFlow<SettingsUiState> =
         combine(getThemeMode(), getAppLockSettings(), screenState) { themeMode, appLock, state ->
@@ -60,6 +73,12 @@ class SettingsViewModel @Inject constructor(
                 screenState.update { it.copy(isLockTimeoutDialogOpen = true) }
             SettingsEvent.LockTimeoutDialogDismissed -> closeLockTimeoutDialog()
             is SettingsEvent.LockTimeoutSelected -> selectLockTimeout(event.timeout)
+            is SettingsEvent.DeveloperActionClicked -> requestDeveloperAction(event.action)
+            SettingsEvent.DeveloperActionConfirmed -> runDeveloperAction()
+            SettingsEvent.DeveloperActionDismissed ->
+                screenState.update { it.copy(pendingDeveloperAction = null) }
+            SettingsEvent.DeveloperMessageShown ->
+                screenState.update { it.copy(developerMessage = null) }
         }
     }
 
@@ -103,6 +122,28 @@ class SettingsViewModel @Inject constructor(
 
     private fun closeLockTimeoutDialog() {
         screenState.update { it.copy(isLockTimeoutDialogOpen = false) }
+    }
+
+    private fun requestDeveloperAction(action: DeveloperAction) {
+        // Release builds never show the section; this keeps the actions out of reach there too
+        if (!buildInfo.isDebug || screenState.value.isDeveloperActionRunning) return
+        screenState.update { it.copy(pendingDeveloperAction = action) }
+    }
+
+    private fun runDeveloperAction() {
+        val action = screenState.value.pendingDeveloperAction
+        if (!buildInfo.isDebug || action == null || screenState.value.isDeveloperActionRunning) return
+
+        screenState.update { it.copy(pendingDeveloperAction = null, isDeveloperActionRunning = true) }
+        viewModelScope.launch {
+            val message = when (action) {
+                DeveloperAction.LOAD_SAMPLE_DATA ->
+                    loadSampleData()?.let { DeveloperMessage.SampleDataLoaded(it) } ?: DeveloperMessage.Failed
+                DeveloperAction.CLEAR_ALL_DATA ->
+                    if (clearAllData()) DeveloperMessage.AllDataCleared else DeveloperMessage.Failed
+            }
+            screenState.update { it.copy(isDeveloperActionRunning = false, developerMessage = message) }
+        }
     }
 
     private fun updateAppLock(change: (AppLockSettings) -> AppLockSettings) {

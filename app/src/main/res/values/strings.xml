@@ -248,6 +248,26 @@
     <!-- Manage categories -->
     <string name="category_delete_blocked">Can\'t delete \"%1$s\" because it still has transactions. Delete or move them first.</string>
 
+    <!-- Settings: developer section, shown in debug builds only -->
+    <string name="settings_section_developer">Developer</string>
+    <string name="settings_load_sample_data">Load sample data</string>
+    <string name="settings_load_sample_data_subtitle">Six months of made-up transactions, for testing</string>
+    <string name="settings_load_sample_data_dialog_title">Load sample data?</string>
+    <string name="settings_load_sample_data_dialog_message">Every transaction you have will be replaced with sample ones. This can\'t be undone.</string>
+    <string name="settings_load_sample_data_confirm">Replace</string>
+    <string name="settings_clear_all_data">Clear all data</string>
+    <string name="settings_clear_all_data_subtitle">Delete every transaction and custom category</string>
+    <string name="settings_clear_all_data_dialog_title">Clear all data?</string>
+    <string name="settings_clear_all_data_dialog_message">Every transaction and every category you added will be deleted. This can\'t be undone.</string>
+    <string name="settings_clear_all_data_confirm">Clear</string>
+    <string name="settings_developer_action_cancel">Cancel</string>
+    <plurals name="settings_sample_data_loaded">
+        <item quantity="one">Loaded %1$d sample transaction</item>
+        <item quantity="other">Loaded %1$d sample transactions</item>
+    </plurals>
+    <string name="settings_all_data_cleared">All data cleared</string>
+    <string name="settings_developer_action_failed">Couldn\'t change the data. Try again.</string>
+
     <!-- Settings: theme -->
     <string name="settings_theme">Theme</string>
     <string name="theme_dialog_title">Choose theme</string>
