@@ -44,5 +44,5 @@ class GetPeriodComparisonUseCase @Inject constructor(
         }
     }
 
-    private fun FinancialSummary.isEmpty(): Boolean = totalIncome == 0.0 && totalExpense == 0.0
+    private fun FinancialSummary.isEmpty(): Boolean = totalIncome.isZero && totalExpense.isZero
 }

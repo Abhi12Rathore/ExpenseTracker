@@ -67,8 +67,6 @@ Apply these to all new and changed code. Existing violations are tracked under K
 
 ## Known issues (remove each line once fixed)
 Planned for the `refactor/lld` branch:
-- Money is `Double` in entities and domain models. Migrate to `Money` (paise as `Long`) with a Room `Migration`.
-- `Transaction` stores `categoryName` alongside `categoryId`. `CategoryDao.update` and `reassignAndDelete` keep the copy in step; any new write to a category's name must too. Read it via JOIN/`@Relation` and drop the column (migration).
 - No shared error model. Introduce `DomainError` + `Result`.
 
 ## Workflow

@@ -3,8 +3,10 @@ package com.example.expensetrackerpro.domain.usecase.dashboard
 import com.example.expensetrackerpro.domain.models.BucketSize
 import com.example.expensetrackerpro.domain.models.DailyExpense
 import com.example.expensetrackerpro.domain.models.DateRange
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.SpendingBucket
 import com.example.expensetrackerpro.domain.models.SpendingChart
+import com.example.expensetrackerpro.domain.models.sumOfMoney
 import com.example.expensetrackerpro.domain.repository.DashboardRepository
 import com.example.expensetrackerpro.domain.time.TimeProvider
 import kotlinx.coroutines.flow.Flow
@@ -34,7 +36,7 @@ class GetSpendingBucketsUseCase @Inject constructor(
             val spent = days.filter { it.dateMillis in bucket }
             SpendingBucket(
                 range = bucket,
-                amount = spent.sumOf { it.amount },
+                amount = spent.sumOfMoney { it.amount },
                 transactionCount = spent.sumOf { it.transactionCount },
                 isFuture = bucket.startMillis > nowMillis
             )
@@ -44,7 +46,7 @@ class GetSpendingBucketsUseCase @Inject constructor(
         return SpendingChart(
             bucketSize = bucketSize,
             buckets = buckets,
-            average = if (started.isEmpty()) 0.0 else started.sumOf { it.amount } / started.size
+            average = if (started.isEmpty()) Money.ZERO else started.sumOfMoney { it.amount } / started.size
         )
     }
 

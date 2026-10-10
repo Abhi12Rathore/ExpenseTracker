@@ -39,6 +39,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.DateChoice
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.transaction.ValidateTransactionDraftUseCase
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorSheet
@@ -276,7 +277,7 @@ private val previewAddState = AddEditTransactionUiState(
 private val previewEditState = AddEditTransactionUiState(
     title = "Groceries",
     amount = "1850.5",
-    validAmount = 1850.5,
+    validAmount = Money(1_850_50),
     note = "Weekly shop, plus the cake for Sunday",
     isNoteExpanded = true,
     selectedCategoryId = PreviewData.categories.first().id,
@@ -329,7 +330,7 @@ private fun TitleErrorPreview() {
     AddEditTransactionPreview(
         state = previewAddState.copy(
             amount = "250",
-            validAmount = 250.0,
+            validAmount = Money.ofRupees(250),
             selectedCategoryId = PreviewData.categories.first().id,
             isTitleErrorVisible = true
         )

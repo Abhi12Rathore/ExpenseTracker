@@ -14,7 +14,7 @@ data class Dashboard(
     val comparison: PeriodComparison? = null,
 
     // Running balance at the end of each day so far, oldest first
-    val balanceTrend: List<Double> = emptyList(),
+    val balanceTrend: List<Money> = emptyList(),
 
     val spending: SpendingChart = SpendingChart(),
 

@@ -131,14 +131,14 @@ fun SpendingBarChart(
     val textMeasurer = rememberTextMeasurer()
     val axisStyle = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.extendedColors.chartAxisText)
     val axisMax = remember(chart) {
-        niceAxisMax(max(buckets.maxOf { it.amount }, chart.average))
+        niceAxisMax(maxOf(buckets.maxOf { it.amount }, chart.average))
     }
     val xLabels = remember(periodKey, axisStyle) {
         xAxisLabels(chart).map { it.index to textMeasurer.measure(it.text, axisStyle) }
     }
     val gridLabels = remember(axisMax, axisStyle) {
         GridlineFractions.map { fraction ->
-            fraction to textMeasurer.measure(CurrencyFormatter.formatShort(axisMax * fraction), axisStyle)
+            fraction to textMeasurer.measure(CurrencyFormatter.formatShort(axisMax.atFraction(fraction)), axisStyle)
         }
     }
     val averageText = stringResource(
@@ -195,9 +195,9 @@ fun SpendingBarChart(
                 when {
                     bucket.isFuture ->
                         drawBar(left, plotBottom, barWidth, FutureBarHeight.toPx(), futureBarColor)
-                    bucket.amount > 0 -> {
+                    bucket.amount.isPositive -> {
                         val fullHeight = max(
-                            (bucket.amount / axisMax).toFloat() * plotHeight,
+                            bucket.amount.ratioTo(axisMax) * plotHeight,
                             MinBarHeight.toPx()
                         )
                         drawBar(
@@ -213,8 +213,8 @@ fun SpendingBarChart(
                 }
             }
 
-            if (chart.average > 0) {
-                val y = plotBottom - (chart.average / axisMax).toFloat() * plotHeight
+            if (chart.average.isPositive) {
+                val y = plotBottom - chart.average.ratioTo(axisMax) * plotHeight
                 val dash = 4.dp.toPx()
                 drawLine(
                     color = averageColor,

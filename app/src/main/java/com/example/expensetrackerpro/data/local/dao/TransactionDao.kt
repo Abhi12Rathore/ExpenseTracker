@@ -25,31 +25,30 @@ interface TransactionDao {
     @Delete
     suspend fun deleteTransaction(transaction: TransactionEntity)
 
-    // Reads join the category for its icon, which is not stored on the transaction
+    // Reads join the category for its name and icon, which are not stored on the transaction
 
-    @Query("SELECT t.*, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId WHERE t.id = :id")
+    @Query("SELECT t.*, c.name AS categoryName, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId WHERE t.id = :id")
     suspend fun getTransactionById(id: Int): TransactionWithCategory?
 
-    @Query("SELECT t.*, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId ORDER BY t.dateMillis DESC")
+    @Query("SELECT t.*, c.name AS categoryName, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId ORDER BY t.dateMillis DESC")
     fun getAllTransactions(): Flow<List<TransactionWithCategory>>
 
-    @Query("SELECT t.*, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId WHERE t.transactionType = :type ORDER BY t.dateMillis DESC")
+    @Query("SELECT t.*, c.name AS categoryName, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId WHERE t.transactionType = :type ORDER BY t.dateMillis DESC")
     fun getTransactionsByType(type: TransactionType): Flow<List<TransactionWithCategory>>
 
     @Query(
         """
-SELECT t.*, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId
+SELECT t.*, c.name AS categoryName, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId
 WHERE t.dateMillis >= :startMillis AND t.dateMillis < :endMillis
 ORDER BY t.dateMillis DESC
 """
     )
     fun getTransactionsBetween(startMillis: Long, endMillis: Long): Flow<List<TransactionWithCategory>>
 
-    // :query must already have %, _ and \ escaped with a backslash. The category is matched by
-    // its current name, not the copy stored on the transaction.
+    // :query must already have %, _ and \ escaped with a backslash
     @Query(
         """
-SELECT t.*, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId
+SELECT t.*, c.name AS categoryName, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId
 WHERE t.dateMillis >= :startMillis AND t.dateMillis < :endMillis
 AND (
     t.title LIKE '%' || :query || '%' ESCAPE '\'

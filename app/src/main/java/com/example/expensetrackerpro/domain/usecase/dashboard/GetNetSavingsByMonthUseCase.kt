@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.domain.usecase.dashboard
 
 import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.DateRange
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.MonthlyNet
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
 import com.example.expensetrackerpro.domain.time.TimeProvider
@@ -44,7 +45,7 @@ class GetNetSavingsByMonthUseCase @Inject constructor(
                     add(
                         MonthlyNet(
                             range = DateRange(startMillis, minOf(cursor.timeInMillis, range.endMillis)),
-                            net = if (month == null) 0.0 else month.income - month.expense,
+                            net = if (month == null) Money.ZERO else month.income - month.expense,
                             isFuture = startMillis > nowMillis
                         )
                     )

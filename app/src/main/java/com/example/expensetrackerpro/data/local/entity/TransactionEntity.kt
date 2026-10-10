@@ -21,10 +21,9 @@ import com.example.expensetrackerpro.domain.models.TransactionType
 data class TransactionEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val title: String,
-    val amount: Double,
+    val amountPaise: Long,
     val note: String,
     val dateMillis: Long,
     val categoryId: Int,
-    val categoryName: String,
     val transactionType: TransactionType
 )

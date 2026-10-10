@@ -22,7 +22,7 @@ import com.example.expensetrackerpro.data.local.utils.Converters
 @Database(
     entities = [TransactionEntity::class, CategoryEntity::class],
     // Pre-release: every schema change bumps this, and the destructive fallback resets the data
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

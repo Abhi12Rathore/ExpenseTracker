@@ -6,5 +6,5 @@ data class CategoryUsage(
     // Every transaction filed under it, whenever it was made
     val totalCount: Int = 0,
     val periodCount: Int = 0,
-    val periodAmount: Double = 0.0
+    val periodAmount: Money = Money.ZERO
 )

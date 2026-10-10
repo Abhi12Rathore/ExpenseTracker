@@ -29,6 +29,7 @@ import com.example.expensetrackerpro.fakes.FakeThemePreferenceRepository
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
 import com.example.expensetrackerpro.fakes.FakeTransactionRepository
 import com.example.expensetrackerpro.fakes.category
+import com.example.expensetrackerpro.fakes.rupees
 import com.example.expensetrackerpro.fakes.transaction
 import com.example.expensetrackerpro.presentation.main.MainViewModel
 import com.example.expensetrackerpro.presentation.main.uistate.LockMessage
@@ -457,8 +458,8 @@ class MainViewModelTest {
 
     // --- Undo delete
 
-    private val lunch = transaction(id = 2, amount = 250.0)
-    private val rent = transaction(id = 3, amount = 400.0)
+    private val lunch = transaction(id = 2, amount = rupees(250))
+    private val rent = transaction(id = 3, amount = rupees(400))
 
     private fun TestScope.effectsOf(viewModel: MainViewModel): List<MainEffect> {
         val effects = mutableListOf<MainEffect>()

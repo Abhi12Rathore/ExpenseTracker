@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.domain.usecase.dashboard
 
 import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.DateRange
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.PeriodComparison
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
 import com.example.expensetrackerpro.domain.models.TransactionType
@@ -11,6 +12,7 @@ import com.example.expensetrackerpro.domain.usecase.filter.StepPeriodUseCase
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
 import com.example.expensetrackerpro.fakes.FakeTransactionRepository
 import com.example.expensetrackerpro.fakes.millisAt
+import com.example.expensetrackerpro.fakes.rupees
 import com.example.expensetrackerpro.fakes.transaction
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -38,7 +40,7 @@ class GetPeriodComparisonUseCaseTest {
 
     private var nextId = 1
 
-    private suspend fun save(amount: Double, type: TransactionType, dateMillis: Long) {
+    private suspend fun save(amount: Money, type: TransactionType, dateMillis: Long) {
         transactions.saveTransaction(
             transaction(id = nextId++, amount = amount, type = type, dateMillis = dateMillis)
         )
@@ -52,11 +54,11 @@ class GetPeriodComparisonUseCaseTest {
     @Test
     fun ongoingMonth_comparesWithTheSameDaysOfTheMonthBefore() = runTest {
         // By 8 Sep: saved 900. The rent on the 30th came later in the month
-        save(900.0, TransactionType.INCOME, millisAt(2026, Calendar.SEPTEMBER, 5))
-        save(400.0, TransactionType.EXPENSE, millisAt(2026, Calendar.SEPTEMBER, 30, hour = 23))
+        save(rupees(900), TransactionType.INCOME, millisAt(2026, Calendar.SEPTEMBER, 5))
+        save(rupees(400), TransactionType.EXPENSE, millisAt(2026, Calendar.SEPTEMBER, 30, hour = 23))
         // By 8 Oct: saved 750
-        save(1000.0, TransactionType.INCOME, millisAt(2026, Calendar.OCTOBER, 1))
-        save(250.0, TransactionType.EXPENSE, millisAt(2026, Calendar.OCTOBER, 7))
+        save(rupees(1000), TransactionType.INCOME, millisAt(2026, Calendar.OCTOBER, 1))
+        save(rupees(250), TransactionType.EXPENSE, millisAt(2026, Calendar.OCTOBER, 7))
 
         val comparison = getPeriodComparison(period(PeriodGranularity.MONTH, 2026, Calendar.OCTOBER)).first()
 
@@ -67,7 +69,7 @@ class GetPeriodComparisonUseCaseTest {
                     millisAt(2026, Calendar.SEPTEMBER, 1),
                     millisAt(2026, Calendar.SEPTEMBER, 9)
                 ),
-                balanceDifference = -150.0,
+                balanceDifference = rupees(-150),
                 isPartial = true
             ),
             comparison
@@ -76,22 +78,22 @@ class GetPeriodComparisonUseCaseTest {
 
     @Test
     fun ongoingMonth_countsTheSameDayOfTheMonthBefore_butNotTheNext() = runTest {
-        save(100.0, TransactionType.INCOME, millisAt(2026, Calendar.SEPTEMBER, 8, hour = 23, minute = 59))
-        save(5000.0, TransactionType.INCOME, millisAt(2026, Calendar.SEPTEMBER, 9))
-        save(300.0, TransactionType.INCOME, millisAt(2026, Calendar.OCTOBER, 2))
+        save(rupees(100), TransactionType.INCOME, millisAt(2026, Calendar.SEPTEMBER, 8, hour = 23, minute = 59))
+        save(rupees(5000), TransactionType.INCOME, millisAt(2026, Calendar.SEPTEMBER, 9))
+        save(rupees(300), TransactionType.INCOME, millisAt(2026, Calendar.OCTOBER, 2))
 
         val comparison = getPeriodComparison(period(PeriodGranularity.MONTH, 2026, Calendar.OCTOBER)).first()
 
-        assertEquals(200.0, requireNotNull(comparison).balanceDifference, 0.001)
+        assertEquals(rupees(200), requireNotNull(comparison).balanceDifference)
     }
 
     @Test
     fun ongoingWeek_comparesWithTheSameWeekdaysOfTheWeekBefore() = runTest {
         // Weeks start on Sunday: 27 Sep to 3 Oct, then 4 to 10 Oct. Today is Thursday
-        save(200.0, TransactionType.EXPENSE, millisAt(2026, Calendar.SEPTEMBER, 28))
+        save(rupees(200), TransactionType.EXPENSE, millisAt(2026, Calendar.SEPTEMBER, 28))
         // Friday of last week: later than today's weekday, so left out
-        save(900.0, TransactionType.EXPENSE, millisAt(2026, Calendar.OCTOBER, 2))
-        save(50.0, TransactionType.EXPENSE, millisAt(2026, Calendar.OCTOBER, 4))
+        save(rupees(900), TransactionType.EXPENSE, millisAt(2026, Calendar.OCTOBER, 2))
+        save(rupees(50), TransactionType.EXPENSE, millisAt(2026, Calendar.OCTOBER, 4))
 
         val comparison = getPeriodComparison(period(PeriodGranularity.WEEK, 2026, Calendar.OCTOBER, 4)).first()
 
@@ -102,7 +104,7 @@ class GetPeriodComparisonUseCaseTest {
                     millisAt(2026, Calendar.SEPTEMBER, 27),
                     millisAt(2026, Calendar.OCTOBER, 2)
                 ),
-                balanceDifference = 150.0,
+                balanceDifference = rupees(150),
                 isPartial = true
             ),
             comparison
@@ -111,10 +113,10 @@ class GetPeriodComparisonUseCaseTest {
 
     @Test
     fun ongoingYear_comparesWithTheSameDatesLastYear() = runTest {
-        save(5000.0, TransactionType.INCOME, millisAt(2025, Calendar.OCTOBER, 8, hour = 23))
+        save(rupees(5000), TransactionType.INCOME, millisAt(2025, Calendar.OCTOBER, 8, hour = 23))
         // After 8 Oct last year, so left out
-        save(70000.0, TransactionType.INCOME, millisAt(2025, Calendar.DECEMBER, 31, hour = 23))
-        save(8000.0, TransactionType.INCOME, millisAt(2026, Calendar.JANUARY, 1))
+        save(rupees(70000), TransactionType.INCOME, millisAt(2025, Calendar.DECEMBER, 31, hour = 23))
+        save(rupees(8000), TransactionType.INCOME, millisAt(2026, Calendar.JANUARY, 1))
 
         val comparison = getPeriodComparison(period(PeriodGranularity.YEAR, 2026, Calendar.JANUARY)).first()
 
@@ -125,7 +127,7 @@ class GetPeriodComparisonUseCaseTest {
                     millisAt(2025, Calendar.JANUARY, 1),
                     millisAt(2025, Calendar.OCTOBER, 9)
                 ),
-                balanceDifference = 3000.0,
+                balanceDifference = rupees(3000),
                 isPartial = true
             ),
             comparison
@@ -134,21 +136,21 @@ class GetPeriodComparisonUseCaseTest {
 
     @Test
     fun anchorInsideThePeriod_makesNoDifference() = runTest {
-        save(400.0, TransactionType.INCOME, millisAt(2026, Calendar.SEPTEMBER, 1))
-        save(900.0, TransactionType.INCOME, millisAt(2026, Calendar.OCTOBER, 5))
+        save(rupees(400), TransactionType.INCOME, millisAt(2026, Calendar.SEPTEMBER, 1))
+        save(rupees(900), TransactionType.INCOME, millisAt(2026, Calendar.OCTOBER, 5))
 
         val comparison = getPeriodComparison(period(PeriodGranularity.MONTH, 2026, Calendar.OCTOBER, day = 20)).first()
 
-        assertEquals(500.0, requireNotNull(comparison).balanceDifference, 0.001)
+        assertEquals(rupees(500), requireNotNull(comparison).balanceDifference)
     }
 
     // --- A finished period ---
 
     @Test
     fun finishedMonth_comparesWithTheWholeMonthBefore() = runTest {
-        save(600.0, TransactionType.INCOME, millisAt(2026, Calendar.AUGUST, 31, hour = 23))
-        save(900.0, TransactionType.INCOME, millisAt(2026, Calendar.SEPTEMBER, 5))
-        save(400.0, TransactionType.EXPENSE, millisAt(2026, Calendar.SEPTEMBER, 30, hour = 23))
+        save(rupees(600), TransactionType.INCOME, millisAt(2026, Calendar.AUGUST, 31, hour = 23))
+        save(rupees(900), TransactionType.INCOME, millisAt(2026, Calendar.SEPTEMBER, 5))
+        save(rupees(400), TransactionType.EXPENSE, millisAt(2026, Calendar.SEPTEMBER, 30, hour = 23))
 
         val comparison = getPeriodComparison(period(PeriodGranularity.MONTH, 2026, Calendar.SEPTEMBER)).first()
 
@@ -159,7 +161,7 @@ class GetPeriodComparisonUseCaseTest {
                     millisAt(2026, Calendar.AUGUST, 1),
                     millisAt(2026, Calendar.SEPTEMBER, 1)
                 ),
-                balanceDifference = -100.0,
+                balanceDifference = rupees(-100),
                 isPartial = false
             ),
             comparison
@@ -168,8 +170,8 @@ class GetPeriodComparisonUseCaseTest {
 
     @Test
     fun finishedYear_comparesWithTheWholeYearBefore() = runTest {
-        save(5000.0, TransactionType.INCOME, millisAt(2024, Calendar.DECEMBER, 31, hour = 23))
-        save(8000.0, TransactionType.INCOME, millisAt(2025, Calendar.JANUARY, 1))
+        save(rupees(5000), TransactionType.INCOME, millisAt(2024, Calendar.DECEMBER, 31, hour = 23))
+        save(rupees(8000), TransactionType.INCOME, millisAt(2025, Calendar.JANUARY, 1))
 
         val comparison = getPeriodComparison(period(PeriodGranularity.YEAR, 2025, Calendar.JANUARY)).first()
 
@@ -180,7 +182,7 @@ class GetPeriodComparisonUseCaseTest {
                     millisAt(2024, Calendar.JANUARY, 1),
                     millisAt(2025, Calendar.JANUARY, 1)
                 ),
-                balanceDifference = 3000.0,
+                balanceDifference = rupees(3000),
                 isPartial = false
             ),
             comparison
@@ -189,7 +191,7 @@ class GetPeriodComparisonUseCaseTest {
 
     @Test
     fun finishedJanuary_comparesWithDecemberOfThePreviousYear() = runTest {
-        save(100.0, TransactionType.INCOME, millisAt(2025, Calendar.DECEMBER, 25))
+        save(rupees(100), TransactionType.INCOME, millisAt(2025, Calendar.DECEMBER, 25))
 
         val comparison = getPeriodComparison(period(PeriodGranularity.MONTH, 2026, Calendar.JANUARY)).first()
 
@@ -197,30 +199,30 @@ class GetPeriodComparisonUseCaseTest {
             DateRange(millisAt(2025, Calendar.DECEMBER, 1), millisAt(2026, Calendar.JANUARY, 1)),
             requireNotNull(comparison).previousRange
         )
-        assertEquals(-100.0, comparison.balanceDifference, 0.001)
+        assertEquals(rupees(-100), comparison.balanceDifference)
     }
 
     // --- Signs and empty data ---
 
     @Test
     fun lessSavedThanBefore_isANegativeDifference() = runTest {
-        save(1000.0, TransactionType.INCOME, millisAt(2026, Calendar.SEPTEMBER, 5))
-        save(300.0, TransactionType.INCOME, millisAt(2026, Calendar.OCTOBER, 2))
+        save(rupees(1000), TransactionType.INCOME, millisAt(2026, Calendar.SEPTEMBER, 5))
+        save(rupees(300), TransactionType.INCOME, millisAt(2026, Calendar.OCTOBER, 2))
 
         val comparison = getPeriodComparison(period(PeriodGranularity.MONTH, 2026, Calendar.OCTOBER)).first()
 
-        assertEquals(-700.0, requireNotNull(comparison).balanceDifference, 0.001)
+        assertEquals(rupees(-700), requireNotNull(comparison).balanceDifference)
     }
 
     @Test
     fun overspendingBothPeriods_comparesTheNegativeBalances() = runTest {
-        save(800.0, TransactionType.EXPENSE, millisAt(2026, Calendar.SEPTEMBER, 5))
-        save(300.0, TransactionType.EXPENSE, millisAt(2026, Calendar.OCTOBER, 2))
+        save(rupees(800), TransactionType.EXPENSE, millisAt(2026, Calendar.SEPTEMBER, 5))
+        save(rupees(300), TransactionType.EXPENSE, millisAt(2026, Calendar.OCTOBER, 2))
 
         val comparison = getPeriodComparison(period(PeriodGranularity.MONTH, 2026, Calendar.OCTOBER)).first()
 
         // -300 against -800
-        assertEquals(500.0, requireNotNull(comparison).balanceDifference, 0.001)
+        assertEquals(rupees(500), requireNotNull(comparison).balanceDifference)
     }
 
     @Test
@@ -231,24 +233,24 @@ class GetPeriodComparisonUseCaseTest {
     @Test
     fun onlyLaterTransactionsInThePreviousPeriod_stillHasNothingToCompare() = runTest {
         // September's only transaction falls after the 8th
-        save(400.0, TransactionType.INCOME, millisAt(2026, Calendar.SEPTEMBER, 20))
+        save(rupees(400), TransactionType.INCOME, millisAt(2026, Calendar.SEPTEMBER, 20))
 
         assertNull(getPeriodComparison(period(PeriodGranularity.MONTH, 2026, Calendar.OCTOBER)).first())
     }
 
     @Test
     fun sameBalanceInBothPeriods_isAZeroDifference() = runTest {
-        save(400.0, TransactionType.INCOME, millisAt(2026, Calendar.SEPTEMBER, 5))
-        save(400.0, TransactionType.INCOME, millisAt(2026, Calendar.OCTOBER, 5))
+        save(rupees(400), TransactionType.INCOME, millisAt(2026, Calendar.SEPTEMBER, 5))
+        save(rupees(400), TransactionType.INCOME, millisAt(2026, Calendar.OCTOBER, 5))
 
         val comparison = getPeriodComparison(period(PeriodGranularity.MONTH, 2026, Calendar.OCTOBER)).first()
 
-        assertEquals(0.0, requireNotNull(comparison).balanceDifference, 0.001)
+        assertEquals(Money.ZERO, requireNotNull(comparison).balanceDifference)
     }
 
     @Test
     fun customRange_hasNothingToCompareWith() = runTest {
-        save(400.0, TransactionType.INCOME, millisAt(2026, Calendar.OCTOBER, 2))
+        save(rupees(400), TransactionType.INCOME, millisAt(2026, Calendar.OCTOBER, 2))
         val custom = DateFilter.Custom(
             DateRange(millisAt(2026, Calendar.OCTOBER, 1), millisAt(2026, Calendar.OCTOBER, 8))
         )

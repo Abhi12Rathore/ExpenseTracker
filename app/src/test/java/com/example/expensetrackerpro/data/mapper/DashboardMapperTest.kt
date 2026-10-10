@@ -8,7 +8,9 @@ import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.CashFlowPoint
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
 import com.example.expensetrackerpro.domain.models.DailyExpense
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
+import com.example.expensetrackerpro.fakes.rupees
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -16,40 +18,40 @@ class DashboardMapperTest {
 
     @Test
     fun categoryExpense_mapsTotalAmountToAmount() {
-        val entity = CategoryExpenseEntity(categoryId = 2, categoryName = "Food", icon = CategoryIcon.RESTAURANT, totalAmount = 1250.75)
+        val entity = CategoryExpenseEntity(categoryId = 2, categoryName = "Food", icon = CategoryIcon.RESTAURANT, totalPaise = 1250_75)
 
         assertEquals(
-            CategoryBreakdown(categoryId = 2, categoryName = "Food", icon = CategoryIcon.RESTAURANT, amount = 1250.75),
+            CategoryBreakdown(categoryId = 2, categoryName = "Food", icon = CategoryIcon.RESTAURANT, amount = Money(1250_75)),
             entity.toDomain()
         )
     }
 
     @Test
     fun dailyCashFlow_keepsIncomeAndExpenseSeparate() {
-        val entity = DailyCashFlowEntity(dateMillis = 1_700_000_000_000, income = 500.0, expense = 120.0)
+        val entity = DailyCashFlowEntity(dateMillis = 1_700_000_000_000, incomePaise = 500_00, expensePaise = 120_00)
 
         assertEquals(
-            CashFlowPoint(dateMillis = 1_700_000_000_000, income = 500.0, expense = 120.0),
+            CashFlowPoint(dateMillis = 1_700_000_000_000, income = rupees(500), expense = rupees(120)),
             entity.toDomain()
         )
     }
 
     @Test
     fun dailyExpense_mapsDayMillisToDateMillis() {
-        val entity = DailyExpenseEntity(dayMillis = 1_700_000_000_000, amount = 340.5, transactionCount = 3)
+        val entity = DailyExpenseEntity(dayMillis = 1_700_000_000_000, amountPaise = 340_50, transactionCount = 3)
 
         assertEquals(
-            DailyExpense(dateMillis = 1_700_000_000_000, amount = 340.5, transactionCount = 3),
+            DailyExpense(dateMillis = 1_700_000_000_000, amount = Money(340_50), transactionCount = 3),
             entity.toDomain()
         )
     }
 
     @Test
     fun monthlyTrend_keepsYearAndMonthSeparate() {
-        val entity = MonthlyTrendEntity(year = 2026, month = 7, income = 9000.0, expense = 4000.0)
+        val entity = MonthlyTrendEntity(year = 2026, month = 7, incomePaise = 9000_00, expensePaise = 4000_00)
 
         assertEquals(
-            MonthlyTrend(year = 2026, month = 7, income = 9000.0, expense = 4000.0),
+            MonthlyTrend(year = 2026, month = 7, income = rupees(9000), expense = rupees(4000)),
             entity.toDomain()
         )
     }

@@ -2,12 +2,16 @@ package com.example.expensetrackerpro.fakes
 
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
 
+/** Whole rupees as [Money], to keep test amounts short. */
+fun rupees(amount: Long): Money = Money.ofRupees(amount)
+
 fun transaction(
     id: Int = 1,
-    amount: Double = 100.0,
+    amount: Money = rupees(100),
     type: TransactionType = TransactionType.EXPENSE,
     dateMillis: Long = 0L,
     note: String = "note",

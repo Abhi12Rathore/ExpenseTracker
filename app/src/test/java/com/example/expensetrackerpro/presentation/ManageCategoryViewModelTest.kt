@@ -19,6 +19,7 @@ import com.example.expensetrackerpro.fakes.FakeCategoryRepository
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
 import com.example.expensetrackerpro.fakes.category
 import com.example.expensetrackerpro.fakes.millisAt
+import com.example.expensetrackerpro.fakes.rupees
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorEvent
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorReducer
 import com.example.expensetrackerpro.presentation.manageCategories.ManageCategoryViewModel
@@ -51,8 +52,8 @@ class ManageCategoryViewModelTest {
 
     // Food and Transport were used this month, Transport for more money; Gym never
     private val repository = FakeCategoryRepository(listOf(food, transport, gym, salary)).apply {
-        setUsage(food.id, totalCount = 20, periodCount = 6, periodAmount = 1200.0)
-        setUsage(transport.id, totalCount = 8, periodCount = 2, periodAmount = 3000.0)
+        setUsage(food.id, totalCount = 20, periodCount = 6, periodAmount = rupees(1200))
+        setUsage(transport.id, totalCount = 8, periodCount = 2, periodAmount = rupees(3000))
     }
 
     private fun viewModel(): ManageCategoryViewModel {
@@ -108,7 +109,7 @@ class ManageCategoryViewModelTest {
         val top = subscribedViewModel().uiState.value.sections.mostUsed.first()
 
         assertEquals(2, top.periodCount)
-        assertEquals(3000.0, top.periodAmount, 0.0)
+        assertEquals(rupees(3000), top.periodAmount)
         assertEquals(8, top.totalCount)
     }
 
@@ -150,7 +151,7 @@ class ManageCategoryViewModelTest {
     fun aChangeInUsage_movesTheCategoryBetweenSections() = runTest {
         val viewModel = subscribedViewModel()
 
-        repository.setUsage(gym.id, totalCount = 1, periodCount = 1, periodAmount = 5000.0)
+        repository.setUsage(gym.id, totalCount = 1, periodCount = 1, periodAmount = rupees(5000))
 
         val sections = viewModel.uiState.value.sections
         assertEquals(listOf(gym, transport, food), sections.mostUsed.map { it.category })

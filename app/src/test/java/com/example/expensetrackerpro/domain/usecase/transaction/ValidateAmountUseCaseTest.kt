@@ -2,18 +2,16 @@ package com.example.expensetrackerpro.domain.usecase.transaction
 
 import com.example.expensetrackerpro.domain.models.AmountError
 import com.example.expensetrackerpro.domain.models.AmountValidation
+import com.example.expensetrackerpro.domain.models.Money
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.math.BigDecimal
 
 class ValidateAmountUseCaseTest {
 
     private val validate = ValidateAmountUseCase()
 
-    private fun assertValid(expected: String, input: String) {
-        val result = validate(input)
-        check(result is AmountValidation.Valid) { "$input was $result" }
-        assertEquals(0, BigDecimal(expected).compareTo(result.amount))
+    private fun assertValid(expected: Money, input: String) {
+        assertEquals(input, AmountValidation.Valid(expected), validate(input))
     }
 
     private fun assertInvalid(reason: AmountError, vararg inputs: String) {
@@ -24,22 +22,22 @@ class ValidateAmountUseCaseTest {
 
     @Test
     fun wholeAndDecimalAmounts_areValid() {
-        assertValid("4201", "4201")
-        assertValid("4201.5", "4201.5")
-        assertValid("0.01", "0.01")
-        assertValid("250.50", "250.50")
+        assertValid(Money.ofRupees(4201), "4201")
+        assertValid(Money(4201_50), "4201.5")
+        assertValid(Money(1), "0.01")
+        assertValid(Money(250_50), "250.50")
     }
 
     @Test
     fun missingDigitsAroundThePoint_readAsZero() {
-        assertValid("12", "12.")
-        assertValid("0.5", ".5")
+        assertValid(Money.ofRupees(12), "12.")
+        assertValid(Money(50), ".5")
     }
 
     @Test
     fun oneCrore_isTheLargestValidAmount() {
-        assertValid("10000000", "10000000")
-        assertValid("10000000", "10000000.00")
+        assertValid(Money.ofRupees(10_000_000), "10000000")
+        assertValid(Money.ofRupees(10_000_000), "10000000.00")
         assertInvalid(AmountError.ABOVE_LIMIT, "10000000.01", "10000001", "99999999999999999999999")
     }
 

@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.domain.usecase.dashboard
 
 import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.DateRange
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.MonthlyNet
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
@@ -9,6 +10,7 @@ import com.example.expensetrackerpro.domain.usecase.filter.GetDateRangeUseCase
 import com.example.expensetrackerpro.fakes.FakeDashboardRepository
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
 import com.example.expensetrackerpro.fakes.millisAt
+import com.example.expensetrackerpro.fakes.rupees
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -59,15 +61,15 @@ class GetNetSavingsByMonthUseCaseTest {
     @Test
     fun netIsIncomeMinusExpense_negativeWhenOverspent_zeroWhenNothingHappened() = runTest {
         repository.monthlyTrend.value = listOf(
-            MonthlyTrend(year = 2026, month = 1, income = 5000.0, expense = 3000.0),
-            MonthlyTrend(year = 2026, month = 3, income = 1000.0, expense = 2500.0),
-            MonthlyTrend(year = 2026, month = 10, income = 0.0, expense = 400.0)
+            MonthlyTrend(year = 2026, month = 1, income = rupees(5000), expense = rupees(3000)),
+            MonthlyTrend(year = 2026, month = 3, income = rupees(1000), expense = rupees(2500)),
+            MonthlyTrend(year = 2026, month = 10, income = Money.ZERO, expense = rupees(400))
         )
 
         val nets = netSavings(year(2026)).map { it.net }
 
         assertEquals(
-            listOf(2000.0, 0.0, -1500.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -400.0, 0.0, 0.0),
+            listOf(rupees(2000), Money.ZERO, rupees(-1500), Money.ZERO, Money.ZERO, Money.ZERO, Money.ZERO, Money.ZERO, Money.ZERO, rupees(-400), Money.ZERO, Money.ZERO),
             nets
         )
     }
@@ -75,11 +77,11 @@ class GetNetSavingsByMonthUseCaseTest {
     @Test
     fun monthsOfAnotherYear_areNotMixedIn() = runTest {
         repository.monthlyTrend.value = listOf(
-            MonthlyTrend(year = 2025, month = 2, income = 900.0, expense = 0.0),
-            MonthlyTrend(year = 2026, month = 2, income = 100.0, expense = 0.0)
+            MonthlyTrend(year = 2025, month = 2, income = rupees(900), expense = Money.ZERO),
+            MonthlyTrend(year = 2026, month = 2, income = rupees(100), expense = Money.ZERO)
         )
 
-        assertEquals(100.0, netSavings(year(2026))[1].net, 0.001)
+        assertEquals(rupees(100), netSavings(year(2026))[1].net)
     }
 
     @Test
@@ -98,7 +100,7 @@ class GetNetSavingsByMonthUseCaseTest {
     @Test
     fun anythingShorterThanAYear_hasNoMonthlyBreakdown() = runTest {
         repository.monthlyTrend.value =
-            listOf(MonthlyTrend(year = 2026, month = 10, income = 500.0, expense = 100.0))
+            listOf(MonthlyTrend(year = 2026, month = 10, income = rupees(500), expense = rupees(100)))
 
         assertTrue(
             netSavings(DateFilter.Period(PeriodGranularity.MONTH, millisAt(2026, Calendar.OCTOBER, 1))).isEmpty()

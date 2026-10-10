@@ -11,9 +11,11 @@ import com.example.expensetrackerpro.domain.models.CategoryBreakdown
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.DailyExpense
 import com.example.expensetrackerpro.domain.models.DateRange
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.fakes.millisAt
+import com.example.expensetrackerpro.fakes.rupees
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -63,14 +65,14 @@ class DashboardDaoTest {
 
         val dao = database.transactionDao()
         // August and September, for the months before the one the reports are asked for
-        dao.insertTransaction(transaction(1, salary, 80000.0, millisAt(2026, Calendar.AUGUST, 15, hour = 12)))
-        dao.insertTransaction(transaction(2, food, 700.0, millisAt(2026, Calendar.SEPTEMBER, 15, hour = 12)))
+        dao.insertTransaction(transaction(1, salary, rupees(80000), millisAt(2026, Calendar.AUGUST, 15, hour = 12)))
+        dao.insertTransaction(transaction(2, food, rupees(700), millisAt(2026, Calendar.SEPTEMBER, 15, hour = 12)))
         // October: two expenses and the salary on the 10th, one expense on the 12th and one on the 15th
-        dao.insertTransaction(transaction(3, food, 250.0, oct10Noon))
-        dao.insertTransaction(transaction(4, bills, 1200.0, oct10Afternoon))
-        dao.insertTransaction(transaction(5, salary, 90000.0, oct10Afternoon))
-        dao.insertTransaction(transaction(6, food, 400.5, oct12Noon))
-        dao.insertTransaction(transaction(7, bills, 300.0, oct15Noon))
+        dao.insertTransaction(transaction(3, food, rupees(250), oct10Noon))
+        dao.insertTransaction(transaction(4, bills, rupees(1200), oct10Afternoon))
+        dao.insertTransaction(transaction(5, salary, rupees(90000), oct10Afternoon))
+        dao.insertTransaction(transaction(6, food, Money(400_50), oct12Noon))
+        dao.insertTransaction(transaction(7, bills, rupees(300), oct15Noon))
     }
 
     @After
@@ -78,15 +80,14 @@ class DashboardDaoTest {
         database.close()
     }
 
-    private fun transaction(id: Int, category: CategoryEntity, amount: Double, dateMillis: Long) =
+    private fun transaction(id: Int, category: CategoryEntity, amount: Money, dateMillis: Long) =
         TransactionEntity(
             id = id,
             title = "Transaction $id",
-            amount = amount,
+            amountPaise = amount.paise,
             note = "",
             dateMillis = dateMillis,
             categoryId = category.id,
-            categoryName = category.name,
             transactionType = category.type
         )
 
@@ -97,8 +98,8 @@ class DashboardDaoTest {
         // No income, nothing from September, and no category without an expense
         assertEquals(
             listOf(
-                CategoryBreakdown(bills.id.toLong(), "Bills", CategoryIcon.RECEIPT_LONG, 1500.0),
-                CategoryBreakdown(food.id.toLong(), "Food", CategoryIcon.RESTAURANT, 650.5)
+                CategoryBreakdown(bills.id.toLong(), "Bills", CategoryIcon.RECEIPT_LONG, rupees(1500)),
+                CategoryBreakdown(food.id.toLong(), "Food", CategoryIcon.RESTAURANT, Money(650_50))
             ),
             repository.getCategoryBreakdown(october).first()
         )
@@ -130,8 +131,8 @@ class DashboardDaoTest {
     fun cashFlow_sumsIncomeAndExpensePerDay_oldestFirst() = runTest {
         val days = repository.getCashFlow(october).first()
 
-        assertEquals(listOf(90000.0, 0.0, 0.0), days.map { it.income })
-        assertEquals(listOf(1450.0, 400.5, 300.0), days.map { it.expense })
+        assertEquals(listOf(rupees(90000), Money.ZERO, Money.ZERO), days.map { it.income })
+        assertEquals(listOf(rupees(1450), Money(400_50), rupees(300)), days.map { it.expense })
         // Each point is dated within its own day
         assertTrue(days[0].dateMillis in oct10Noon..oct10Afternoon)
         assertEquals(listOf(oct12Noon, oct15Noon), days.drop(1).map { it.dateMillis })
@@ -142,9 +143,9 @@ class DashboardDaoTest {
         // The salary on the 10th is neither summed nor counted
         assertEquals(
             listOf(
-                DailyExpense(dateMillis = oct10Noon, amount = 1450.0, transactionCount = 2),
-                DailyExpense(dateMillis = oct12Noon, amount = 400.5, transactionCount = 1),
-                DailyExpense(dateMillis = oct15Noon, amount = 300.0, transactionCount = 1)
+                DailyExpense(dateMillis = oct10Noon, amount = rupees(1450), transactionCount = 2),
+                DailyExpense(dateMillis = oct12Noon, amount = Money(400_50), transactionCount = 1),
+                DailyExpense(dateMillis = oct15Noon, amount = rupees(300), transactionCount = 1)
             ),
             repository.getDailyExpenses(october).first()
         )
@@ -157,9 +158,9 @@ class DashboardDaoTest {
         // August and September are months 8 and 9: read as text, "08" and "09" would come back as 0
         assertEquals(
             listOf(
-                MonthlyTrend(year = 2026, month = 8, income = 80000.0, expense = 0.0),
-                MonthlyTrend(year = 2026, month = 9, income = 0.0, expense = 700.0),
-                MonthlyTrend(year = 2026, month = 10, income = 90000.0, expense = 2150.5)
+                MonthlyTrend(year = 2026, month = 8, income = rupees(80000), expense = Money.ZERO),
+                MonthlyTrend(year = 2026, month = 9, income = Money.ZERO, expense = rupees(700)),
+                MonthlyTrend(year = 2026, month = 10, income = rupees(90000), expense = Money(2150_50))
             ),
             repository.getMonthlyTrend(year2026).first()
         )
@@ -168,7 +169,7 @@ class DashboardDaoTest {
     @Test
     fun monthlyTrend_keepsToTheRangeItIsAskedFor() = runTest {
         assertEquals(
-            listOf(MonthlyTrend(year = 2026, month = 10, income = 90000.0, expense = 2150.5)),
+            listOf(MonthlyTrend(year = 2026, month = 10, income = rupees(90000), expense = Money(2150_50))),
             repository.getMonthlyTrend(october).first()
         )
     }

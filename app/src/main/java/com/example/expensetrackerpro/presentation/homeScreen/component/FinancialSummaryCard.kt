@@ -35,13 +35,13 @@ import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.domain.models.FinancialSummary
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.PeriodComparison
 import com.example.expensetrackerpro.presentation.common.filter.comparedWithLabel
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.presentation.homeScreen.component.charts.BalanceSparkline
 import com.example.expensetrackerpro.utils.CurrencyFormatter
 import com.example.expensetrackerpro.utils.DateFormatter
-import kotlin.math.abs
 
 private const val CHIP_BACKGROUND_ALPHA = 0.08f
 private const val MIN_AMOUNT_FONT_SCALE = 0.6f
@@ -51,7 +51,7 @@ fun FinancialSummaryCard(
     data: FinancialSummary,
     periodLabel: String,
     comparison: PeriodComparison? = null,
-    balanceTrend: List<Double> = emptyList()
+    balanceTrend: List<Money> = emptyList()
 ) {
     Surface(
         shape = RoundedCornerShape(28.dp),
@@ -102,11 +102,11 @@ private fun ComparisonChip(comparison: PeriodComparison) {
         isPartial = comparison.isPartial
     )
     val difference = comparison.balanceDifference
-    val amount = CurrencyFormatter.formatWhole(abs(difference))
+    val amount = CurrencyFormatter.formatWhole(difference.abs())
     val text = when {
         // Less than a rupee apart reads as no difference
-        abs(difference) < 0.5 -> stringResource(R.string.comparison_same_saved, previousPeriod)
-        difference > 0 -> stringResource(R.string.comparison_more_saved, amount, previousPeriod)
+        difference.roundedToRupees().isZero -> stringResource(R.string.comparison_same_saved, previousPeriod)
+        difference.isPositive -> stringResource(R.string.comparison_more_saved, amount, previousPeriod)
         else -> stringResource(R.string.comparison_less_saved, amount, previousPeriod)
     }
 

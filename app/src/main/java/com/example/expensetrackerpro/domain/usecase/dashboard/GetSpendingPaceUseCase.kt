@@ -3,9 +3,11 @@ package com.example.expensetrackerpro.domain.usecase.dashboard
 import com.example.expensetrackerpro.domain.models.DailyExpense
 import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.DateRange
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.PacePoint
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
 import com.example.expensetrackerpro.domain.models.SpendingPace
+import com.example.expensetrackerpro.domain.models.sumOfMoney
 import com.example.expensetrackerpro.domain.repository.DashboardRepository
 import com.example.expensetrackerpro.domain.time.TimeProvider
 import com.example.expensetrackerpro.domain.usecase.filter.GetComparableRangeUseCase
@@ -44,23 +46,23 @@ class GetSpendingPaceUseCase @Inject constructor(
             val current = cumulative(currentDayRanges.filter { it.startMillis <= nowMillis }, currentDays)
             val spentByTheSameDay = previousDays
                 .filter { it.dateMillis in comparable.range }
-                .sumOf { it.amount }
+                .sumOfMoney { it.amount }
 
             SpendingPace(
                 granularity = period.granularity,
                 current = current,
                 previous = cumulative(previousDayRanges, previousDays),
                 dayCount = maxOf(currentDayRanges.size, previousDayRanges.size),
-                difference = (current.lastOrNull()?.total ?: 0.0) - spentByTheSameDay,
+                difference = (current.lastOrNull()?.total ?: Money.ZERO) - spentByTheSameDay,
                 isPartial = comparable.isPartial
             )
         }
     }
 
     private fun cumulative(days: List<DateRange>, expenses: List<DailyExpense>): List<PacePoint> {
-        var total = 0.0
+        var total = Money.ZERO
         return days.map { day ->
-            total += expenses.filter { it.dateMillis in day }.sumOf { it.amount }
+            total += expenses.filter { it.dateMillis in day }.sumOfMoney { it.amount }
             PacePoint(dateMillis = day.startMillis, total = total)
         }
     }

@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 
 private val LineWidth = 2.dp
@@ -27,7 +28,7 @@ private const val FILL_ALPHA = 0.25f
 /** A small unlabelled line of [values], oldest first, scaled to fill its own height. */
 @Composable
 fun BalanceSparkline(
-    values: List<Double>,
+    values: List<Money>,
     modifier: Modifier = Modifier,
     color: Color = LocalContentColor.current
 ) {
@@ -42,7 +43,7 @@ fun BalanceSparkline(
 
         val points = values.mapIndexed { index, value ->
             // A flat trend has no span to scale by, so it runs through the middle
-            val height = if (span > 0) ((value - lowest) / span).toFloat() else 0.5f
+            val height = if (span.isPositive) (value - lowest).ratioTo(span) else 0.5f
             Offset(
                 x = dotRadius + index * stepX,
                 y = dotRadius + drawableHeight * (1f - height)

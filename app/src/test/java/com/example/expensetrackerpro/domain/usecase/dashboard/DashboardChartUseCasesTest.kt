@@ -4,8 +4,10 @@ import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.CashFlowPoint
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
 import com.example.expensetrackerpro.domain.models.DateRange
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
 import com.example.expensetrackerpro.fakes.FakeDashboardRepository
+import com.example.expensetrackerpro.fakes.rupees
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -19,8 +21,8 @@ class DashboardChartUseCasesTest {
     @Test
     fun getCashFlow_returnsRepositoryPoints() = runTest {
         val points = listOf(
-            CashFlowPoint(dateMillis = 1L, income = 100.0, expense = 20.0),
-            CashFlowPoint(dateMillis = 2L, income = 0.0, expense = 50.0)
+            CashFlowPoint(dateMillis = 1L, income = rupees(100), expense = rupees(20)),
+            CashFlowPoint(dateMillis = 2L, income = Money.ZERO, expense = rupees(50))
         )
         repository.cashFlow.value = points
 
@@ -30,8 +32,8 @@ class DashboardChartUseCasesTest {
     @Test
     fun getCategoryBreakdown_returnsRepositoryOrder() = runTest {
         val breakdown = listOf(
-            CategoryBreakdown(categoryId = 2, categoryName = "Bills", icon = CategoryIcon.RECEIPT_LONG, amount = 900.0),
-            CategoryBreakdown(categoryId = 1, categoryName = "Food", icon = CategoryIcon.RESTAURANT, amount = 300.0)
+            CategoryBreakdown(categoryId = 2, categoryName = "Bills", icon = CategoryIcon.RECEIPT_LONG, amount = rupees(900)),
+            CategoryBreakdown(categoryId = 1, categoryName = "Food", icon = CategoryIcon.RESTAURANT, amount = rupees(300))
         )
         repository.categoryBreakdown.value = breakdown
 
@@ -41,8 +43,8 @@ class DashboardChartUseCasesTest {
     @Test
     fun getMonthlyTrend_returnsRepositoryMonths() = runTest {
         val trend = listOf(
-            MonthlyTrend(year = 2026, month = 6, income = 5000.0, expense = 3000.0),
-            MonthlyTrend(year = 2026, month = 7, income = 5200.0, expense = 2800.0)
+            MonthlyTrend(year = 2026, month = 6, income = rupees(5000), expense = rupees(3000)),
+            MonthlyTrend(year = 2026, month = 7, income = rupees(5200), expense = rupees(2800))
         )
         repository.monthlyTrend.value = trend
 

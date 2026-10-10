@@ -3,7 +3,7 @@ package com.example.expensetrackerpro.domain.models
 /** Everything spent from the start of a period up to and including the day of [dateMillis]. */
 data class PacePoint(
     val dateMillis: Long,
-    val total: Double
+    val total: Money
 )
 
 /** How fast a week or month is being spent compared with the one before it. */
@@ -16,10 +16,10 @@ data class SpendingPace(
     /** Days in the longer of the two periods, so both fit on one axis. */
     val dayCount: Int,
     /** Spent so far minus what the previous period had spent by the same day. */
-    val difference: Double,
+    val difference: Money,
     /** True while the selected period is still under way. */
     val isPartial: Boolean
 ) {
     val hasSpending: Boolean
-        get() = (current.lastOrNull()?.total ?: 0.0) > 0 || (previous.lastOrNull()?.total ?: 0.0) > 0
+        get() = current.lastOrNull()?.total?.isPositive == true || previous.lastOrNull()?.total?.isPositive == true
 }

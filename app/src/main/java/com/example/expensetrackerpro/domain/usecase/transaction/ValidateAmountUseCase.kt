@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.domain.usecase.transaction
 
 import com.example.expensetrackerpro.domain.models.AmountError
 import com.example.expensetrackerpro.domain.models.AmountValidation
+import com.example.expensetrackerpro.domain.models.Money
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -29,7 +30,7 @@ class ValidateAmountUseCase @Inject constructor() {
         return when {
             amount.signum() <= 0 -> AmountValidation.Invalid(AmountError.NOT_POSITIVE)
             amount > MAX_AMOUNT -> AmountValidation.Invalid(AmountError.ABOVE_LIMIT)
-            else -> AmountValidation.Valid(amount)
+            else -> AmountValidation.Valid(Money.fromRupees(amount))
         }
     }
 

@@ -7,5 +7,6 @@ import com.example.expensetrackerpro.domain.models.CategoryIcon
 /** A transaction with what is read from its category rather than stored on it. */
 data class TransactionWithCategory(
     @Embedded val transaction: TransactionEntity,
+    val categoryName: String,
     val categoryIcon: CategoryIcon
 )

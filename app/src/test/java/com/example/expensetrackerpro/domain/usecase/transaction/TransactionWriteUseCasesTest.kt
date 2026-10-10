@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.domain.usecase.transaction
 
 import com.example.expensetrackerpro.fakes.FakeTransactionRepository
+import com.example.expensetrackerpro.fakes.rupees
 import com.example.expensetrackerpro.fakes.transaction
 import com.example.expensetrackerpro.domain.models.Transaction
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,8 +17,8 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class TransactionWriteUseCasesTest {
 
-    private val lunch = transaction(id = 1, amount = 120.0, note = "Lunch")
-    private val taxi = transaction(id = 2, amount = 300.0, note = "Taxi")
+    private val lunch = transaction(id = 1, amount = rupees(120), note = "Lunch")
+    private val taxi = transaction(id = 2, amount = rupees(300), note = "Taxi")
 
     @Test
     fun addTransaction_storesIt() = runTest {
@@ -31,7 +32,7 @@ class TransactionWriteUseCasesTest {
     @Test
     fun updateTransaction_replacesOnlyTheMatchingId() = runTest {
         val repository = FakeTransactionRepository(listOf(lunch, taxi))
-        val edited = lunch.copy(amount = 150.0, note = "Team lunch")
+        val edited = lunch.copy(amount = rupees(150), note = "Team lunch")
 
         UpdateTransactionUseCase(repository)(edited)
 
@@ -52,7 +53,7 @@ class TransactionWriteUseCasesTest {
         val repository = FakeTransactionRepository(listOf(lunch))
         val save = SaveTransactionUseCase(AddTransactionUseCase(repository), UpdateTransactionUseCase(repository))
         val unsaved = taxi.copy(id = 0)
-        val edited = lunch.copy(amount = 150.0)
+        val edited = lunch.copy(amount = rupees(150))
 
         assertTrue(save(unsaved))
         assertTrue(save(edited))
@@ -88,7 +89,7 @@ class TransactionWriteUseCasesTest {
         val repository = FakeTransactionRepository(listOf(lunch)).apply { failWrites = true }
 
         assertFalse(AddTransactionUseCase(repository)(taxi))
-        assertFalse(UpdateTransactionUseCase(repository)(lunch.copy(amount = 1.0)))
+        assertFalse(UpdateTransactionUseCase(repository)(lunch.copy(amount = rupees(1))))
         assertFalse(DeleteTransactionUseCase(repository)(lunch))
 
         assertEquals(listOf(lunch), repository.current)

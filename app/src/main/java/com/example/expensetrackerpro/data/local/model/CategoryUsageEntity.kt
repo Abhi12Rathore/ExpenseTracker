@@ -7,5 +7,5 @@ data class CategoryUsageEntity(
     @Embedded val category: CategoryEntity,
     val totalCount: Int,
     val periodCount: Int,
-    val periodAmount: Double
+    val periodPaise: Long
 )

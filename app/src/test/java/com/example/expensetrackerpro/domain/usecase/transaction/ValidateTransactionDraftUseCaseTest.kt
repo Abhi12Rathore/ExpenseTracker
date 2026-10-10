@@ -1,12 +1,12 @@
 package com.example.expensetrackerpro.domain.usecase.transaction
 
 import com.example.expensetrackerpro.domain.models.AmountError
+import com.example.expensetrackerpro.domain.models.Money
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.math.BigDecimal
 
 class ValidateTransactionDraftUseCaseTest {
 
@@ -17,7 +17,7 @@ class ValidateTransactionDraftUseCaseTest {
         val result = validate(amount = "250.50", title = "Lunch", note = "", hasCategory = true)
 
         assertTrue(result.isValid)
-        assertEquals(0, BigDecimal("250.5").compareTo(result.amount))
+        assertEquals(Money(250_50), result.amount)
     }
 
     @Test

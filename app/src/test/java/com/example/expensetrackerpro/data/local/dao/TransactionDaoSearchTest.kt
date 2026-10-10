@@ -38,11 +38,10 @@ class TransactionDaoSearchTest {
         repository = TransactionRepositoryImpl(dao)
 
         database.categoryDao().insertCategory(category(id = 1, name = "Food"))
-        // Renamed since its transactions were saved: they still carry the old name
         database.categoryDao().insertCategory(category(id = 2, name = "Commute", icon = CategoryIcon.TRAIN))
 
         dao.insertTransaction(transaction(1, title = "Team Lunch", note = "Paid for Riya", categoryId = 1, day = 5))
-        dao.insertTransaction(transaction(2, title = "Metro card", note = "", categoryId = 2, day = 4, categoryName = "Transport"))
+        dao.insertTransaction(transaction(2, title = "Metro card", note = "", categoryId = 2, day = 4))
         dao.insertTransaction(transaction(3, title = "Groceries", note = "50% off deal", categoryId = 1, day = 3))
         dao.insertTransaction(transaction(4, title = "Snacks", note = "movie_night", categoryId = 1, day = 2))
         dao.insertTransaction(transaction(5, title = "Old lunch", note = "", categoryId = 1, day = -30))
@@ -95,16 +94,14 @@ class TransactionDaoSearchTest {
         title: String,
         note: String,
         categoryId: Int,
-        day: Int,
-        categoryName: String = "Food"
+        day: Int
     ) = TransactionEntity(
         id = id,
         title = title,
-        amount = 100.0,
+        amountPaise = 100_00,
         note = note,
         dateMillis = day * DAY_MILLIS,
         categoryId = categoryId,
-        categoryName = categoryName,
         transactionType = TransactionType.EXPENSE
     )
 

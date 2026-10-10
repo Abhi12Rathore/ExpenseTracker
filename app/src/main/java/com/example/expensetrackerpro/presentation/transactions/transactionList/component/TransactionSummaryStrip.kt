@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.TransactionListSummary
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.ui.theme.extendedColors
@@ -31,7 +32,7 @@ fun TransactionSummaryStrip(summary: TransactionListSummary, modifier: Modifier 
     val income = MaterialTheme.extendedColors.income
     val expense = MaterialTheme.extendedColors.expense
     // A balance: green when money was left over, red when more went out than came in
-    val netColor = { net: Double -> if (net < 0) expense else income }
+    val netColor = { net: Money -> if (net.isNegative) expense else income }
 
     val cells = when (summary) {
         is TransactionListSummary.Overview -> listOf(

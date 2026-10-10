@@ -24,11 +24,10 @@ class SampleDataSeeder @Inject constructor(
                 val categoryId = categoryIds[sample.categoryName to sample.type] ?: return@mapNotNull null
                 TransactionEntity(
                     title = sample.title,
-                    amount = sample.amount,
+                    amountPaise = sample.amount.paise,
                     note = sample.note,
                     dateMillis = sample.dateMillis,
                     categoryId = categoryId,
-                    categoryName = sample.categoryName,
                     transactionType = sample.type
                 )
             }

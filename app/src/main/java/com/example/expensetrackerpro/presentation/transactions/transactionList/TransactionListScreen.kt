@@ -34,6 +34,7 @@ import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.DateRange
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
 import com.example.expensetrackerpro.domain.models.TransactionListSummary
 import com.example.expensetrackerpro.domain.models.TransactionType
@@ -236,7 +237,11 @@ private fun TransactionListContentPreview() {
         TransactionListContent(
             uiState = TransactionListUiState(
                 days = PreviewData.transactionDays,
-                summary = TransactionListSummary.Overview(income = 85000.0, expense = 4650.0, net = 80350.0),
+                summary = TransactionListSummary.Overview(
+                    income = Money.ofRupees(85_000),
+                    expense = Money.ofRupees(4_650),
+                    net = Money.ofRupees(80_350)
+                ),
                 counts = TransactionTypeCounts(all = 4, expense = 3, income = 1),
                 filter = previewFilter
             ),
@@ -256,9 +261,9 @@ private fun TransactionListIncomeFilterPreview() {
                 days = PreviewData.transactionDays.subList(1, 2),
                 summary = TransactionListSummary.SingleType(
                     type = TransactionType.INCOME,
-                    total = 85000.0,
+                    total = Money.ofRupees(85_000),
                     count = 1,
-                    biggest = 85000.0
+                    biggest = Money.ofRupees(85_000)
                 ),
                 counts = TransactionTypeCounts(all = 4, expense = 3, income = 1),
                 typeFilter = TransactionTypeFilter.INCOME,
@@ -279,7 +284,11 @@ private fun TransactionListSearchPreview() {
             uiState = TransactionListUiState(
                 // "ca" is in the note "…plus the cake…" and in the title "Metro card"
                 days = PreviewData.transactionDays.take(1) + PreviewData.transactionDays.takeLast(1),
-                summary = TransactionListSummary.Search(count = 3, total = -4650.0, average = -1550.0),
+                summary = TransactionListSummary.Search(
+                    count = 3,
+                    total = Money.ofRupees(-4_650),
+                    average = Money.ofRupees(-1_550)
+                ),
                 counts = TransactionTypeCounts(all = 3, expense = 3, income = 0),
                 filter = previewFilter,
                 isSearchOpen = true,
@@ -300,9 +309,9 @@ private fun TransactionListEmptyPreview() {
             uiState = TransactionListUiState(
                 summary = TransactionListSummary.SingleType(
                     type = TransactionType.INCOME,
-                    total = 0.0,
+                    total = Money.ZERO,
                     count = 0,
-                    biggest = 0.0
+                    biggest = Money.ZERO
                 ),
                 typeFilter = TransactionTypeFilter.INCOME,
                 filter = previewFilter

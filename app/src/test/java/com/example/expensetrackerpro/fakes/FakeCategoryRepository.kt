@@ -3,6 +3,7 @@ package com.example.expensetrackerpro.fakes
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.CategoryUsage
 import com.example.expensetrackerpro.domain.models.DateRange
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.repository.CategoryRepository
 import kotlinx.coroutines.flow.Flow
@@ -32,7 +33,7 @@ class FakeCategoryRepository(
     var failReassign = false
 
     /** Says how much the category [id] has been used, ever and in the period asked for. */
-    fun setUsage(id: Int, totalCount: Int, periodCount: Int = 0, periodAmount: Double = 0.0) {
+    fun setUsage(id: Int, totalCount: Int, periodCount: Int = 0, periodAmount: Money = Money.ZERO) {
         usage.update { it + (id to Usage(totalCount, periodCount, periodAmount)) }
     }
 
@@ -92,6 +93,6 @@ class FakeCategoryRepository(
     private data class Usage(
         val totalCount: Int = 0,
         val periodCount: Int = 0,
-        val periodAmount: Double = 0.0
+        val periodAmount: Money = Money.ZERO
     )
 }

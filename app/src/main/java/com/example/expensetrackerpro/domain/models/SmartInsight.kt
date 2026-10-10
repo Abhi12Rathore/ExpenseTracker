@@ -6,7 +6,7 @@ sealed interface SmartInsight {
 
     val type: InsightType
 
-    data class Saved(val amount: Double) : SmartInsight {
+    data class Saved(val amount: Money) : SmartInsight {
         override val type = InsightType.POSITIVE
     }
 

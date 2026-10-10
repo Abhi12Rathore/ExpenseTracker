@@ -1,34 +1,37 @@
 package com.example.expensetrackerpro.presentation.homeScreen.component.charts
 
 import com.example.expensetrackerpro.domain.models.BucketSize
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.SpendingBucket
 import com.example.expensetrackerpro.domain.models.SpendingChart
 import com.example.expensetrackerpro.utils.DateFormatter
 import kotlin.math.ceil
-import kotlin.math.floor
-import kotlin.math.log10
-import kotlin.math.pow
+import kotlin.math.roundToLong
 
 /** The text under the bucket at [index]. */
 internal data class AxisLabel(val index: Int, val text: String)
 
-// Multiples whose half is still a round number, since a gridline is drawn at half the maximum
-private val NICE_STEPS = listOf(1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0)
+// In tenths. Multiples whose half is still a round number, since a gridline is drawn at half the maximum
+private val NICE_STEPS = listOf(10L, 15L, 20L, 30L, 40L, 50L, 60L, 80L, 100L)
 
 private const val DAYS_PER_LABEL = 7
 private const val MAX_MONTH_LABELS = 12
 
 /** The smallest round value at or above [value], used as the top of the y axis. */
-internal fun niceAxisMax(value: Double): Double {
-    if (value <= 0) return 1.0
+internal fun niceAxisMax(value: Money): Money {
+    if (!value.isPositive) return Money.ofRupees(1)
 
-    val magnitude = 10.0.pow(floor(log10(value)))
-    val normalized = value / magnitude
-    // The tolerance keeps 3000 / 1000 from landing just above 3 and skipping to 4
-    val step = NICE_STEPS.firstOrNull { it >= normalized - 1e-9 } ?: NICE_STEPS.last()
+    // The largest power of ten that fits in the value
+    var magnitude = 1L
+    while (magnitude * 10 <= value.paise) magnitude *= 10
+    val step = NICE_STEPS.first { it * magnitude >= value.paise * 10 }
 
-    return step * magnitude
+    // Only a maximum of 1.5 paise is not whole, and it rounds up
+    return Money((step * magnitude + 9) / 10)
 }
+
+/** The amount a gridline [fraction] of the way up an axis ending at this one stands for. */
+internal fun Money.atFraction(fraction: Float): Money = Money((paise * fraction).roundToLong())
 
 /**
  * A few labels rather than one per bar: every weekday for up to a week (`Mon` … `Sun`), every

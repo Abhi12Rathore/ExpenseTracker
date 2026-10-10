@@ -1,6 +1,6 @@
 package com.example.expensetrackerpro.utils
 
-import java.util.Locale
+import com.example.expensetrackerpro.domain.models.Money
 import kotlin.math.abs
 
 /**
@@ -14,24 +14,23 @@ object CurrencyFormatter {
     // Largest first: crore, lakh, thousand
     private val SHORT_UNITS = listOf(10_000_000L to "Cr", 100_000L to "L", 1_000L to "k")
 
-    fun format(amount: Double): String {
-        val fixed = String.format(Locale.US, "%.2f", abs(amount))
-        val integerPart = fixed.substringBefore('.')
-        val decimals = fixed.substringAfter('.')
-        // A negative that rounds to 0.00 is shown without a sign
-        val sign = if (amount < 0 && fixed != "0.00") "-" else ""
+    fun format(amount: Money): String {
+        val paise = abs(amount.paise)
+        val rupees = paise / Money.PAISE_PER_RUPEE
+        val decimals = (paise % Money.PAISE_PER_RUPEE).toString().padStart(2, '0')
+        val sign = if (amount.isNegative) "-" else ""
 
-        return "$sign$SYMBOL${groupIndian(integerPart)}.$decimals"
+        return "$sign$SYMBOL${groupIndian(rupees.toString())}.$decimals"
     }
 
     /** Always signed: `+₹500.00` for income, `-₹500.00` for an expense. */
-    fun formatSigned(amount: Double, isIncome: Boolean): String =
-        (if (isIncome) "+" else "-") + format(abs(amount))
+    fun formatSigned(amount: Money, isIncome: Boolean): String =
+        (if (isIncome) "+" else "-") + format(amount.abs())
 
     /** Rounded to whole rupees, for summaries where paise are noise: `₹27,550`. */
-    fun formatWhole(amount: Double): String {
-        val rupees = Math.round(abs(amount))
-        val sign = if (amount < 0 && rupees != 0L) "-" else ""
+    fun formatWhole(amount: Money): String {
+        val rupees = wholeRupees(amount)
+        val sign = if (amount.isNegative && rupees != 0L) "-" else ""
 
         return "$sign$SYMBOL${groupIndian(rupees.toString())}"
     }
@@ -40,14 +39,15 @@ object CurrencyFormatter {
      * At most one decimal with a k, L (lakh) or Cr (crore) suffix, for chart axes:
      * `₹950`, `₹2.4k`, `₹12k`, `₹1.5L`, `₹2Cr`.
      */
-    fun formatShort(amount: Double): String {
-        val rupees = Math.round(abs(amount))
-        val sign = if (amount < 0 && rupees != 0L) "-" else ""
+    fun formatShort(amount: Money): String {
+        val rupees = wholeRupees(amount)
+        val sign = if (amount.isNegative && rupees != 0L) "-" else ""
 
         var unitIndex = SHORT_UNITS.indexOfFirst { (size, _) -> rupees >= size }
         if (unitIndex == -1) return "$sign$SYMBOL$rupees"
 
-        var tenths = Math.round(rupees * 10.0 / SHORT_UNITS[unitIndex].first)
+        // Tenths of the unit, halves rounded up
+        var tenths = (rupees * 10 + SHORT_UNITS[unitIndex].first / 2) / SHORT_UNITS[unitIndex].first
         // Rounding can reach the next unit up: 99,960 is 1L, not 100k
         if (unitIndex > 0 && tenths * SHORT_UNITS[unitIndex].first >= SHORT_UNITS[unitIndex - 1].first * 10) {
             unitIndex -= 1
@@ -70,6 +70,9 @@ object CurrencyFormatter {
 
         return groupIndian(integerPart) + input.removePrefix(integerPart)
     }
+
+    // The size of [amount] in rupees, to the nearest one with halves rounded up
+    private fun wholeRupees(amount: Money): Long = abs(amount.roundedToRupees().paise) / Money.PAISE_PER_RUPEE
 
     // Last three digits form one group, then groups of two: 12,34,567
     private fun groupIndian(digits: String): String {
