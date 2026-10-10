@@ -6,28 +6,17 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -61,7 +50,6 @@ import com.example.expensetrackerpro.presentation.transactions.transactionList.v
 fun TransactionListScreen(
     // The app's shared host, so a message here looks and queues like the Undo one
     snackbarHostState: SnackbarHostState,
-    onAddClick: () -> Unit,
     onTransactionClick: (TransactionId) -> Unit,
     viewModel: TransactionListViewModel = hiltViewModel()
 ) {
@@ -85,7 +73,6 @@ fun TransactionListScreen(
     TransactionListContent(
         uiState = uiState,
         onEvent = viewModel::onEvent,
-        onAddClick = onAddClick,
         onTransactionClick = onTransactionClick
     )
 }
@@ -95,11 +82,9 @@ fun TransactionListScreen(
 fun TransactionListContent(
     uiState: TransactionListUiState,
     onEvent: (TransactionListEvent) -> Unit,
-    onAddClick: () -> Unit,
     onTransactionClick: (TransactionId) -> Unit
 ) {
     val listState = rememberLazyListState()
-    val isFabExpanded = listState.isScrollingUp()
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -111,22 +96,6 @@ fun TransactionListContent(
                 onSearchChange = { onEvent(TransactionListEvent.SearchChanged(it)) },
                 onCloseSearch = { onEvent(TransactionListEvent.SearchClosed) }
             )
-        },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                text = { Text(stringResource(R.string.transactions_add)) },
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        // Collapsed, the icon is all that is left to name the button
-                        contentDescription = if (isFabExpanded) null else stringResource(R.string.transactions_add)
-                    )
-                },
-                onClick = onAddClick,
-                expanded = isFabExpanded,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
         }
     ) { padding ->
         LazyColumn(
@@ -134,8 +103,7 @@ fun TransactionListContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            // The bottom leaves room to scroll the last row clear of the FAB
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 96.dp)
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp)
         ) {
             item(key = KEY_PERIOD) {
                 CompactPeriodFilter(
@@ -198,26 +166,6 @@ fun TransactionListContent(
     }
 }
 
-/** False while the list is being scrolled towards its end, true otherwise. */
-@Composable
-private fun LazyListState.isScrollingUp(): Boolean {
-    var previousIndex by remember(this) { mutableIntStateOf(firstVisibleItemIndex) }
-    var previousOffset by remember(this) { mutableIntStateOf(firstVisibleItemScrollOffset) }
-
-    return remember(this) {
-        derivedStateOf {
-            if (previousIndex != firstVisibleItemIndex) {
-                previousIndex > firstVisibleItemIndex
-            } else {
-                previousOffset >= firstVisibleItemScrollOffset
-            }.also {
-                previousIndex = firstVisibleItemIndex
-                previousOffset = firstVisibleItemScrollOffset
-            }
-        }
-    }.value
-}
-
 // Row keys are transaction ids, so everything else in the list is keyed by name
 private const val KEY_PERIOD = "period"
 private const val KEY_SUMMARY = "summary"
@@ -249,7 +197,6 @@ private fun TransactionListContentPreview() {
                 filter = previewFilter
             ),
             onEvent = {},
-            onAddClick = {},
             onTransactionClick = {}
         )
     }
@@ -273,7 +220,6 @@ private fun TransactionListIncomeFilterPreview() {
                 filter = previewFilter
             ),
             onEvent = {},
-            onAddClick = {},
             onTransactionClick = {}
         )
     }
@@ -298,7 +244,6 @@ private fun TransactionListSearchPreview() {
                 searchQuery = "ca"
             ),
             onEvent = {},
-            onAddClick = {},
             onTransactionClick = {}
         )
     }
@@ -320,7 +265,6 @@ private fun TransactionListEmptyPreview() {
                 filter = previewFilter
             ),
             onEvent = {},
-            onAddClick = {},
             onTransactionClick = {}
         )
     }
