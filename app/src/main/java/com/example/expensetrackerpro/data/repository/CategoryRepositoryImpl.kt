@@ -3,7 +3,6 @@ package com.example.expensetrackerpro.data.repository
 import android.database.sqlite.SQLiteConstraintException
 import android.database.sqlite.SQLiteException
 import com.example.expensetrackerpro.data.local.dao.CategoryDao
-import com.example.expensetrackerpro.data.local.dao.TransactionDao
 import com.example.expensetrackerpro.data.mapper.toDomain
 import com.example.expensetrackerpro.data.mapper.toEntity
 import com.example.expensetrackerpro.domain.models.Category
@@ -16,18 +15,17 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class CategoryRepositoryImpl @Inject constructor(
-    private val transactionDao: TransactionDao,
     private val categoryDao: CategoryDao
 ) : CategoryRepository {
 
     override fun getAllCategories(): Flow<List<Category>> =
-        transactionDao.getAllCategories().map { list -> list.map { it.toDomain() } }
+        categoryDao.getAllCategories().map { list -> list.map { it.toDomain() } }
 
     override fun getCategoriesByType(type: TransactionType): Flow<List<Category>> =
-        transactionDao.getCategoriesByType(type).map { list -> list.map { it.toDomain() } }
+        categoryDao.getCategoriesByType(type).map { list -> list.map { it.toDomain() } }
 
     override suspend fun insertCategory(category: Category): Int =
-        transactionDao.insertCategory(category.toEntity()).toInt()
+        categoryDao.insertCategory(category.toEntity()).toInt()
 
     override suspend fun updateCategory(category: Category) {
         categoryDao.update(category.toEntity())
@@ -35,7 +33,7 @@ class CategoryRepositoryImpl @Inject constructor(
 
     override suspend fun deleteCategory(category: Category): Boolean =
         try {
-            transactionDao.deleteCategory(category.toEntity())
+            categoryDao.deleteCategory(category.toEntity())
             true
         } catch (e: SQLiteConstraintException) {
             // Transactions reference this category (foreign key RESTRICT)

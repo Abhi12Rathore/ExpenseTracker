@@ -47,7 +47,7 @@ class AppDataRepositoryImplTest {
         database.close()
     }
 
-    private suspend fun categories() = dao.getAllCategories().first()
+    private suspend fun categories() = database.categoryDao().getAllCategories().first()
 
     private suspend fun addTransaction(category: CategoryEntity) {
         dao.insertTransaction(
@@ -65,7 +65,7 @@ class AppDataRepositoryImplTest {
 
     @Test
     fun deletesTransactionsAndCustomCategories_andKeepsTheBuiltInOnes() = runTest {
-        val potteryId = dao.insertCategory(
+        val potteryId = database.categoryDao().insertCategory(
             CategoryEntity(name = "Pottery", type = TransactionType.EXPENSE, icon = CategoryIcon.PETS)
         ).toInt()
         // One under a custom category, one under a built-in one

@@ -50,10 +50,10 @@ class CategoryDaoTest {
             AppDatabase::class.java
         ).allowMainThreadQueries().build()
         val dao = database.transactionDao()
-        repository = CategoryRepositoryImpl(dao, database.categoryDao())
+        repository = CategoryRepositoryImpl(database.categoryDao())
         transactions = TransactionRepositoryImpl(dao)
 
-        listOf(food, groceries, pets, salary).forEach { dao.insertCategory(it) }
+        listOf(food, groceries, pets, salary).forEach { database.categoryDao().insertCategory(it) }
 
         // Food: one before October, two in it (the first at its very first moment), one after
         dao.insertTransaction(transaction(1, food, 100.0, millisAt(2026, Calendar.SEPTEMBER, 30, hour = 23, minute = 59)))

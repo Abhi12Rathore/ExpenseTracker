@@ -37,9 +37,9 @@ class TransactionDaoSearchTest {
         val dao = database.transactionDao()
         repository = TransactionRepositoryImpl(dao)
 
-        dao.insertCategory(category(id = 1, name = "Food"))
+        database.categoryDao().insertCategory(category(id = 1, name = "Food"))
         // Renamed since its transactions were saved: they still carry the old name
-        dao.insertCategory(category(id = 2, name = "Commute", icon = CategoryIcon.TRAIN))
+        database.categoryDao().insertCategory(category(id = 2, name = "Commute", icon = CategoryIcon.TRAIN))
 
         dao.insertTransaction(transaction(1, title = "Team Lunch", note = "Paid for Riya", categoryId = 1, day = 5))
         dao.insertTransaction(transaction(2, title = "Metro card", note = "", categoryId = 2, day = 4, categoryName = "Transport"))

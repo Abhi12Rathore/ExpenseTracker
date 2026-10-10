@@ -39,7 +39,7 @@ class DefaultCategoriesSeedTest {
 
     @Test
     fun aNewDatabase_holdsTheDefaults_withTheirIconsAndTypes() = runTest {
-        val seeded = database.transactionDao().getAllCategories().first().map { it.toDomain() }
+        val seeded = database.categoryDao().getAllCategories().first().map { it.toDomain() }
 
         // Ids are assigned in order, starting at 1
         val expected = DefaultCategories.all.mapIndexed { index, category -> category.copy(id = index + 1) }

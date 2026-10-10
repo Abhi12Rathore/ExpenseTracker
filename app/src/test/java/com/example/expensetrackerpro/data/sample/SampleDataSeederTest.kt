@@ -57,10 +57,10 @@ class SampleDataSeederTest {
 
     private suspend fun transactions() = TransactionRepositoryImpl(dao).getAllTransactions().first()
 
-    private suspend fun categories() = dao.getAllCategories().first()
+    private suspend fun categories() = database.categoryDao().getAllCategories().first()
 
     private suspend fun addCustomCategoryWithATransaction() {
-        val id = dao.insertCategory(
+        val id = database.categoryDao().insertCategory(
             CategoryEntity(name = "Pottery", type = TransactionType.EXPENSE, icon = CategoryIcon.PETS)
         ).toInt()
         dao.insertTransaction(
@@ -107,7 +107,7 @@ class SampleDataSeederTest {
     @Test
     fun load_putsBackADefaultCategoryThatWasDeleted() = runTest {
         val fuel = categories().single { it.name == "Fuel" }
-        dao.deleteCategory(fuel)
+        database.categoryDao().deleteCategory(fuel)
 
         val count = loadSampleData()
 
