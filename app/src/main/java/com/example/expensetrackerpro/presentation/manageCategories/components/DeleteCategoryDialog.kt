@@ -27,6 +27,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.presentation.common.category.CategoryIconTile
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.presentation.manageCategories.uistate.CategoryDeleteRequest
@@ -39,7 +40,7 @@ import com.example.expensetrackerpro.ExpenseTrackerProTheme
 @Composable
 fun DeleteCategoryDialog(
     request: CategoryDeleteRequest,
-    onTargetSelected: (Int) -> Unit,
+    onTargetSelected: (CategoryId) -> Unit,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -87,7 +88,7 @@ fun DeleteCategoryDialog(
 @Composable
 private fun ReassignTargets(
     request: CategoryDeleteRequest,
-    onTargetSelected: (Int) -> Unit
+    onTargetSelected: (CategoryId) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
@@ -107,7 +108,7 @@ private fun ReassignTargets(
                 .heightIn(max = 280.dp)
                 .selectableGroup()
         ) {
-            items(request.targets, key = { it.id }) { target ->
+            items(request.targets, key = { it.id.value }) { target ->
                 TargetRow(
                     category = target,
                     isSelected = target.id == request.selectedTargetId,

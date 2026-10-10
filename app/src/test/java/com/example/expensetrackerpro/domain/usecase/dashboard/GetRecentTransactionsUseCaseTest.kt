@@ -19,28 +19,28 @@ class GetRecentTransactionsUseCaseTest {
     fun keepsTheFiveNewestByDefault() = runTest {
         val recent = useCaseWith(8)().first()
 
-        assertEquals(listOf(8, 7, 6, 5, 4), recent.map { it.id })
+        assertEquals(listOf(8, 7, 6, 5, 4), recent.map { it.id.value })
     }
 
     @Test
     fun fewerThanLimit_returnsAll() = runTest {
         val recent = useCaseWith(3)().first()
 
-        assertEquals(listOf(3, 2, 1), recent.map { it.id })
+        assertEquals(listOf(3, 2, 1), recent.map { it.id.value })
     }
 
     @Test
     fun respectsCustomLimit() = runTest {
         val recent = useCaseWith(8)(limit = 2).first()
 
-        assertEquals(listOf(8, 7), recent.map { it.id })
+        assertEquals(listOf(8, 7), recent.map { it.id.value })
     }
 
     @Test
     fun keepsTheNewestWithinRange() = runTest {
         val recent = useCaseWith(8)(DateRange(startMillis = 2L, endMillis = 5L), limit = 2).first()
 
-        assertEquals(listOf(4, 3), recent.map { it.id })
+        assertEquals(listOf(4, 3), recent.map { it.id.value })
     }
 
     @Test

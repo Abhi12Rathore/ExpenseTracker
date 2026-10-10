@@ -37,6 +37,7 @@ import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
+import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.domain.models.TransactionListSummary
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.models.TransactionTypeCounts
@@ -61,7 +62,7 @@ fun TransactionListScreen(
     // The app's shared host, so a message here looks and queues like the Undo one
     snackbarHostState: SnackbarHostState,
     onAddClick: () -> Unit,
-    onTransactionClick: (Int) -> Unit,
+    onTransactionClick: (TransactionId) -> Unit,
     viewModel: TransactionListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -95,7 +96,7 @@ fun TransactionListContent(
     uiState: TransactionListUiState,
     onEvent: (TransactionListEvent) -> Unit,
     onAddClick: () -> Unit,
-    onTransactionClick: (Int) -> Unit
+    onTransactionClick: (TransactionId) -> Unit
 ) {
     val listState = rememberLazyListState()
     val isFabExpanded = listState.isScrollingUp()
@@ -179,7 +180,7 @@ fun TransactionListContent(
                 // One item per row rather than per card, so a row can animate in and out by itself
                 itemsIndexed(
                     items = day.transactions,
-                    key = { _, transaction -> transaction.id },
+                    key = { _, transaction -> transaction.id.value },
                     contentType = { _, _ -> CONTENT_TYPE_ROW }
                 ) { index, transaction ->
                     TransactionRow(

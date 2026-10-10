@@ -5,6 +5,7 @@ import com.example.expensetrackerpro.domain.error.InvalidInputReason
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.CategoryDraft
 import com.example.expensetrackerpro.domain.models.CategoryIcon
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.fakes.FakeCategoryRepository
 import com.example.expensetrackerpro.fakes.category
@@ -32,7 +33,7 @@ class SaveCategoryUseCaseTest {
 
     private fun draft(
         name: String,
-        id: Int? = null,
+        id: CategoryId? = null,
         type: TransactionType = TransactionType.EXPENSE,
         icon: CategoryIcon = CategoryIcon.PETS
     ) = CategoryDraft(id = id, name = name, type = type, icon = icon)
@@ -106,7 +107,18 @@ class SaveCategoryUseCaseTest {
 
     @Test
     fun editingACategoryThatIsGone_reportsItAndStoresNothing() = runTest {
-        assertEquals(Outcome.Failure(DomainError.NotFound), saveCategory(draft("Ghost", id = 99)))
+        assertEquals(Outcome.Failure(DomainError.NotFound), saveCategory(draft("Ghost", id = CategoryId(99))))
         assertEquals(3, repository.current.size)
+    }
+
+    @Test
+    fun aDatabaseThatCannotWrite_isReported_andNothingIsStored() = runTest {
+        val storageFailure = DomainError.StorageFailure("database or disk is full")
+        repository.saveFailure = storageFailure
+
+        assertEquals(Outcome.Failure(storageFailure), saveCategory(draft("Pets")))
+        assertEquals(Outcome.Failure(storageFailure), saveCategory(draft("Fitness", id = gym.id)))
+
+        assertEquals(listOf(food, gym, salary), repository.current)
     }
 }

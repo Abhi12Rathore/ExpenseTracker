@@ -1,12 +1,13 @@
 package com.example.expensetrackerpro.presentation.navigation
 
 import androidx.lifecycle.SavedStateHandle
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
 
 /** A category Transactions is narrowed to, with the name it is shown under. */
-data class CategoryFilter(val id: Long, val name: String)
+data class CategoryFilter(val id: CategoryId, val name: String)
 
 /** What Transactions opens filtered to when it is reached from a dashboard chart. */
 data class TransactionsFilter(
@@ -34,7 +35,7 @@ data class TransactionsFilter(
                 },
                 category = categoryName
                     ?.takeIf { categoryId != Screens.Transactions.NO_VALUE }
-                    ?.let { CategoryFilter(categoryId, it) }
+                    ?.let { CategoryFilter(CategoryId(categoryId.toInt()), it) }
             )
         }
     }

@@ -3,6 +3,7 @@ package com.example.expensetrackerpro.domain.usecase.dashboard
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.BucketSize
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.CategoryRanking
 import com.example.expensetrackerpro.domain.models.DailyExpense
 import com.example.expensetrackerpro.domain.models.Dashboard
@@ -141,7 +142,7 @@ class GetDashboardUseCaseTest {
             transaction(id = 8, amount = rupees(1400), type = TransactionType.INCOME, dateMillis = october.startMillis + 8)
         )
         val breakdown =
-            listOf(CategoryBreakdown(categoryId = 1, categoryName = "Food", icon = CategoryIcon.RESTAURANT, amount = rupees(700)))
+            listOf(CategoryBreakdown(categoryId = CategoryId(1), categoryName = "Food", icon = CategoryIcon.RESTAURANT, amount = rupees(700)))
         dashboard.categoryBreakdown.value = breakdown
 
         val state = dashboardFor(thisMonth)
@@ -149,7 +150,7 @@ class GetDashboardUseCaseTest {
         assertEquals(rupees(1400), state.summary.totalIncome)
         assertEquals(rupees(700), state.summary.totalExpense)
         assertEquals(50f, state.summary.savingsRate, 0.001f)
-        assertEquals(listOf(8, 7, 6, 5, 4), state.recentTransactions.map { it.id })
+        assertEquals(listOf(8, 7, 6, 5, 4), state.recentTransactions.map { it.id.value })
         assertEquals(breakdown, state.categoryRanking.top.map { it.category })
         assertEquals(rupees(700), state.categoryRanking.total)
     }
@@ -162,7 +163,7 @@ class GetDashboardUseCaseTest {
 
         assertEquals(rupees(1000), thisMonthState.summary.totalIncome)
         assertEquals(rupees(250), thisMonthState.summary.totalExpense)
-        assertEquals(listOf(4, 3), thisMonthState.recentTransactions.map { it.id })
+        assertEquals(listOf(4, 3), thisMonthState.recentTransactions.map { it.id.value })
         assertEquals(listOf(SmartInsight.Saved(rupees(750))), thisMonthState.insights)
         assertChartsAskedFor(october)
 
@@ -170,7 +171,7 @@ class GetDashboardUseCaseTest {
 
         assertEquals(rupees(900), lastMonthState.summary.totalIncome)
         assertEquals(rupees(400), lastMonthState.summary.totalExpense)
-        assertEquals(listOf(2, 1), lastMonthState.recentTransactions.map { it.id })
+        assertEquals(listOf(2, 1), lastMonthState.recentTransactions.map { it.id.value })
         assertEquals(listOf(SmartInsight.Saved(rupees(500))), lastMonthState.insights)
         assertChartsAskedFor(september)
     }
@@ -181,7 +182,7 @@ class GetDashboardUseCaseTest {
 
         val state = dashboardFor(thisWeek)
 
-        assertEquals(listOf(4), state.recentTransactions.map { it.id })
+        assertEquals(listOf(4), state.recentTransactions.map { it.id.value })
         assertChartsAskedFor(DateRange(millisAt(2026, Calendar.OCTOBER, 4), millisAt(2026, Calendar.OCTOBER, 11)))
     }
 
@@ -192,7 +193,7 @@ class GetDashboardUseCaseTest {
         val state = dashboardFor(thisYear)
 
         assertEquals(rupees(1250), state.summary.totalBalance)
-        assertEquals(listOf(4, 3, 2, 1), state.recentTransactions.map { it.id })
+        assertEquals(listOf(4, 3, 2, 1), state.recentTransactions.map { it.id.value })
         assertChartsAskedFor(year2026)
     }
 
@@ -202,7 +203,7 @@ class GetDashboardUseCaseTest {
 
         val state = dashboardFor(twoDays)
 
-        assertEquals(listOf(3, 2), state.recentTransactions.map { it.id })
+        assertEquals(listOf(3, 2), state.recentTransactions.map { it.id.value })
         assertEquals(rupees(600), state.summary.totalBalance)
         assertChartsAskedFor(twoDays.range)
     }
@@ -332,7 +333,7 @@ class GetDashboardUseCaseTest {
             transaction(id = 1, amount = rupees(500), type = TransactionType.INCOME, dateMillis = october.startMillis)
         )
         dashboard.categoryBreakdown.value =
-            listOf(CategoryBreakdown(categoryId = 1, categoryName = "Bills", icon = CategoryIcon.RECEIPT_LONG, amount = rupees(90)))
+            listOf(CategoryBreakdown(categoryId = CategoryId(1), categoryName = "Bills", icon = CategoryIcon.RECEIPT_LONG, amount = rupees(90)))
 
         assertEquals(
             listOf(SmartInsight.Saved(rupees(500)), SmartInsight.HighestSpending("Bills")),
@@ -367,6 +368,6 @@ class GetDashboardUseCaseTest {
         )
 
         assertEquals(rupees(80), emitted.last().summary.totalExpense)
-        assertEquals(listOf(1), emitted.last().recentTransactions.map { it.id })
+        assertEquals(listOf(1), emitted.last().recentTransactions.map { it.id.value })
     }
 }

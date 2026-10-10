@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.presentation.manageCategories.uistate
 
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorEvent
 
@@ -16,7 +17,7 @@ sealed interface ManageCategoryEvent {
     data class Editor(val event: CategoryEditorEvent) : ManageCategoryEvent
 
     // The delete dialog, opened from the sheet's delete button
-    data class DeleteTargetSelected(val categoryId: Int) : ManageCategoryEvent
+    data class DeleteTargetSelected(val categoryId: CategoryId) : ManageCategoryEvent
     data object DeleteConfirmed : ManageCategoryEvent
     data object DeleteDismissed : ManageCategoryEvent
     data object MessageShown : ManageCategoryEvent

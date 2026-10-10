@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.presentation.common.preview
 
 import com.example.expensetrackerpro.domain.models.BucketSize
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.CategoryUsage
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
 import com.example.expensetrackerpro.domain.models.CategoryIcon
@@ -21,6 +22,7 @@ import com.example.expensetrackerpro.domain.models.SpendingChart
 import com.example.expensetrackerpro.domain.models.SpendingPace
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionDayGroup
+import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.models.sum
 import com.example.expensetrackerpro.domain.usecase.dashboard.RankCategorySpendingUseCase
@@ -35,11 +37,11 @@ internal object PreviewData {
     private fun rupees(amount: Long) = Money.ofRupees(amount)
 
     val categories = listOf(
-        Category(id = 1, name = "Food", type = TransactionType.EXPENSE, icon = CategoryIcon.RESTAURANT, isCustom = false),
-        Category(id = 2, name = "Transport", type = TransactionType.EXPENSE, icon = CategoryIcon.DIRECTIONS_CAR, isCustom = false),
-        Category(id = 3, name = "Shopping", type = TransactionType.EXPENSE, icon = CategoryIcon.SHOPPING_BAG, isCustom = false),
-        Category(id = 4, name = "Bills", type = TransactionType.EXPENSE, icon = CategoryIcon.RECEIPT_LONG, isCustom = false),
-        Category(id = 5, name = "Pets", type = TransactionType.EXPENSE, icon = CategoryIcon.PETS)
+        Category(id = CategoryId(1), name = "Food", type = TransactionType.EXPENSE, icon = CategoryIcon.RESTAURANT, isCustom = false),
+        Category(id = CategoryId(2), name = "Transport", type = TransactionType.EXPENSE, icon = CategoryIcon.DIRECTIONS_CAR, isCustom = false),
+        Category(id = CategoryId(3), name = "Shopping", type = TransactionType.EXPENSE, icon = CategoryIcon.SHOPPING_BAG, isCustom = false),
+        Category(id = CategoryId(4), name = "Bills", type = TransactionType.EXPENSE, icon = CategoryIcon.RECEIPT_LONG, isCustom = false),
+        Category(id = CategoryId(5), name = "Pets", type = TransactionType.EXPENSE, icon = CategoryIcon.PETS)
     )
 
     // This month's use of each, the last two not used at all
@@ -52,10 +54,10 @@ internal object PreviewData {
     )
 
     val transactions = listOf(
-        Transaction(1, "Groceries", rupees(1850), "Weekly shop, plus the cake for Sunday", DATE_MILLIS, 1, "Food", TransactionType.EXPENSE, CategoryIcon.RESTAURANT),
-        Transaction(2, "Salary", rupees(85000), "", DATE_MILLIS - DAY_MILLIS, 6, "Payments", TransactionType.INCOME, CategoryIcon.PAYMENTS),
-        Transaction(3, "Metro card", rupees(500), "", DATE_MILLIS - 2 * DAY_MILLIS, 2, "Transport", TransactionType.EXPENSE, CategoryIcon.DIRECTIONS_CAR),
-        Transaction(4, "Electricity", rupees(2300), "", DATE_MILLIS - 3 * DAY_MILLIS, 4, "Bills", TransactionType.EXPENSE, CategoryIcon.RECEIPT_LONG)
+        Transaction(TransactionId(1), "Groceries", rupees(1850), "Weekly shop, plus the cake for Sunday", DATE_MILLIS, CategoryId(1), "Food", TransactionType.EXPENSE, CategoryIcon.RESTAURANT),
+        Transaction(TransactionId(2), "Salary", rupees(85000), "", DATE_MILLIS - DAY_MILLIS, CategoryId(6), "Payments", TransactionType.INCOME, CategoryIcon.PAYMENTS),
+        Transaction(TransactionId(3), "Metro card", rupees(500), "", DATE_MILLIS - 2 * DAY_MILLIS, CategoryId(2), "Transport", TransactionType.EXPENSE, CategoryIcon.DIRECTIONS_CAR),
+        Transaction(TransactionId(4), "Electricity", rupees(2300), "", DATE_MILLIS - 3 * DAY_MILLIS, CategoryId(4), "Bills", TransactionType.EXPENSE, CategoryIcon.RECEIPT_LONG)
     )
 
     // The same transactions as the Transactions list groups them, seen on the 9th
@@ -90,13 +92,13 @@ internal object PreviewData {
 
     // Highest first, as the repository returns them
     val categoryExpense = listOf(
-        CategoryBreakdown(4, "Bills", CategoryIcon.RECEIPT_LONG, rupees(9800)),
-        CategoryBreakdown(1, "Food", CategoryIcon.RESTAURANT, rupees(7450)),
-        CategoryBreakdown(3, "Shopping", CategoryIcon.SHOPPING_BAG, rupees(4900)),
-        CategoryBreakdown(2, "Transport", CategoryIcon.DIRECTIONS_CAR, rupees(2600)),
-        CategoryBreakdown(6, "Health", CategoryIcon.MEDICAL_SERVICES, rupees(1500)),
-        CategoryBreakdown(5, "Pets", CategoryIcon.PETS, rupees(800)),
-        CategoryBreakdown(7, "Gifts", CategoryIcon.CARD_GIFTCARD, rupees(500))
+        CategoryBreakdown(CategoryId(4), "Bills", CategoryIcon.RECEIPT_LONG, rupees(9800)),
+        CategoryBreakdown(CategoryId(1), "Food", CategoryIcon.RESTAURANT, rupees(7450)),
+        CategoryBreakdown(CategoryId(3), "Shopping", CategoryIcon.SHOPPING_BAG, rupees(4900)),
+        CategoryBreakdown(CategoryId(2), "Transport", CategoryIcon.DIRECTIONS_CAR, rupees(2600)),
+        CategoryBreakdown(CategoryId(6), "Health", CategoryIcon.MEDICAL_SERVICES, rupees(1500)),
+        CategoryBreakdown(CategoryId(5), "Pets", CategoryIcon.PETS, rupees(800)),
+        CategoryBreakdown(CategoryId(7), "Gifts", CategoryIcon.CARD_GIFTCARD, rupees(500))
     )
 
     val categoryRanking = RankCategorySpendingUseCase()(categoryExpense)

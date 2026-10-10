@@ -23,6 +23,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.presentation.homeScreen.HomeScreen
 import com.example.expensetrackerpro.presentation.navigation.Screens
 import com.example.expensetrackerpro.presentation.settings.SettingsScreen
@@ -36,7 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 @Composable
 fun MainScreen(
     snackbarHostState: SnackbarHostState,
-    onNavigateToTransactionForm: (Int?) -> Unit,
+    onNavigateToTransactionForm: (TransactionId?) -> Unit,
     onNavigateToManageCategories: () -> Unit
 ) {
     val bottomNavController = rememberNavController()

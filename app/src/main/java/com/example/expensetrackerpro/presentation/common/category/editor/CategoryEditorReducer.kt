@@ -67,19 +67,27 @@ class CategoryEditorReducer @Inject constructor(
 
     /** The form after a save failed with [error]: a name that was turned down is called out. */
     fun saveFailed(state: CategoryEditorState, error: DomainError): CategoryEditorState {
-        val nameValidation = when (error) {
-            DomainError.DuplicateName -> CategoryNameValidation.DUPLICATE
-            is DomainError.InvalidInput -> when (error.reason) {
-                InvalidInputReason.NAME_BLANK -> CategoryNameValidation.BLANK
-                InvalidInputReason.NAME_TOO_LONG -> CategoryNameValidation.TOO_LONG
-                InvalidInputReason.INCOMPATIBLE_REASSIGN_TARGET -> null
-            }
-            DomainError.NotFound,
-            DomainError.CategoryInUse,
-            is DomainError.StorageFailure -> null
-        } ?: return state.copy(isSaving = false)
+        val nameValidation = nameProblemOf(error) ?: return state.copy(isSaving = false)
 
         return state.copy(nameValidation = nameValidation, isNameEdited = true, isSaving = false)
+    }
+
+    /**
+     * True when [error] is about the name, which the sheet shows under the name field. Any
+     * other failure has to be reported by the screen showing the sheet.
+     */
+    fun isNameProblem(error: DomainError): Boolean = nameProblemOf(error) != null
+
+    private fun nameProblemOf(error: DomainError): CategoryNameValidation? = when (error) {
+        DomainError.DuplicateName -> CategoryNameValidation.DUPLICATE
+        is DomainError.InvalidInput -> when (error.reason) {
+            InvalidInputReason.NAME_BLANK -> CategoryNameValidation.BLANK
+            InvalidInputReason.NAME_TOO_LONG -> CategoryNameValidation.TOO_LONG
+            InvalidInputReason.INCOMPATIBLE_REASSIGN_TARGET -> null
+        }
+        DomainError.NotFound,
+        DomainError.CategoryInUse,
+        is DomainError.StorageFailure -> null
     }
 
     private companion object {

@@ -5,8 +5,8 @@ import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.AuthResult
-import com.example.expensetrackerpro.domain.models.BiometricStatus
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.CategoryUsage
 import com.example.expensetrackerpro.domain.models.LockTimeout
@@ -34,8 +34,9 @@ import com.example.expensetrackerpro.fakes.FakeTransactionRepository
 import com.example.expensetrackerpro.fakes.category
 import com.example.expensetrackerpro.fakes.rupees
 import com.example.expensetrackerpro.fakes.transaction
+import com.example.expensetrackerpro.presentation.lock.AppLockController
+import com.example.expensetrackerpro.presentation.lock.LockMessage
 import com.example.expensetrackerpro.presentation.main.MainViewModel
-import com.example.expensetrackerpro.presentation.main.uistate.LockMessage
 import com.example.expensetrackerpro.presentation.main.uistate.MainEffect
 import com.example.expensetrackerpro.presentation.main.uistate.MainEvent
 import com.example.expensetrackerpro.util.MainDispatcherRule
@@ -74,12 +75,14 @@ class MainViewModelTest {
     ) = MainViewModel(
         GetCategoriesUseCase(categoryRepository),
         GetThemeModeUseCase(themeRepository),
-        GetAppLockSettingsUseCase(appLockRepository),
-        GetBiometricStatusUseCase(biometricAvailability),
-        ShouldLockUseCase(timeProvider),
-        GetCurrentTimeMillisUseCase(timeProvider),
         ObserveDeletedTransactionsUseCase(transactionRepository),
-        RestoreTransactionUseCase(transactionRepository)
+        RestoreTransactionUseCase(transactionRepository),
+        AppLockController(
+            GetAppLockSettingsUseCase(appLockRepository),
+            GetBiometricStatusUseCase(biometricAvailability),
+            ShouldLockUseCase(timeProvider),
+            GetCurrentTimeMillisUseCase(timeProvider)
+        )
     )
 
     private fun lockedViewModel(timeout: LockTimeout = LockTimeout.SECONDS_30) =
@@ -174,6 +177,8 @@ class MainViewModelTest {
         assertTrue(viewModel.uiState.value.isReady)
     }
 
+    // --- App lock: the logic is AppLockController's, tested there
+
     @Test
     fun notReadyUntilTheAppLockSettingsAreLoaded() = runTest {
         val appLockRepository = PendingAppLockRepository()
@@ -189,120 +194,45 @@ class MainViewModelTest {
     }
 
     @Test
-    fun lockOff_startsUnlocked() = runTest {
-        val state = mainViewModel().uiState.value
+    fun theLockState_isShownAsTheControllerReportsIt() = runTest {
+        val viewModel = lockedViewModel()
 
-        assertFalse(state.isLocked)
-        assertFalse(state.isAppLockEnabled)
-        assertFalse(state.isPromptRequested)
-    }
-
-    @Test
-    fun lockOn_startsLockedAndAsksForThePrompt() = runTest {
-        // Even the longest timeout locks on launch: a new process has no session to continue
-        val state = lockedViewModel(LockTimeout.MINUTES_5).uiState.value
-
-        assertTrue(state.isLocked)
+        val state = viewModel.uiState.value
+        assertTrue(state.isLockStateKnown)
         assertTrue(state.isAppLockEnabled)
+        assertTrue(state.isLocked)
         assertTrue(state.isPromptRequested)
         assertNull(state.lockMessage)
     }
 
     @Test
-    fun lockOnButNoScreenLock_startsUnlocked() = runTest {
-        biometricAvailability.current = BiometricStatus.NO_DEVICE_CREDENTIAL
-
-        val state = lockedViewModel().uiState.value
-
-        assertFalse(state.isLocked)
-        assertTrue(state.isAppLockEnabled)
-    }
-
-    @Test
-    fun promptLaunched_consumesTheRequest() = runTest {
+    fun promptLaunchedAndAuthFinished_reachTheController() = runTest {
         val viewModel = lockedViewModel()
 
         viewModel.onEvent(MainEvent.PromptLaunched)
-
         assertFalse(viewModel.uiState.value.isPromptRequested)
+
+        viewModel.onEvent(MainEvent.AuthFinished(AuthResult.LOCKOUT))
+        assertEquals(LockMessage.LOCKOUT, viewModel.uiState.value.lockMessage)
         assertTrue(viewModel.uiState.value.isLocked)
     }
 
     @Test
-    fun authSucceeded_unlocks() = runTest {
+    fun unlockClicked_reachesTheController() = runTest {
         val viewModel = lockedViewModel()
         viewModel.onEvent(MainEvent.PromptLaunched)
-
-        viewModel.onEvent(MainEvent.AuthFinished(AuthResult.SUCCESS))
-
-        assertFalse(viewModel.uiState.value.isLocked)
-        assertFalse(viewModel.uiState.value.isPromptRequested)
-        assertTrue(viewModel.uiState.value.isAppLockEnabled)
-    }
-
-    @Test
-    fun authFailures_stayLockedWithAMessage() = runTest {
-        mapOf(
-            AuthResult.CANCELED to LockMessage.CANCELED,
-            AuthResult.LOCKOUT to LockMessage.LOCKOUT,
-            AuthResult.LOCKOUT_PERMANENT to LockMessage.LOCKOUT_PERMANENT,
-            AuthResult.ERROR to LockMessage.ERROR
-        ).forEach { (result, message) ->
-            val viewModel = lockedViewModel()
-            viewModel.onEvent(MainEvent.PromptLaunched)
-
-            viewModel.onEvent(MainEvent.AuthFinished(result))
-
-            assertTrue(viewModel.uiState.value.isLocked)
-            assertEquals(message, viewModel.uiState.value.lockMessage)
-            assertFalse(viewModel.uiState.value.isPromptRequested)
-        }
-    }
-
-    @Test
-    fun screenLockRemovedWhileLocked_unlocksInsteadOfStrandingTheUser() = runTest {
-        val viewModel = lockedViewModel()
-        viewModel.onEvent(MainEvent.PromptLaunched)
-
-        viewModel.onEvent(MainEvent.AuthFinished(AuthResult.NO_CREDENTIAL))
-
-        assertFalse(viewModel.uiState.value.isLocked)
-    }
-
-    @Test
-    fun unlockClicked_clearsTheMessageAndAsksForThePromptAgain() = runTest {
-        val viewModel = lockedViewModel()
-        viewModel.onEvent(MainEvent.PromptLaunched)
-        viewModel.onEvent(MainEvent.AuthFinished(AuthResult.LOCKOUT))
+        viewModel.onEvent(MainEvent.AuthFinished(AuthResult.CANCELED))
 
         viewModel.onEvent(MainEvent.UnlockClicked)
 
         assertTrue(viewModel.uiState.value.isPromptRequested)
         assertNull(viewModel.uiState.value.lockMessage)
-        assertTrue(viewModel.uiState.value.isLocked)
     }
 
     @Test
-    fun unlockClickedWhileUnlocked_doesNothing() = runTest {
-        val viewModel = unlockedViewModel()
-
-        viewModel.onEvent(MainEvent.UnlockClicked)
-
-        assertFalse(viewModel.uiState.value.isPromptRequested)
-    }
-
-    @Test
-    fun backInsideTheTimeout_staysUnlocked() = runTest {
+    fun backgroundedAndForegrounded_reachTheController() = runTest {
         val viewModel = unlockedViewModel(LockTimeout.SECONDS_30)
-
-        viewModel.backgroundFor(29_999)
-
         assertFalse(viewModel.uiState.value.isLocked)
-    }
-
-    @Test
-    fun backExactlyAtTheTimeout_locks() = runTest {
-        val viewModel = unlockedViewModel(LockTimeout.SECONDS_30)
 
         viewModel.backgroundFor(30_000)
 
@@ -311,130 +241,7 @@ class MainViewModelTest {
     }
 
     @Test
-    fun backAfterTheTimeout_locks() = runTest {
-        val viewModel = unlockedViewModel(LockTimeout.MINUTE_1)
-
-        viewModel.backgroundFor(60_001)
-
-        assertTrue(viewModel.uiState.value.isLocked)
-    }
-
-    @Test
-    fun immediately_locksOnEveryReturn() = runTest {
-        val viewModel = unlockedViewModel(LockTimeout.IMMEDIATELY)
-
-        viewModel.backgroundFor(0)
-
-        assertTrue(viewModel.uiState.value.isLocked)
-    }
-
-    @Test
-    fun foregroundedWithoutEverBackgrounding_doesNotLock() = runTest {
-        // What a rotation looks like: the new activity's observer is told the app is in front
-        val viewModel = unlockedViewModel(LockTimeout.IMMEDIATELY)
-
-        viewModel.onEvent(MainEvent.AppForegrounded)
-
-        assertFalse(viewModel.uiState.value.isLocked)
-    }
-
-    @Test
-    fun eachReturnIsMeasuredFromItsOwnBackgrounding() = runTest {
-        val viewModel = unlockedViewModel(LockTimeout.SECONDS_30)
-        viewModel.backgroundFor(20_000)
-
-        viewModel.backgroundFor(20_000)
-
-        assertFalse(viewModel.uiState.value.isLocked)
-    }
-
-    @Test
-    fun lockOff_neverLocksOnReturn() = runTest {
-        val viewModel = mainViewModel()
-
-        viewModel.backgroundFor(600_000)
-
-        assertFalse(viewModel.uiState.value.isLocked)
-    }
-
-    @Test
-    fun noScreenLock_doesNotLockOnReturn() = runTest {
-        val viewModel = unlockedViewModel(LockTimeout.IMMEDIATELY)
-        biometricAvailability.current = BiometricStatus.NO_DEVICE_CREDENTIAL
-
-        viewModel.backgroundFor(1_000)
-
-        assertFalse(viewModel.uiState.value.isLocked)
-    }
-
-    @Test
-    fun unlockingThroughAScreenThatBackgroundsTheApp_doesNotLockAgain() = runTest {
-        // Before Android 11 the screen lock check is a separate screen: the result arrives first,
-        // and the app only then learns it is back in front
-        val viewModel = lockedViewModel(LockTimeout.IMMEDIATELY)
-        viewModel.onEvent(MainEvent.PromptLaunched)
-        viewModel.onEvent(MainEvent.AppBackgrounded)
-        timeProvider.nowMillis += 5_000
-
-        viewModel.onEvent(MainEvent.AuthFinished(AuthResult.SUCCESS))
-        viewModel.onEvent(MainEvent.AppForegrounded)
-
-        assertFalse(viewModel.uiState.value.isLocked)
-    }
-
-    @Test
-    fun returningWhileThePromptIsOpen_doesNotAskForAnotherPrompt() = runTest {
-        val viewModel = lockedViewModel(LockTimeout.IMMEDIATELY)
-        viewModel.onEvent(MainEvent.PromptLaunched)
-
-        viewModel.backgroundFor(5_000)
-
-        assertTrue(viewModel.uiState.value.isLocked)
-        assertFalse(viewModel.uiState.value.isPromptRequested)
-    }
-
-    @Test
-    fun returningToTheLockScreenAfterACancelledPrompt_asksForThePromptAgain() = runTest {
-        val viewModel = lockedViewModel()
-        viewModel.onEvent(MainEvent.PromptLaunched)
-        viewModel.onEvent(MainEvent.AuthFinished(AuthResult.CANCELED))
-
-        viewModel.backgroundFor(1_000)
-
-        assertTrue(viewModel.uiState.value.isPromptRequested)
-        assertNull(viewModel.uiState.value.lockMessage)
-    }
-
-    @Test
-    fun turningTheLockOnMidSession_doesNotLockUntilTheNextTimeout() = runTest {
-        val appLockRepository = FakeAppLockRepository()
-        val viewModel = mainViewModel(appLockRepository = appLockRepository)
-
-        appLockRepository.setSettings(AppLockSettings(enabled = true, timeout = LockTimeout.MINUTE_1))
-
-        assertFalse(viewModel.uiState.value.isLocked)
-        assertTrue(viewModel.uiState.value.isAppLockEnabled)
-
-        viewModel.backgroundFor(60_000)
-
-        assertTrue(viewModel.uiState.value.isLocked)
-    }
-
-    @Test
-    fun aChangedTimeoutAppliesToTheNextReturn() = runTest {
-        val appLockRepository = FakeAppLockRepository(AppLockSettings(true, LockTimeout.MINUTES_5))
-        val viewModel = mainViewModel(appLockRepository = appLockRepository)
-        viewModel.onEvent(MainEvent.PromptLaunched)
-        viewModel.onEvent(MainEvent.AuthFinished(AuthResult.SUCCESS))
-
-        appLockRepository.setSettings(AppLockSettings(true, LockTimeout.IMMEDIATELY))
-        viewModel.backgroundFor(1)
-
-        assertTrue(viewModel.uiState.value.isLocked)
-    }
-
-    @Test
-    fun turningTheLockOff_unlocksAndStopsLocking() = runTest {
+    fun aChangeToTheSettings_reachesTheUiState() = runTest {
         val appLockRepository = FakeAppLockRepository(AppLockSettings(true, LockTimeout.IMMEDIATELY))
         val viewModel = mainViewModel(appLockRepository = appLockRepository)
 
@@ -442,21 +249,6 @@ class MainViewModelTest {
 
         assertFalse(viewModel.uiState.value.isLocked)
         assertFalse(viewModel.uiState.value.isAppLockEnabled)
-        assertFalse(viewModel.uiState.value.isPromptRequested)
-
-        viewModel.backgroundFor(600_000)
-
-        assertFalse(viewModel.uiState.value.isLocked)
-    }
-
-    @Test
-    fun aLateResultWhileUnlocked_isIgnored() = runTest {
-        val viewModel = unlockedViewModel()
-
-        viewModel.onEvent(MainEvent.AuthFinished(AuthResult.ERROR))
-
-        assertFalse(viewModel.uiState.value.isLocked)
-        assertNull(viewModel.uiState.value.lockMessage)
     }
 
     // --- Undo delete
@@ -529,7 +321,7 @@ class MainViewModelTest {
 
         viewModel.onEvent(MainEvent.UndoDelete(lunch))
 
-        assertEquals(listOf(lunch, rent), repository.current.sortedBy { it.id })
+        assertEquals(listOf(lunch, rent), repository.current.sortedBy { it.id.value })
         assertEquals(listOf<MainEffect>(MainEffect.ShowUndoDelete(lunch)), effects)
     }
 
@@ -586,9 +378,9 @@ private class PendingCategoryRepository : CategoryRepository {
     override fun getCategoriesByType(type: TransactionType): Flow<List<Category>> =
         categories.map { list -> list.filter { it.type == type } }
 
-    override suspend fun insertCategory(category: Category): Int = category.id
+    override suspend fun insertCategory(category: Category): Outcome<CategoryId> = Outcome.Success(category.id)
 
-    override suspend fun updateCategory(category: Category) = Unit
+    override suspend fun updateCategory(category: Category): Outcome<Unit> = Outcome.Success(Unit)
 
     override suspend fun deleteCategory(category: Category): Outcome<Unit> = Outcome.Success(Unit)
 

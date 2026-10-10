@@ -8,6 +8,7 @@ import com.example.expensetrackerpro.data.local.expenseDatabase.AppDatabase
 import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.CategoryIcon
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.fakes.rupees
@@ -73,7 +74,7 @@ class TransactionRepositoryImplTest {
 
     @Test
     fun save_underACategoryThatIsGone_isNotFound_andStoresNothing() = runTest {
-        assertEquals(categoryGone, repository.saveTransaction(lunch.copy(categoryId = 99)))
+        assertEquals(categoryGone, repository.saveTransaction(lunch.copy(categoryId = CategoryId(99))))
 
         assertTrue(stored().isEmpty())
     }
@@ -92,7 +93,7 @@ class TransactionRepositoryImplTest {
     fun update_toACategoryThatIsGone_isNotFound_andKeepsWhatWasStored() = runTest {
         repository.saveTransaction(lunch)
 
-        assertEquals(categoryGone, repository.updateTransaction(lunch.copy(categoryId = 99)))
+        assertEquals(categoryGone, repository.updateTransaction(lunch.copy(categoryId = CategoryId(99))))
 
         assertEquals(listOf(lunch), stored())
     }

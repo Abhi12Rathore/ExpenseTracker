@@ -3,12 +3,14 @@ package com.example.expensetrackerpro.presentation
 import androidx.lifecycle.SavedStateHandle
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
 import com.example.expensetrackerpro.domain.models.DayLabel
 import com.example.expensetrackerpro.domain.models.Transaction
+import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.domain.models.TransactionListSummary
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.models.TransactionTypeCounts
@@ -270,7 +272,7 @@ class TransactionListViewModelTest {
 
     @Test
     fun openedWithACategory_listsOnlyThatCategory_untilTheFilterIsCleared() = runTest {
-        val travel = lunch.copy(id = 4, categoryId = 7, categoryName = "Travel", amount = rupees(90))
+        val travel = lunch.copy(id = TransactionId(4), categoryId = CategoryId(7), categoryName = "Travel", amount = rupees(90))
         val repository = FakeTransactionRepository(listOf(salary, lunch, oldRent, travel))
         val viewModel = viewModel(
             repository = repository,
@@ -287,7 +289,7 @@ class TransactionListViewModelTest {
         val filtered = viewModel.uiState.value
 
         assertEquals(thisMonth, filtered.filter)
-        assertEquals(CategoryFilter(id = 7, name = "Travel"), filtered.categoryFilter)
+        assertEquals(CategoryFilter(id = CategoryId(7), name = "Travel"), filtered.categoryFilter)
         assertEquals(listOf(travel), filtered.transactions)
         // Totals follow what is listed
         assertEquals(rupees(90), filtered.overview.expense)
@@ -316,7 +318,7 @@ class TransactionListViewModelTest {
 
         viewModel.onFilterEvent(PeriodFilterEvent.PreviousPeriod)
 
-        assertEquals(CategoryFilter(id = 1, name = "Food"), viewModel.uiState.value.categoryFilter)
+        assertEquals(CategoryFilter(id = CategoryId(1), name = "Food"), viewModel.uiState.value.categoryFilter)
         assertEquals(listOf(oldRent), viewModel.uiState.value.transactions)
     }
 
@@ -394,10 +396,10 @@ class TransactionListViewModelTest {
 
     @Test
     fun typeFilter_combinesWithPeriodSearchAndCategory() = runTest {
-        val travelRefund = salary.copy(id = 4, title = "Trip refund", amount = rupees(60), categoryId = 7, categoryName = "Travel")
-        val travelTaxi = lunch.copy(id = 5, title = "Trip taxi", amount = rupees(90), categoryId = 7, categoryName = "Travel")
-        val foodTrip = lunch.copy(id = 6, title = "Trip snacks", amount = rupees(30))
-        val oldTravel = oldRent.copy(id = 7, title = "Trip hotel", categoryId = 7, categoryName = "Travel")
+        val travelRefund = salary.copy(id = TransactionId(4), title = "Trip refund", amount = rupees(60), categoryId = CategoryId(7), categoryName = "Travel")
+        val travelTaxi = lunch.copy(id = TransactionId(5), title = "Trip taxi", amount = rupees(90), categoryId = CategoryId(7), categoryName = "Travel")
+        val foodTrip = lunch.copy(id = TransactionId(6), title = "Trip snacks", amount = rupees(30))
+        val oldTravel = oldRent.copy(id = TransactionId(7), title = "Trip hotel", categoryId = CategoryId(7), categoryName = "Travel")
         val viewModel = viewModel(
             repository = FakeTransactionRepository(listOf(salary, lunch, travelRefund, travelTaxi, foodTrip, oldTravel)),
             savedStateHandle = SavedStateHandle(
@@ -437,7 +439,7 @@ class TransactionListViewModelTest {
 
         assertEquals(listOf(salary), state.transactions)
         assertEquals(Money.ZERO, state.overview.expense)
-        assertEquals(listOf(salary, oldRent), repository.current.sortedBy { it.id })
+        assertEquals(listOf(salary, oldRent), repository.current.sortedBy { it.id.value })
         assertEquals(listOf(lunch), deleted)
         assertEquals(0, state.swipeResetToken)
     }

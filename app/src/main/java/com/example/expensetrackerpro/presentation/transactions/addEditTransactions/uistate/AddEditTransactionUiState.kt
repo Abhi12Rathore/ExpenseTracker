@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate
 
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.DateChoice
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.Transaction
@@ -15,7 +16,7 @@ data class AddEditTransactionUiState(
     val validAmount: Money? = null,
     val note: String = "",
     val isNoteExpanded: Boolean = false,
-    val selectedCategoryId: Int? = null,
+    val selectedCategoryId: CategoryId? = null,
     val transactionType: TransactionType = TransactionType.EXPENSE,
     val dateMillis: Long = 0L,
     val dateChoice: DateChoice = DateChoice.TODAY,

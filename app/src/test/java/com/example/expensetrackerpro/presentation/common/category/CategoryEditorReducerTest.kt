@@ -48,6 +48,7 @@ class CategoryEditorReducerTest {
             assertEquals(expected, state.nameError)
             assertFalse(state.isSaving)
             assertFalse(state.isSaveEnabled)
+            assertTrue(reducer.isNameProblem(error))
         }
     }
 
@@ -68,6 +69,7 @@ class CategoryEditorReducerTest {
             assertNull(state.nameError)
             assertFalse(state.isSaving)
             assertTrue(state.isSaveEnabled)
+            assertFalse(reducer.isNameProblem(error))
         }
     }
 

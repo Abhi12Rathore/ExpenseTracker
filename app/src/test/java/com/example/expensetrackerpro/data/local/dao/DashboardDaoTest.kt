@@ -9,6 +9,7 @@ import com.example.expensetrackerpro.data.local.expenseDatabase.AppDatabase
 import com.example.expensetrackerpro.data.repository.DashboardRepositoryImpl
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
 import com.example.expensetrackerpro.domain.models.CategoryIcon
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.DailyExpense
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.Money
@@ -98,8 +99,8 @@ class DashboardDaoTest {
         // No income, nothing from September, and no category without an expense
         assertEquals(
             listOf(
-                CategoryBreakdown(bills.id.toLong(), "Bills", CategoryIcon.RECEIPT_LONG, rupees(1500)),
-                CategoryBreakdown(food.id.toLong(), "Food", CategoryIcon.RESTAURANT, Money(650_50))
+                CategoryBreakdown(CategoryId(bills.id), "Bills", CategoryIcon.RECEIPT_LONG, rupees(1500)),
+                CategoryBreakdown(CategoryId(food.id), "Food", CategoryIcon.RESTAURANT, Money(650_50))
             ),
             repository.getCategoryBreakdown(october).first()
         )
@@ -109,7 +110,7 @@ class DashboardDaoTest {
     fun categoryBreakdown_usesTheCategorysCurrentNameAndIcon() = runTest {
         database.categoryDao().update(food.copy(name = "Eating out", icon = CategoryIcon.FASTFOOD))
 
-        val eatingOut = repository.getCategoryBreakdown(october).first().single { it.categoryId == food.id.toLong() }
+        val eatingOut = repository.getCategoryBreakdown(october).first().single { it.categoryId.value == food.id }
 
         assertEquals("Eating out", eatingOut.categoryName)
         assertEquals(CategoryIcon.FASTFOOD, eatingOut.icon)

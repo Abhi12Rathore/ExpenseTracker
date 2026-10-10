@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.domain.usecase.transaction
 
 import com.example.expensetrackerpro.domain.models.DateRange
+import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.fakes.FakeTransactionRepository
 import com.example.expensetrackerpro.fakes.transaction
 import kotlinx.coroutines.flow.first
@@ -45,11 +46,11 @@ class TransactionReadUseCasesTest {
 
     @Test
     fun getTransactionById_returnsMatch() = runTest {
-        assertEquals(mid, GetTransactionByIdUseCase(repository)(2))
+        assertEquals(mid, GetTransactionByIdUseCase(repository)(TransactionId(2)))
     }
 
     @Test
     fun getTransactionById_unknownId_isNull() = runTest {
-        assertNull(GetTransactionByIdUseCase(repository)(99))
+        assertNull(GetTransactionByIdUseCase(repository)(TransactionId(99)))
     }
 }

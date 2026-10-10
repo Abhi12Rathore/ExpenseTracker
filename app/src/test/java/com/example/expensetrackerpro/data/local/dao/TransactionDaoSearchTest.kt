@@ -9,6 +9,7 @@ import com.example.expensetrackerpro.data.local.expenseDatabase.AppDatabase
 import com.example.expensetrackerpro.data.repository.TransactionRepositoryImpl
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.DateRange
+import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.domain.models.TransactionType
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -56,7 +57,7 @@ class TransactionDaoSearchTest {
 
     @Test
     fun everyRead_carriesItsCategorysIcon() = runTest {
-        val listed = repository.getTransactions(RECENT).first().associate { it.id to it.categoryIcon }
+        val listed = repository.getTransactions(RECENT).first().associate { it.id.value to it.categoryIcon }
 
         assertEquals(
             mapOf(
@@ -67,8 +68,8 @@ class TransactionDaoSearchTest {
             ),
             listed
         )
-        assertEquals(CategoryIcon.TRAIN, repository.getTransactionById(2)?.categoryIcon)
-        assertEquals(CategoryIcon.TRAIN, repository.getAllTransactions().first().single { it.id == 2 }.categoryIcon)
+        assertEquals(CategoryIcon.TRAIN, repository.getTransactionById(TransactionId(2))?.categoryIcon)
+        assertEquals(CategoryIcon.TRAIN, repository.getAllTransactions().first().single { it.id.value == 2 }.categoryIcon)
         assertEquals(listOf(CategoryIcon.TRAIN), repository.getTransactions(RECENT, "metro").first().map { it.categoryIcon })
     }
 
@@ -76,14 +77,14 @@ class TransactionDaoSearchTest {
     fun changingACategorysIcon_changesItOnItsTransactions() = runTest {
         database.categoryDao().update(category(id = 2, name = "Commute", icon = CategoryIcon.DIRECTIONS_BUS))
 
-        assertEquals(CategoryIcon.DIRECTIONS_BUS, repository.getTransactionById(2)?.categoryIcon)
+        assertEquals(CategoryIcon.DIRECTIONS_BUS, repository.getTransactionById(TransactionId(2))?.categoryIcon)
     }
 
     @Test
     fun anIconKeyThisVersionDoesNotKnow_isReadAsTheDefault() = runTest {
         database.openHelper.writableDatabase.execSQL("UPDATE categories SET icon = 'hoverboard' WHERE id = 2")
 
-        assertEquals(CategoryIcon.DEFAULT, repository.getTransactionById(2)?.categoryIcon)
+        assertEquals(CategoryIcon.DEFAULT, repository.getTransactionById(TransactionId(2))?.categoryIcon)
     }
 
     private fun category(id: Int, name: String, icon: CategoryIcon = CategoryIcon.RESTAURANT) =
@@ -106,7 +107,7 @@ class TransactionDaoSearchTest {
     )
 
     private suspend fun search(query: String, range: DateRange = RECENT): List<Int> =
-        repository.getTransactions(range, query).first().map { it.id }
+        repository.getTransactions(range, query).first().map { it.id.value }
 
     @Test
     fun blankQuery_returnsEverythingInRangeNewestFirst() = runTest {

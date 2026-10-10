@@ -7,6 +7,7 @@ import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.CategoryNameValidation
 import com.example.expensetrackerpro.domain.models.DateChoice
 import com.example.expensetrackerpro.domain.models.Money
+import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.category.AddCategoryUseCase
 import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesByTypeUseCase
@@ -348,6 +349,29 @@ class AddEditTransactionViewModelTest {
     }
 
     @Test
+    fun aNewCategoryTheDatabaseCannotWrite_keepsTheSheetAsTyped_andShowsAnError() = runTest {
+        categories.saveFailure = DomainError.StorageFailure("database or disk is full")
+        val viewModel = viewModel()
+        val effects = effectsOf(viewModel)
+        viewModel.onEvent(AddEditTransactionEvent.CategorySheetOpened)
+        viewModel.editor(CategoryEditorEvent.NameChanged("Gym"))
+
+        viewModel.editor(CategoryEditorEvent.SaveClicked)
+        val editor = requireNotNull(viewModel.uiState.value.categoryEditor)
+
+        assertEquals("Gym", editor.name)
+        assertNull(editor.nameError)
+        assertTrue(editor.isSaveEnabled)
+        assertEquals(
+            listOf<AddEditTransactionEffect>(
+                AddEditTransactionEffect.ShowError(R.string.error_storage_failure)
+            ),
+            effects
+        )
+        assertEquals(listOf(food, bills, salary), categories.current)
+    }
+
+    @Test
     fun aNameIsCheckedAgainstTheTypeChosenInTheSheet_notTheTransactions() = runTest {
         val viewModel = viewModel()
         viewModel.onEvent(AddEditTransactionEvent.CategorySheetOpened)
@@ -422,7 +446,7 @@ class AddEditTransactionViewModelTest {
         viewModel.onEvent(AddEditTransactionEvent.SaveClicked)
 
         val saved = transactions.current.single()
-        assertEquals(0, saved.id)
+        assertEquals(TransactionId.UNSAVED, saved.id)
         assertEquals(Money(120_50), saved.amount)
         assertEquals("Lunch", saved.title)
         assertEquals("With the team", saved.note)
@@ -563,7 +587,7 @@ class AddEditTransactionViewModelTest {
         viewModel.onEvent(AddEditTransactionEvent.SaveClicked)
 
         val updated = transactions.current.single()
-        assertEquals(5, updated.id)
+        assertEquals(5, updated.id.value)
         assertEquals(rupees(180), updated.amount)
         assertEquals("Lunch", updated.title)
         assertEquals("", updated.note)

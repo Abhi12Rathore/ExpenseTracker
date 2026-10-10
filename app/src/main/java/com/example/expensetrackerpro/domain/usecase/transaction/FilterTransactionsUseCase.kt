@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.transaction
 
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.models.TransactionTypeFilter
@@ -11,7 +12,7 @@ class FilterTransactionsUseCase @Inject constructor() {
     operator fun invoke(
         transactions: List<Transaction>,
         typeFilter: TransactionTypeFilter,
-        categoryId: Long? = null
+        categoryId: CategoryId? = null
     ): List<Transaction> {
         val type = when (typeFilter) {
             TransactionTypeFilter.ALL -> null
@@ -21,7 +22,7 @@ class FilterTransactionsUseCase @Inject constructor() {
 
         return transactions.filter { transaction ->
             (type == null || transaction.transactionType == type) &&
-                (categoryId == null || transaction.categoryId.toLong() == categoryId)
+                (categoryId == null || transaction.categoryId == categoryId)
         }
     }
 }

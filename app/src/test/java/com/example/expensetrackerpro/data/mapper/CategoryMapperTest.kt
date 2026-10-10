@@ -3,6 +3,7 @@ package com.example.expensetrackerpro.data.mapper
 import com.example.expensetrackerpro.data.local.entity.CategoryEntity
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.TransactionType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -19,7 +20,7 @@ class CategoryMapperTest {
     )
 
     private val domain = Category(
-        id = 4,
+        id = CategoryId(4),
         name = "Salary",
         type = TransactionType.INCOME,
         icon = CategoryIcon.PAYMENTS,

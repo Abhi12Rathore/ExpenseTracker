@@ -38,7 +38,7 @@ sealed class Screens(val route: String) {
                     "$ARG_START=${dateFilter.range.startMillis}&$ARG_END=${dateFilter.range.endMillis}"
             }
             val category = filter.category
-                ?.let { "&$ARG_CATEGORY_ID=${it.id}&$ARG_CATEGORY_NAME=${Uri.encode(it.name)}" }
+                ?.let { "&$ARG_CATEGORY_ID=${it.id.value}&$ARG_CATEGORY_NAME=${Uri.encode(it.name)}" }
                 .orEmpty()
 
             return "$BASE_ROUTE?$dates$category"

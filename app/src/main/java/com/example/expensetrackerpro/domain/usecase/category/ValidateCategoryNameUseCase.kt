@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.domain.usecase.category
 
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.CategoryNameValidation
 import com.example.expensetrackerpro.domain.models.TransactionType
 import javax.inject.Inject
@@ -15,7 +16,7 @@ class ValidateCategoryNameUseCase @Inject constructor() {
         name: String,
         type: TransactionType,
         // The category being renamed, which may keep its own name
-        editingId: Int?,
+        editingId: CategoryId?,
         existing: List<Category>
     ): CategoryNameValidation {
         val trimmed = name.trim()
