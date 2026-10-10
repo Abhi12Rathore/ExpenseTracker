@@ -1,6 +1,8 @@
 package com.example.expensetrackerpro.presentation
 
 import androidx.lifecycle.SavedStateHandle
+import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.Money
@@ -508,9 +510,27 @@ class TransactionListViewModelTest {
 
         viewModel.onEvent(TransactionListEvent.DeleteSwiped(lunch))
 
-        assertEquals(TransactionListEffect.DeleteFailed, viewModel.effects.first())
+        assertEquals(
+            TransactionListEffect.DeleteFailed(R.string.error_storage_failure),
+            viewModel.effects.first()
+        )
         assertEquals(listOf(salary, lunch), viewModel.uiState.value.transactions)
         assertEquals(1, viewModel.uiState.value.swipeResetToken)
+    }
+
+    @Test
+    fun deleteSwiped_whenTheWriteFails_saysWhy() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        repository.failWrites = true
+        repository.writeFailure = DomainError.NotFound
+
+        viewModel.onEvent(TransactionListEvent.DeleteSwiped(lunch))
+
+        assertEquals(
+            TransactionListEffect.DeleteFailed(R.string.error_category_not_found),
+            viewModel.effects.first()
+        )
     }
 
     // --- Search

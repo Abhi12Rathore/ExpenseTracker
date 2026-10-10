@@ -3,6 +3,7 @@ package com.example.expensetrackerpro.presentation.transactions.transactionList.
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.expensetrackerpro.domain.error.onFailure
 import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
@@ -15,6 +16,7 @@ import com.example.expensetrackerpro.domain.usecase.filter.StepPeriodUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.DeleteTransactionUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionListingUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionsUseCase
+import com.example.expensetrackerpro.presentation.common.error.toMessageRes
 import com.example.expensetrackerpro.presentation.common.filter.PeriodFilterEvent
 import com.example.expensetrackerpro.presentation.common.filter.PeriodFilterState
 import com.example.expensetrackerpro.presentation.navigation.TransactionsFilter
@@ -169,10 +171,10 @@ class TransactionListViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                if (!deleteTransaction(transaction)) {
+                deleteTransaction(transaction).onFailure { error ->
                     // The row is still swiped aside, so it has to be brought back
                     swipeResetToken.update { it + 1 }
-                    _effects.send(TransactionListEffect.DeleteFailed)
+                    _effects.send(TransactionListEffect.DeleteFailed(error.toMessageRes()))
                 }
             } finally {
                 pendingDeleteIds.remove(transaction.id)

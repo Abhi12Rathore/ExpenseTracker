@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation.manageCategories.uistate
 
+import androidx.annotation.StringRes
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.CategorySections
 import com.example.expensetrackerpro.domain.models.TransactionType
@@ -16,7 +17,7 @@ data class ManageCategoryUiState(
     // Non-null while a delete is waiting to be confirmed
     val pendingDelete: CategoryDeleteRequest? = null,
     // What went wrong last, until the screen has shown it
-    val message: ManageCategoryMessage? = null
+    @StringRes val message: Int? = null
 )
 
 /** A category the user asked to delete, and where its transactions could go. */
@@ -34,5 +35,3 @@ data class CategoryDeleteRequest(
 
     val isConfirmEnabled: Boolean get() = !needsReassign || selectedTarget != null
 }
-
-enum class ManageCategoryMessage { DELETE_FAILED }

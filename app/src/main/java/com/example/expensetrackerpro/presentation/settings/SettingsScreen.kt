@@ -119,7 +119,7 @@ fun SettingsContent(
             message.transactionCount
         )
         SettingsMessage.AllDataDeleted -> stringResource(R.string.settings_all_data_deleted)
-        SettingsMessage.Failed -> stringResource(R.string.settings_data_action_failed)
+        is SettingsMessage.Failed -> stringResource(message.messageRes)
         null -> null
     }
     LaunchedEffect(state.message) {

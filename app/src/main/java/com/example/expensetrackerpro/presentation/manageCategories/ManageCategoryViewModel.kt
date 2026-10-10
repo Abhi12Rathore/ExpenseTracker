@@ -2,9 +2,11 @@ package com.example.expensetrackerpro.presentation.manageCategories
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.error.Outcome
+import com.example.expensetrackerpro.domain.error.onFailure
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.CategoryUsage
-import com.example.expensetrackerpro.domain.models.SaveCategoryResult
 import com.example.expensetrackerpro.domain.usecase.category.DeleteCategoryUseCase
 import com.example.expensetrackerpro.domain.usecase.category.GetCategoryUsageUseCase
 import com.example.expensetrackerpro.domain.usecase.category.ReassignAndDeleteCategoryUseCase
@@ -13,9 +15,9 @@ import com.example.expensetrackerpro.domain.usecase.category.SectionCategoryUsag
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorEvent
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorReducer
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorState
+import com.example.expensetrackerpro.presentation.common.error.toMessageRes
 import com.example.expensetrackerpro.presentation.manageCategories.uistate.CategoryDeleteRequest
 import com.example.expensetrackerpro.presentation.manageCategories.uistate.ManageCategoryEvent
-import com.example.expensetrackerpro.presentation.manageCategories.uistate.ManageCategoryMessage
 import com.example.expensetrackerpro.presentation.manageCategories.uistate.ManageCategoryUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -107,10 +109,11 @@ class ManageCategoryViewModel @Inject constructor(
         updateEditor { it.copy(isSaving = true) }
         viewModelScope.launch {
             when (val result = saveCategory(editor.toDraft())) {
-                is SaveCategoryResult.Saved,
-                SaveCategoryResult.NotFound -> closeEditor()
-                is SaveCategoryResult.Invalid -> updateEditor {
-                    it.copy(nameValidation = result.reason, isNameEdited = true, isSaving = false)
+                is Outcome.Success -> closeEditor()
+                is Outcome.Failure -> when (result.error) {
+                    // Deleted while the sheet was open, so there is nothing left to edit
+                    DomainError.NotFound -> closeEditor()
+                    else -> updateEditor { categoryEditorReducer.saveFailed(it, result.error) }
                 }
             }
         }
@@ -140,15 +143,21 @@ class ManageCategoryViewModel @Inject constructor(
         screenState.update { it.copy(pendingDelete = null) }
         viewModelScope.launch {
             val target = request.selectedTarget
-            if (target != null) {
-                if (!reassignAndDeleteCategory(request.category, target)) {
-                    screenState.update { it.copy(message = ManageCategoryMessage.DELETE_FAILED) }
-                }
-            } else if (!deleteCategory(request.category)) {
-                // It gained a transaction since the dialog opened, so they have to be moved after all
-                screenState.update {
-                    val latest = deleteRequestFor(request.category)
-                    it.copy(pendingDelete = latest.copy(transactionCount = latest.transactionCount.coerceAtLeast(1)))
+            val result = if (target != null) {
+                reassignAndDeleteCategory(request.category, target)
+            } else {
+                deleteCategory(request.category)
+            }
+
+            result.onFailure { error ->
+                if (error == DomainError.CategoryInUse && target == null) {
+                    // It gained a transaction since the dialog opened, so they have to be moved after all
+                    screenState.update {
+                        val latest = deleteRequestFor(request.category)
+                        it.copy(pendingDelete = latest.copy(transactionCount = latest.transactionCount.coerceAtLeast(1)))
+                    }
+                } else {
+                    screenState.update { it.copy(message = error.toMessageRes()) }
                 }
             }
         }

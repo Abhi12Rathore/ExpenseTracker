@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.transaction
 
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.Transaction
 import javax.inject.Inject
 
@@ -9,7 +10,6 @@ class SaveTransactionUseCase @Inject constructor(
     private val updateTransaction: UpdateTransactionUseCase
 ) {
 
-    /** Returns false when the transaction could not be written. */
-    suspend operator fun invoke(transaction: Transaction): Boolean =
+    suspend operator fun invoke(transaction: Transaction): Outcome<Unit> =
         if (transaction.id == 0) addTransaction(transaction) else updateTransaction(transaction)
 }

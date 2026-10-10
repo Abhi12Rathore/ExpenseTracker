@@ -106,8 +106,8 @@ class MainActivity : FragmentActivity() {
                                     viewModel.onEvent(MainEvent.UndoDelete(effect.transaction))
                                 }
                             }
-                            MainEffect.ShowRestoreFailed -> snackbarHostState.showSnackbar(
-                                getString(R.string.transactions_restore_failed)
+                            is MainEffect.ShowRestoreFailed -> snackbarHostState.showSnackbar(
+                                getString(effect.messageRes)
                             )
                         }
                     }

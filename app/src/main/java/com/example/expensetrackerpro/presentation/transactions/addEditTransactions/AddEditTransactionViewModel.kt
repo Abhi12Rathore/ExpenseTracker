@@ -3,11 +3,14 @@ package com.example.expensetrackerpro.presentation.transactions.addEditTransacti
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.error.Outcome
+import com.example.expensetrackerpro.domain.error.onFailure
+import com.example.expensetrackerpro.domain.error.onSuccess
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.DateChoice
 import com.example.expensetrackerpro.domain.models.DateSelection
 import com.example.expensetrackerpro.domain.models.Transaction
-import com.example.expensetrackerpro.domain.models.SaveCategoryResult
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesByTypeUseCase
 import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesUseCase
@@ -22,8 +25,8 @@ import com.example.expensetrackerpro.domain.usecase.transaction.ValidateTransact
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorEvent
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorReducer
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorState
+import com.example.expensetrackerpro.presentation.common.error.toMessageRes
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEffect
-import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionError
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEvent
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -195,21 +198,21 @@ class AddEditTransactionViewModel @Inject constructor(
         updateEditor { it.copy(isSaving = true) }
         viewModelScope.launch {
             when (val result = saveCategory(editor.toDraft())) {
-                is SaveCategoryResult.Saved -> updateForm {
+                is Outcome.Success -> updateForm {
                     it.copy(
                         categoryEditor = null,
                         // A category of the other type can't be picked for this transaction
                         selectedCategoryId = if (it.transactionType == editor.type) {
-                            result.categoryId
+                            result.value
                         } else {
                             it.selectedCategoryId
                         }
                     )
                 }
-                is SaveCategoryResult.Invalid -> updateEditor {
-                    it.copy(nameValidation = result.reason, isNameEdited = true, isSaving = false)
+                is Outcome.Failure -> when (result.error) {
+                    DomainError.NotFound -> updateForm { it.copy(categoryEditor = null) }
+                    else -> updateEditor { categoryEditorReducer.saveFailed(it, result.error) }
                 }
-                SaveCategoryResult.NotFound -> updateForm { it.copy(categoryEditor = null) }
             }
         }
     }
@@ -228,7 +231,7 @@ class AddEditTransactionViewModel @Inject constructor(
         // Also disables Save, so a second tap can't store the transaction twice
         updateForm { it.copy(isSaving = true) }
         viewModelScope.launch {
-            val saved = saveTransaction(
+            val result = saveTransaction(
                 Transaction(
                     id = transactionId ?: 0,
                     title = state.title.trim(),
@@ -242,12 +245,12 @@ class AddEditTransactionViewModel @Inject constructor(
                 )
             )
 
-            if (saved) {
-                _effects.send(AddEditTransactionEffect.NavigateBack)
-            } else {
-                updateForm { it.copy(isSaving = false) }
-                _effects.send(AddEditTransactionEffect.ShowError(AddEditTransactionError.SAVE_FAILED))
-            }
+            result
+                .onSuccess { _effects.send(AddEditTransactionEffect.NavigateBack) }
+                .onFailure { error ->
+                    updateForm { it.copy(isSaving = false) }
+                    _effects.send(AddEditTransactionEffect.ShowError(error.toMessageRes()))
+                }
         }
     }
 
@@ -256,11 +259,9 @@ class AddEditTransactionViewModel @Inject constructor(
 
         updateForm { it.copy(transactionToDelete = null) }
         viewModelScope.launch {
-            if (deleteTransaction(transaction)) {
-                _effects.send(AddEditTransactionEffect.NavigateBack)
-            } else {
-                _effects.send(AddEditTransactionEffect.ShowError(AddEditTransactionError.DELETE_FAILED))
-            }
+            deleteTransaction(transaction)
+                .onSuccess { _effects.send(AddEditTransactionEffect.NavigateBack) }
+                .onFailure { _effects.send(AddEditTransactionEffect.ShowError(it.toMessageRes())) }
         }
     }
 

@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.domain.usecase.transaction
 
+import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.fakes.FakeTransactionRepository
 import com.example.expensetrackerpro.fakes.rupees
 import com.example.expensetrackerpro.fakes.transaction
@@ -10,7 +12,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -55,8 +56,8 @@ class TransactionWriteUseCasesTest {
         val unsaved = taxi.copy(id = 0)
         val edited = lunch.copy(amount = rupees(150))
 
-        assertTrue(save(unsaved))
-        assertTrue(save(edited))
+        assertEquals(Outcome.Success(Unit), save(unsaved))
+        assertEquals(Outcome.Success(Unit), save(edited))
 
         assertEquals(listOf(edited, unsaved), repository.current)
     }
@@ -66,7 +67,7 @@ class TransactionWriteUseCasesTest {
         val repository = FakeTransactionRepository(listOf(lunch, taxi))
         DeleteTransactionUseCase(repository)(lunch)
 
-        assertTrue(RestoreTransactionUseCase(repository)(lunch))
+        assertEquals(Outcome.Success(Unit), RestoreTransactionUseCase(repository)(lunch))
 
         assertEquals(listOf(taxi, lunch), repository.current)
     }
@@ -85,12 +86,20 @@ class TransactionWriteUseCasesTest {
     }
 
     @Test
-    fun rejectedWrites_returnFalseAndChangeNothing() = runTest {
-        val repository = FakeTransactionRepository(listOf(lunch)).apply { failWrites = true }
+    fun rejectedWrites_reportWhyAndChangeNothing() = runTest {
+        val repository = FakeTransactionRepository(listOf(lunch)).apply {
+            failWrites = true
+            writeFailure = DomainError.NotFound
+        }
+        val save = SaveTransactionUseCase(AddTransactionUseCase(repository), UpdateTransactionUseCase(repository))
+        val rejected = Outcome.Failure(DomainError.NotFound)
 
-        assertFalse(AddTransactionUseCase(repository)(taxi))
-        assertFalse(UpdateTransactionUseCase(repository)(lunch.copy(amount = rupees(1))))
-        assertFalse(DeleteTransactionUseCase(repository)(lunch))
+        assertEquals(rejected, AddTransactionUseCase(repository)(taxi))
+        assertEquals(rejected, UpdateTransactionUseCase(repository)(lunch.copy(amount = rupees(1))))
+        assertEquals(rejected, DeleteTransactionUseCase(repository)(lunch))
+        assertEquals(rejected, RestoreTransactionUseCase(repository)(taxi))
+        assertEquals(rejected, save(taxi.copy(id = 0)))
+        assertEquals(rejected, save(lunch.copy(amount = rupees(1))))
 
         assertEquals(listOf(lunch), repository.current)
     }

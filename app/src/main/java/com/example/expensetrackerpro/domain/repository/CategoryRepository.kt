@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.repository
 
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.CategoryUsage
 import com.example.expensetrackerpro.domain.models.DateRange
@@ -17,15 +18,15 @@ interface CategoryRepository {
 
     suspend fun updateCategory(category: Category)
 
-    /** Returns false, leaving the category in place, when transactions still use it. */
-    suspend fun deleteCategory(category: Category): Boolean
+    /** Fails with CategoryInUse, leaving the category in place, when transactions still use it. */
+    suspend fun deleteCategory(category: Category): Outcome<Unit>
 
     /** Every category with its transaction count ever, and its count and amount within [range]. */
     fun getCategoryUsage(range: DateRange): Flow<List<CategoryUsage>>
 
     /**
      * Moves the transactions of [category] to [target] and deletes [category], all or nothing.
-     * Returns false when nothing was changed.
+     * Fails with NotFound, changing nothing, unless both are stored, differ and share a type.
      */
-    suspend fun deleteCategoryReassigning(category: Category, target: Category): Boolean
+    suspend fun deleteCategoryReassigning(category: Category, target: Category): Outcome<Unit>
 }
