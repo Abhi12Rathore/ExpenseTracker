@@ -1,22 +1,23 @@
 package com.example.expensetrackerpro.presentation.settings
 
-import com.example.expensetrackerpro.domain.models.BuildInfo
-import com.example.expensetrackerpro.domain.usecase.sample.ClearAllDataUseCase
-import com.example.expensetrackerpro.domain.usecase.sample.LoadSampleDataUseCase
-import com.example.expensetrackerpro.presentation.settings.uistate.DeveloperAction
-import com.example.expensetrackerpro.presentation.settings.uistate.DeveloperMessage
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.AuthResult
+import com.example.expensetrackerpro.domain.models.BuildInfo
 import com.example.expensetrackerpro.domain.models.LockTimeout
-import com.example.expensetrackerpro.domain.models.ThemeMode
 import com.example.expensetrackerpro.domain.usecase.applock.GetAppLockSettingsUseCase
 import com.example.expensetrackerpro.domain.usecase.applock.GetBiometricStatusUseCase
 import com.example.expensetrackerpro.domain.usecase.applock.SetAppLockSettingsUseCase
+import com.example.expensetrackerpro.domain.usecase.category.GetCategoryCountsUseCase
+import com.example.expensetrackerpro.domain.usecase.data.DeleteAllDataUseCase
+import com.example.expensetrackerpro.domain.usecase.profile.GetUserProfileUseCase
+import com.example.expensetrackerpro.domain.usecase.profile.SetUserNameUseCase
+import com.example.expensetrackerpro.domain.usecase.sample.LoadSampleDataUseCase
 import com.example.expensetrackerpro.domain.usecase.theme.GetThemeModeUseCase
 import com.example.expensetrackerpro.domain.usecase.theme.SetThemeModeUseCase
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsEvent
+import com.example.expensetrackerpro.presentation.settings.uistate.SettingsMessage
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,30 +38,53 @@ class SettingsViewModel @Inject constructor(
     private val getAppLockSettings: GetAppLockSettingsUseCase,
     private val setAppLockSettings: SetAppLockSettingsUseCase,
     private val getBiometricStatus: GetBiometricStatusUseCase,
+    getUserProfile: GetUserProfileUseCase,
+    private val setUserName: SetUserNameUseCase,
+    getCategoryCounts: GetCategoryCountsUseCase,
     private val loadSampleData: LoadSampleDataUseCase,
-    private val clearAllData: ClearAllDataUseCase,
+    private val deleteAllData: DeleteAllDataUseCase,
     private val buildInfo: BuildInfo
 ) : ViewModel() {
 
-    // Dialog and prompt state; the saved theme and app lock settings are merged in below
+    // Dialog and prompt state; everything that is stored is merged in below
     private val screenState = MutableStateFlow(
         SettingsUiState(
             biometricStatus = getBiometricStatus(),
+            versionName = buildInfo.versionName,
             isDeveloperSectionVisible = buildInfo.isDebug
         )
     )
 
     val uiState: StateFlow<SettingsUiState> =
-        combine(getThemeMode(), getAppLockSettings(), screenState) { themeMode, appLock, state ->
-            state.copy(themeMode = themeMode, appLock = appLock)
+        combine(
+            getThemeMode(),
+            getAppLockSettings(),
+            getUserProfile(),
+            getCategoryCounts(),
+            screenState
+        ) { themeMode, appLock, profile, categoryCounts, state ->
+            state.copy(
+                themeMode = themeMode,
+                appLock = appLock,
+                profile = profile,
+                categoryCounts = categoryCounts
+            )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), screenState.value)
 
     fun onEvent(event: SettingsEvent) {
         when (event) {
-            SettingsEvent.ThemeClicked ->
-                screenState.update { it.copy(isThemeDialogOpen = true) }
-            SettingsEvent.ThemeDialogDismissed -> closeThemeDialog()
-            is SettingsEvent.ThemeModeSelected -> selectTheme(event.mode)
+            SettingsEvent.ProfileClicked ->
+                // Opens on the stored name, ready to be changed
+                screenState.update { it.copy(profileNameDraft = uiState.value.profile.name) }
+            is SettingsEvent.ProfileNameChanged -> screenState.update {
+                // Left alone while the dialog is closed; longer text, such as a paste, is cut at the limit
+                it.copy(profileNameDraft = it.profileNameDraft?.let { _ -> event.name.take(NAME_MAX_LENGTH) })
+            }
+            SettingsEvent.ProfileNameSaved -> saveProfileName()
+            SettingsEvent.ProfileDialogDismissed ->
+                screenState.update { it.copy(profileNameDraft = null) }
+            is SettingsEvent.ThemeModeSelected ->
+                viewModelScope.launch { setThemeMode(event.mode) }
             SettingsEvent.ScreenResumed ->
                 screenState.update { it.copy(biometricStatus = getBiometricStatus()) }
             is SettingsEvent.AppLockToggled -> toggleAppLock(event.enabled)
@@ -73,22 +97,29 @@ class SettingsViewModel @Inject constructor(
                 screenState.update { it.copy(isLockTimeoutDialogOpen = true) }
             SettingsEvent.LockTimeoutDialogDismissed -> closeLockTimeoutDialog()
             is SettingsEvent.LockTimeoutSelected -> selectLockTimeout(event.timeout)
-            is SettingsEvent.DeveloperActionClicked -> requestDeveloperAction(event.action)
-            SettingsEvent.DeveloperActionConfirmed -> runDeveloperAction()
-            SettingsEvent.DeveloperActionDismissed ->
-                screenState.update { it.copy(pendingDeveloperAction = null) }
-            SettingsEvent.DeveloperMessageShown ->
-                screenState.update { it.copy(developerMessage = null) }
+            SettingsEvent.DeleteAllDataClicked -> screenState.update {
+                if (it.isDataActionRunning) it else it.copy(deleteAllConfirmation = "")
+            }
+            is SettingsEvent.DeleteAllDataTextChanged -> screenState.update {
+                it.copy(deleteAllConfirmation = it.deleteAllConfirmation?.let { _ -> event.text })
+            }
+            SettingsEvent.DeleteAllDataConfirmed -> deleteEverything()
+            SettingsEvent.DeleteAllDataDismissed ->
+                screenState.update { it.copy(deleteAllConfirmation = null) }
+            SettingsEvent.LoadSampleDataClicked -> requestSampleData()
+            SettingsEvent.LoadSampleDataConfirmed -> loadSamples()
+            SettingsEvent.LoadSampleDataDismissed ->
+                screenState.update { it.copy(isLoadSampleDialogOpen = false) }
+            SettingsEvent.MessageShown ->
+                screenState.update { it.copy(message = null) }
         }
     }
 
-    private fun selectTheme(mode: ThemeMode) {
-        closeThemeDialog()
-        viewModelScope.launch { setThemeMode(mode) }
-    }
+    private fun saveProfileName() {
+        val name = screenState.value.profileNameDraft ?: return
 
-    private fun closeThemeDialog() {
-        screenState.update { it.copy(isThemeDialogOpen = false) }
+        screenState.update { it.copy(profileNameDraft = null) }
+        viewModelScope.launch { setUserName(name) }
     }
 
     private fun toggleAppLock(enabled: Boolean) {
@@ -124,29 +155,39 @@ class SettingsViewModel @Inject constructor(
         screenState.update { it.copy(isLockTimeoutDialogOpen = false) }
     }
 
-    private fun requestDeveloperAction(action: DeveloperAction) {
-        // Release builds never show the section; this keeps the actions out of reach there too
-        if (!buildInfo.isDebug || screenState.value.isDeveloperActionRunning) return
-        screenState.update { it.copy(pendingDeveloperAction = action) }
+    private fun deleteEverything() {
+        val state = screenState.value
+        if (!state.isDeleteAllConfirmed || state.isDataActionRunning) return
+
+        screenState.update { it.copy(deleteAllConfirmation = null, isDataActionRunning = true) }
+        viewModelScope.launch {
+            val message = if (deleteAllData()) SettingsMessage.AllDataDeleted else SettingsMessage.Failed
+            screenState.update { it.copy(isDataActionRunning = false, message = message) }
+        }
     }
 
-    private fun runDeveloperAction() {
-        val action = screenState.value.pendingDeveloperAction
-        if (!buildInfo.isDebug || action == null || screenState.value.isDeveloperActionRunning) return
+    private fun requestSampleData() {
+        // Release builds never show the section; this keeps the action out of reach there too
+        if (!buildInfo.isDebug || screenState.value.isDataActionRunning) return
+        screenState.update { it.copy(isLoadSampleDialogOpen = true) }
+    }
 
-        screenState.update { it.copy(pendingDeveloperAction = null, isDeveloperActionRunning = true) }
+    private fun loadSamples() {
+        val state = screenState.value
+        if (!buildInfo.isDebug || !state.isLoadSampleDialogOpen || state.isDataActionRunning) return
+
+        screenState.update { it.copy(isLoadSampleDialogOpen = false, isDataActionRunning = true) }
         viewModelScope.launch {
-            val message = when (action) {
-                DeveloperAction.LOAD_SAMPLE_DATA ->
-                    loadSampleData()?.let { DeveloperMessage.SampleDataLoaded(it) } ?: DeveloperMessage.Failed
-                DeveloperAction.CLEAR_ALL_DATA ->
-                    if (clearAllData()) DeveloperMessage.AllDataCleared else DeveloperMessage.Failed
-            }
-            screenState.update { it.copy(isDeveloperActionRunning = false, developerMessage = message) }
+            val message = loadSampleData()?.let { SettingsMessage.SampleDataLoaded(it) } ?: SettingsMessage.Failed
+            screenState.update { it.copy(isDataActionRunning = false, message = message) }
         }
     }
 
     private fun updateAppLock(change: (AppLockSettings) -> AppLockSettings) {
         viewModelScope.launch { setAppLockSettings(change(getAppLockSettings().first())) }
+    }
+
+    private companion object {
+        const val NAME_MAX_LENGTH = SetUserNameUseCase.NAME_MAX_LENGTH
     }
 }

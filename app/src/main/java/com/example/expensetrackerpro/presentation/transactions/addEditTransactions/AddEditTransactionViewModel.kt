@@ -7,10 +7,11 @@ import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.DateChoice
 import com.example.expensetrackerpro.domain.models.DateSelection
 import com.example.expensetrackerpro.domain.models.Transaction
-import com.example.expensetrackerpro.domain.models.CategoryIcon
+import com.example.expensetrackerpro.domain.models.SaveCategoryResult
 import com.example.expensetrackerpro.domain.models.TransactionType
-import com.example.expensetrackerpro.domain.usecase.category.AddCategoryUseCase
 import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesByTypeUseCase
+import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesUseCase
+import com.example.expensetrackerpro.domain.usecase.category.SaveCategoryUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.DeleteTransactionUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.FormatAmountInputUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionByIdUseCase
@@ -18,6 +19,9 @@ import com.example.expensetrackerpro.domain.usecase.transaction.ResolveTransacti
 import com.example.expensetrackerpro.domain.usecase.transaction.SanitizeAmountInputUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.SaveTransactionUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.ValidateTransactionDraftUseCase
+import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorEvent
+import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorReducer
+import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorState
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEffect
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionError
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEvent
@@ -47,7 +51,9 @@ class AddEditTransactionViewModel @Inject constructor(
     private val sanitizeAmountInput: SanitizeAmountInputUseCase,
     private val formatAmountInput: FormatAmountInputUseCase,
     private val resolveTransactionDate: ResolveTransactionDateUseCase,
-    private val addCategory: AddCategoryUseCase,
+    private val getCategories: GetCategoriesUseCase,
+    private val saveCategory: SaveCategoryUseCase,
+    private val categoryEditorReducer: CategoryEditorReducer,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -57,6 +63,9 @@ class AddEditTransactionViewModel @Inject constructor(
 
     // The stored transaction being edited, once it has loaded
     private var original: Transaction? = null
+
+    // Of both types: what a new category's name is checked against
+    private var allCategories: List<Category> = emptyList()
 
     private val _uiState = MutableStateFlow(
         AddEditTransactionUiState(isEditMode = transactionId != null)
@@ -70,6 +79,7 @@ class AddEditTransactionViewModel @Inject constructor(
 
     init {
         observeCategories(getCategoriesByType)
+        observeAllCategories()
         if (transactionId != null) {
             loadExistingTransaction(transactionId)
         }
@@ -93,12 +103,12 @@ class AddEditTransactionViewModel @Inject constructor(
             is AddEditTransactionEvent.DateChoiceSelected -> onDateChoice(event.choice)
             is AddEditTransactionEvent.DatePicked ->
                 updateForm { it.withDate(DateSelection.Picked(event.utcDayMillis)) }
-            AddEditTransactionEvent.CategorySheetOpened ->
-                updateForm { it.copy(isCategorySheetVisible = true) }
-            AddEditTransactionEvent.CategorySheetDismissed ->
-                updateForm { it.copy(isCategorySheetVisible = false) }
-            is AddEditTransactionEvent.CategoryAdded ->
-                onCategoryAdded(event.name, event.icon, event.type)
+            AddEditTransactionEvent.CategorySheetOpened -> updateForm {
+                it.copy(
+                    categoryEditor = categoryEditorReducer.open(it.transactionType, existing = allCategories)
+                )
+            }
+            is AddEditTransactionEvent.CategoryEditor -> onCategoryEditorEvent(event.event)
             AddEditTransactionEvent.SaveClicked -> save()
             AddEditTransactionEvent.DeleteClicked ->
                 updateForm { it.copy(transactionToDelete = original) }
@@ -117,6 +127,15 @@ class AddEditTransactionViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .flatMapLatest { type -> getCategoriesByType(type) }
                 .collect { categories -> updateForm { it.copy(availableCategories = categories) } }
+        }
+    }
+
+    private fun observeAllCategories() {
+        viewModelScope.launch {
+            getCategories().collect { categories ->
+                allCategories = categories
+                updateEditor { categoryEditorReducer.validated(it, categories) }
+            }
         }
     }
 
@@ -159,16 +178,45 @@ class AddEditTransactionViewModel @Inject constructor(
         updateForm { it.withDate(selection) }
     }
 
-    private fun onCategoryAdded(name: String, icon: CategoryIcon, type: TransactionType) {
-        updateForm { it.copy(isCategorySheetVisible = false) }
+    private fun onCategoryEditorEvent(event: CategoryEditorEvent) {
+        when (event) {
+            CategoryEditorEvent.Dismissed -> updateForm { it.copy(categoryEditor = null) }
+            CategoryEditorEvent.SaveClicked -> saveNewCategory()
+            // The sheet only creates categories here, so there is nothing stored to delete
+            CategoryEditorEvent.DeleteClicked -> Unit
+            else -> updateEditor { categoryEditorReducer.reduce(it, event, allCategories) }
+        }
+    }
+
+    private fun saveNewCategory() {
+        val editor = _uiState.value.categoryEditor ?: return
+        if (!editor.isSaveEnabled) return
+
+        updateEditor { it.copy(isSaving = true) }
         viewModelScope.launch {
-            val newId = addCategory(
-                Category(name = name.trim(), icon = icon, type = type, isCustom = true)
-            )
-            updateForm {
-                if (it.transactionType == type) it.copy(selectedCategoryId = newId) else it
+            when (val result = saveCategory(editor.toDraft())) {
+                is SaveCategoryResult.Saved -> updateForm {
+                    it.copy(
+                        categoryEditor = null,
+                        // A category of the other type can't be picked for this transaction
+                        selectedCategoryId = if (it.transactionType == editor.type) {
+                            result.categoryId
+                        } else {
+                            it.selectedCategoryId
+                        }
+                    )
+                }
+                is SaveCategoryResult.Invalid -> updateEditor {
+                    it.copy(nameValidation = result.reason, isNameEdited = true, isSaving = false)
+                }
+                SaveCategoryResult.NotFound -> updateForm { it.copy(categoryEditor = null) }
             }
         }
+    }
+
+    /** Changes the new-category sheet's form, if the sheet is open. */
+    private fun updateEditor(change: (CategoryEditorState) -> CategoryEditorState) {
+        updateForm { it.copy(categoryEditor = it.categoryEditor?.let(change)) }
     }
 
     private fun save() {

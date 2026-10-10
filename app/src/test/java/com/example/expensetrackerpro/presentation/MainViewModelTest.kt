@@ -4,6 +4,8 @@ import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.AuthResult
 import com.example.expensetrackerpro.domain.models.BiometricStatus
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.DateRange
+import com.example.expensetrackerpro.domain.models.CategoryUsage
 import com.example.expensetrackerpro.domain.models.LockTimeout
 import com.example.expensetrackerpro.domain.models.ThemeMode
 import com.example.expensetrackerpro.domain.models.TransactionType
@@ -571,6 +573,11 @@ private class PendingCategoryRepository : CategoryRepository {
     override suspend fun updateCategory(category: Category) = Unit
 
     override suspend fun deleteCategory(category: Category): Boolean = true
+
+    override fun getCategoryUsage(range: DateRange): Flow<List<CategoryUsage>> =
+        categories.map { list -> list.map { CategoryUsage(it) } }
+
+    override suspend fun deleteCategoryReassigning(category: Category, target: Category): Boolean = true
 }
 
 /** Emits nothing until [emit] is called, like preferences that are still being read from disk. */

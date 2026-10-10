@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.presentation.common.preview
 
 import com.example.expensetrackerpro.domain.models.BucketSize
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.CategoryUsage
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.Dashboard
@@ -35,6 +36,15 @@ internal object PreviewData {
         Category(id = 3, name = "Shopping", type = TransactionType.EXPENSE, icon = CategoryIcon.SHOPPING_BAG, isCustom = false),
         Category(id = 4, name = "Bills", type = TransactionType.EXPENSE, icon = CategoryIcon.RECEIPT_LONG, isCustom = false),
         Category(id = 5, name = "Pets", type = TransactionType.EXPENSE, icon = CategoryIcon.PETS)
+    )
+
+    // This month's use of each, the last two not used at all
+    val categoryUsages = listOf(
+        CategoryUsage(categories[0], totalCount = 48, periodCount = 14, periodAmount = 7450.0),
+        CategoryUsage(categories[3], totalCount = 21, periodCount = 4, periodAmount = 9800.0),
+        CategoryUsage(categories[1], totalCount = 30, periodCount = 9, periodAmount = 2100.0),
+        CategoryUsage(categories[2], totalCount = 6),
+        CategoryUsage(categories[4])
     )
 
     val transactions = listOf(

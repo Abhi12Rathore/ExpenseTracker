@@ -10,8 +10,10 @@ import com.example.expensetrackerpro.domain.models.PeriodComparison
 import com.example.expensetrackerpro.domain.models.SpendingChart
 import com.example.expensetrackerpro.domain.models.SpendingPace
 import com.example.expensetrackerpro.domain.models.Transaction
+import com.example.expensetrackerpro.domain.models.UserProfile
 import com.example.expensetrackerpro.domain.time.TimeProvider
 import com.example.expensetrackerpro.domain.usecase.filter.GetDateRangeUseCase
+import com.example.expensetrackerpro.domain.usecase.profile.GetUserProfileUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import java.util.Calendar
@@ -31,6 +33,7 @@ class GetDashboardUseCase @Inject constructor(
     private val getMonthlyTrend: GetMonthlyTrendUseCase,
     private val generateSmartInsights: GenerateSmartInsightsUseCase,
     private val getDayPeriod: GetDayPeriodUseCase,
+    private val getUserProfile: GetUserProfileUseCase,
     private val getDateRange: GetDateRangeUseCase,
     private val timeProvider: TimeProvider
 ) {
@@ -44,6 +47,7 @@ class GetDashboardUseCase @Inject constructor(
             getPeriodComparison(filter),
             getBalanceTrend(range),
             getRecentTransactions(range),
+            getUserProfile(),
             ::Totals
         )
         val charts = combine(
@@ -58,6 +62,7 @@ class GetDashboardUseCase @Inject constructor(
         return combine(totals, charts) { totals, charts ->
             Dashboard(
                 dayPeriod = dayPeriod,
+                userName = totals.profile.name,
                 summary = totals.summary,
                 comparison = totals.comparison,
                 balanceTrend = totals.balanceTrend,
@@ -76,7 +81,8 @@ class GetDashboardUseCase @Inject constructor(
         val summary: FinancialSummary,
         val comparison: PeriodComparison?,
         val balanceTrend: List<Double>,
-        val recentTransactions: List<Transaction>
+        val recentTransactions: List<Transaction>,
+        val profile: UserProfile
     )
 
     private data class Charts(

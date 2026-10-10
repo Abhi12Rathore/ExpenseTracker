@@ -18,6 +18,7 @@ import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.fakes.FakeDashboardRepository
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
 import com.example.expensetrackerpro.fakes.FakeTransactionRepository
+import com.example.expensetrackerpro.fakes.FakeUserProfileRepository
 import com.example.expensetrackerpro.fakes.getDashboardUseCase
 import com.example.expensetrackerpro.fakes.millisAt
 import com.example.expensetrackerpro.fakes.transaction
@@ -56,8 +57,10 @@ class GetDashboardUseCaseTest {
         DateRange(millisAt(2026, Calendar.SEPTEMBER, 30), millisAt(2026, Calendar.OCTOBER, 2))
     )
 
+    private val profile = FakeUserProfileRepository()
+
     private fun getDashboard(nowMillis: Long = now) =
-        getDashboardUseCase(transactions, dashboard, FakeTimeProvider(nowMillis))
+        getDashboardUseCase(transactions, dashboard, FakeTimeProvider(nowMillis), profile)
 
     private suspend fun dashboardFor(filter: DateFilter): Dashboard = getDashboard()(filter).first()
 
@@ -97,6 +100,19 @@ class GetDashboardUseCaseTest {
         assertTrue(state.netSavings.isEmpty())
         assertTrue(state.recentTransactions.isEmpty())
         assertTrue(state.insights.isEmpty())
+    }
+
+    @Test
+    fun greeting_usesTheSavedName_andFollowsAChange() = runTest {
+        val names = mutableListOf<String>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            getDashboard()(thisMonth).collect { names += it.userName }
+        }
+
+        profile.setName("Riya")
+
+        // Blank until a name is set; the screen then greets "there"
+        assertEquals(listOf("", "Riya"), names)
     }
 
     @Test

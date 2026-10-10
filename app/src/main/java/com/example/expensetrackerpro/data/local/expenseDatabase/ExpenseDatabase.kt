@@ -8,6 +8,8 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
 
+import com.example.expensetrackerpro.data.local.dao.AppDataDao
+import com.example.expensetrackerpro.data.local.dao.CategoryDao
 import com.example.expensetrackerpro.data.local.dao.SampleDataDao
 import com.example.expensetrackerpro.data.local.dao.TransactionDao
 import com.example.expensetrackerpro.data.local.entity.CategoryEntity
@@ -26,6 +28,10 @@ import com.example.expensetrackerpro.data.local.utils.Converters
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun transactionDao(): TransactionDao
+
+    abstract fun categoryDao(): CategoryDao
+
+    abstract fun appDataDao(): AppDataDao
 
     abstract fun sampleDataDao(): SampleDataDao
 }

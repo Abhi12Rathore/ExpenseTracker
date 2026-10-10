@@ -12,6 +12,10 @@ import com.example.expensetrackerpro.domain.repository.ThemePreferenceRepository
 import com.example.expensetrackerpro.domain.repository.TransactionRepository
 import com.example.expensetrackerpro.data.sample.SampleDataSeeder
 import com.example.expensetrackerpro.domain.repository.SampleDataRepository
+import com.example.expensetrackerpro.data.preferences.UserProfileRepositoryImpl
+import com.example.expensetrackerpro.data.repository.AppDataRepositoryImpl
+import com.example.expensetrackerpro.domain.repository.AppDataRepository
+import com.example.expensetrackerpro.domain.repository.UserProfileRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -47,4 +51,12 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindSampleDataRepository(impl: SampleDataSeeder): SampleDataRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUserProfileRepository(impl: UserProfileRepositoryImpl): UserProfileRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAppDataRepository(impl: AppDataRepositoryImpl): AppDataRepository
 }

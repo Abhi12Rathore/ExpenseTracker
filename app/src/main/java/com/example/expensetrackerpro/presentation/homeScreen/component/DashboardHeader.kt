@@ -13,11 +13,13 @@ import com.example.expensetrackerpro.domain.models.DayPeriod
 
 @Composable
 fun DashboardHeader(userName: String, dayPeriod: DayPeriod?) {
+    // Someone who has not given a name is still greeted
+    val name = userName.ifBlank { stringResource(R.string.greeting_default_name) }
     // Blank for the moment before the time of day is known, so the line keeps its height
     val greeting = when (dayPeriod) {
-        DayPeriod.MORNING -> stringResource(R.string.greeting_morning, userName)
-        DayPeriod.AFTERNOON -> stringResource(R.string.greeting_afternoon, userName)
-        DayPeriod.EVENING -> stringResource(R.string.greeting_evening, userName)
+        DayPeriod.MORNING -> stringResource(R.string.greeting_morning, name)
+        DayPeriod.AFTERNOON -> stringResource(R.string.greeting_afternoon, name)
+        DayPeriod.EVENING -> stringResource(R.string.greeting_evening, name)
         null -> ""
     }
 

@@ -74,6 +74,9 @@ import com.example.expensetrackerpro.R
  * (dynamic color off). See the theme notes at the bottom of this file.
  */
 
+// Material's opacity for disabled content
+private const val DISABLED_ALPHA = 0.38f
+
 private val TrackShape = RoundedCornerShape(14.dp)
 private val PillShape = RoundedCornerShape(11.dp)
 private val IconButtonShape = RoundedCornerShape(12.dp)
@@ -127,6 +130,8 @@ fun <T> PillSegmentedControl(
     label: (T) -> String,
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
+    // False shows the choice without letting it change
+    enabled: Boolean = true,
 ) {
     val colors = MaterialTheme.colorScheme
     val selectedIndex = options.indexOf(selected)
@@ -134,6 +139,7 @@ fun <T> PillSegmentedControl(
     BoxWithConstraints(
         modifier = modifier
             .height(44.dp)
+            .alpha(if (enabled) 1f else DISABLED_ALPHA)
             .clip(TrackShape)
             .background(colors.surfaceContainer)
             .padding(3.dp),
@@ -171,6 +177,7 @@ fun <T> PillSegmentedControl(
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null, // the sliding pill is the feedback
+                            enabled = enabled,
                         ) { onSelect(option) }
                         .semantics {
                             role = Role.Tab

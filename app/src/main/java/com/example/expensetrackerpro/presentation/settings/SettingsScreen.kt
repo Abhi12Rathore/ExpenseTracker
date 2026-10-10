@@ -1,71 +1,69 @@
 package com.example.expensetrackerpro.presentation.settings
 
-import androidx.compose.material.icons.filled.DeleteSweep
-import androidx.compose.material.icons.filled.Science
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.TextButton
-import androidx.compose.ui.res.pluralStringResource
-import com.example.expensetrackerpro.presentation.settings.uistate.DeveloperAction
-import com.example.expensetrackerpro.presentation.settings.uistate.DeveloperMessage
-import androidx.compose.foundation.layout.Box
+import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.annotation.StringRes
-import androidx.compose.ui.draw.alpha
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.AuthResult
 import com.example.expensetrackerpro.domain.models.BiometricStatus
+import com.example.expensetrackerpro.domain.models.CategoryCounts
+import com.example.expensetrackerpro.domain.models.ThemeMode
+import com.example.expensetrackerpro.domain.models.UserProfile
+import com.example.expensetrackerpro.presentation.common.filter.components.PillSegmentedControl
 import com.example.expensetrackerpro.presentation.lock.rememberBiometricAuthenticator
+import com.example.expensetrackerpro.presentation.settings.components.DeleteAllDataDialog
+import com.example.expensetrackerpro.presentation.settings.components.EditProfileDialog
 import com.example.expensetrackerpro.presentation.settings.components.LockTimeoutDialog
+import com.example.expensetrackerpro.presentation.settings.components.ProfileCard
+import com.example.expensetrackerpro.presentation.settings.components.SettingsDivider
+import com.example.expensetrackerpro.presentation.settings.components.SettingsItem
+import com.example.expensetrackerpro.presentation.settings.components.SettingsSectionCard
 import com.example.expensetrackerpro.presentation.settings.components.SettingsSwitchItem
-import com.example.expensetrackerpro.R
-import com.example.expensetrackerpro.presentation.settings.components.ThemeDialog
+import com.example.expensetrackerpro.presentation.settings.components.SoonPill
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsEvent
+import com.example.expensetrackerpro.presentation.settings.uistate.SettingsMessage
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsUiState
-import com.example.expensetrackerpro.ui.theme.extendedColors
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
+import com.example.expensetrackerpro.ui.theme.extendedColors
 
 @Composable
 fun SettingsScreen(
@@ -98,18 +96,182 @@ fun SettingsScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsContent(
     state: SettingsUiState,
     onEvent: (SettingsEvent) -> Unit,
     onNavigateToCategories: () -> Unit
 ) {
-    if (state.isThemeDialogOpen) {
-        ThemeDialog(
-            selectedMode = state.themeMode,
-            onModeSelected = { onEvent(SettingsEvent.ThemeModeSelected(it)) },
-            onDismiss = { onEvent(SettingsEvent.ThemeDialogDismissed) }
+    SettingsDialogs(state = state, onEvent = onEvent)
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val appLockErrorText = state.appLockError?.enableErrorRes()?.let { stringResource(it) }
+    LaunchedEffect(appLockErrorText) {
+        if (appLockErrorText == null) return@LaunchedEffect
+        snackbarHostState.showSnackbar(appLockErrorText)
+        onEvent(SettingsEvent.AppLockErrorShown)
+    }
+
+    val messageText = when (val message = state.message) {
+        is SettingsMessage.SampleDataLoaded -> pluralStringResource(
+            R.plurals.settings_sample_data_loaded,
+            message.transactionCount,
+            message.transactionCount
+        )
+        SettingsMessage.AllDataDeleted -> stringResource(R.string.settings_all_data_deleted)
+        SettingsMessage.Failed -> stringResource(R.string.settings_data_action_failed)
+        null -> null
+    }
+    LaunchedEffect(state.message) {
+        if (messageText == null) return@LaunchedEffect
+        snackbarHostState.showSnackbar(messageText)
+        onEvent(SettingsEvent.MessageShown)
+    }
+
+    val palette = MaterialTheme.extendedColors.categoryPalette
+
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.settings_title),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.semantics { heading() }
+            )
+
+            ProfileCard(
+                profile = state.profile,
+                onClick = { onEvent(SettingsEvent.ProfileClicked) }
+            )
+
+            SettingsSectionCard(title = stringResource(R.string.settings_section_appearance)) {
+                val themeLabels = ThemeMode.entries.associateWith { stringResource(it.labelRes()) }
+                SettingsItem(
+                    icon = Icons.Default.DarkMode,
+                    iconTint = palette.amber,
+                    title = stringResource(R.string.settings_theme),
+                    subtitle = stringResource(R.string.settings_theme_subtitle),
+                    below = {
+                        PillSegmentedControl(
+                            options = ThemeMode.entries,
+                            selected = state.themeMode,
+                            label = { themeLabels.getValue(it) },
+                            onSelect = { onEvent(SettingsEvent.ThemeModeSelected(it)) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                )
+            }
+
+            SettingsSectionCard(title = stringResource(R.string.settings_section_security)) {
+                SettingsSwitchItem(
+                    icon = Icons.Default.Lock,
+                    title = stringResource(R.string.settings_app_lock),
+                    subtitle = stringResource(state.biometricStatus.appLockSubtitleRes()),
+                    checked = state.appLock.enabled,
+                    onCheckedChange = { onEvent(SettingsEvent.AppLockToggled(it)) },
+                    iconTint = palette.teal,
+                    // Stays switchable while on, so it can always be turned off
+                    enabled = state.isAppLockAvailable || state.appLock.enabled
+                )
+                SettingsDivider()
+                SettingsItem(
+                    icon = Icons.Default.Timer,
+                    iconTint = palette.indigo,
+                    title = stringResource(R.string.settings_lock_after),
+                    subtitle = stringResource(state.appLock.timeout.labelRes()),
+                    onClick = { onEvent(SettingsEvent.LockAfterClicked) },
+                    enabled = state.appLock.enabled
+                )
+            }
+
+            SettingsSectionCard(title = stringResource(R.string.settings_section_data)) {
+                SettingsItem(
+                    icon = Icons.Default.Category,
+                    iconTint = palette.blueGrey,
+                    title = stringResource(R.string.settings_categories),
+                    subtitle = categoriesSubtitle(state.categoryCounts),
+                    onClick = onNavigateToCategories
+                )
+                SettingsDivider()
+                SettingsItem(
+                    icon = Icons.Default.CloudUpload,
+                    iconTint = palette.blue,
+                    title = stringResource(R.string.settings_export),
+                    subtitle = stringResource(R.string.settings_export_subtitle),
+                    enabled = false,
+                    trailing = { SoonPill() }
+                )
+            }
+
+            SettingsSectionCard(title = stringResource(R.string.settings_section_about)) {
+                SettingsItem(
+                    icon = Icons.Default.Info,
+                    iconTint = palette.purple,
+                    title = stringResource(R.string.settings_version),
+                    subtitle = state.versionName
+                )
+            }
+
+            SettingsSectionCard(
+                title = stringResource(R.string.settings_section_danger),
+                titleColor = MaterialTheme.colorScheme.error
+            ) {
+                SettingsItem(
+                    icon = Icons.Default.DeleteForever,
+                    iconTint = MaterialTheme.colorScheme.error,
+                    title = stringResource(R.string.settings_delete_all),
+                    subtitle = stringResource(R.string.settings_delete_all_subtitle),
+                    titleColor = MaterialTheme.colorScheme.error,
+                    onClick = { onEvent(SettingsEvent.DeleteAllDataClicked) },
+                    enabled = !state.isDataActionRunning
+                )
+            }
+
+            if (state.isDeveloperSectionVisible) {
+                SettingsSectionCard(title = stringResource(R.string.settings_section_developer)) {
+                    SettingsItem(
+                        icon = Icons.Default.Science,
+                        iconTint = palette.green,
+                        title = stringResource(R.string.settings_load_sample_data),
+                        subtitle = stringResource(R.string.settings_load_sample_data_subtitle),
+                        onClick = { onEvent(SettingsEvent.LoadSampleDataClicked) },
+                        enabled = !state.isDataActionRunning
+                    )
+                }
+            }
+
+            Text(
+                text = stringResource(R.string.settings_footer),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.outline,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+/** Whichever dialog the state says is open. */
+@Composable
+private fun SettingsDialogs(state: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
+    state.profileNameDraft?.let { draft ->
+        EditProfileDialog(
+            name = draft,
+            onNameChange = { onEvent(SettingsEvent.ProfileNameChanged(it)) },
+            onSave = { onEvent(SettingsEvent.ProfileNameSaved) },
+            onDismiss = { onEvent(SettingsEvent.ProfileDialogDismissed) }
         )
     }
 
@@ -121,260 +283,53 @@ fun SettingsContent(
         )
     }
 
-    val snackbarHostState = remember { SnackbarHostState() }
-    val appLockErrorText = state.appLockError?.enableErrorRes()?.let { stringResource(it) }
-    LaunchedEffect(appLockErrorText) {
-        if (appLockErrorText == null) return@LaunchedEffect
-        snackbarHostState.showSnackbar(appLockErrorText)
-        onEvent(SettingsEvent.AppLockErrorShown)
-    }
-
-    state.pendingDeveloperAction?.let { action ->
-        DeveloperActionDialog(
-            action = action,
-            onConfirm = { onEvent(SettingsEvent.DeveloperActionConfirmed) },
-            onDismiss = { onEvent(SettingsEvent.DeveloperActionDismissed) }
+    state.deleteAllConfirmation?.let { confirmation ->
+        DeleteAllDataDialog(
+            confirmation = confirmation,
+            isConfirmEnabled = state.isDeleteAllConfirmed,
+            onConfirmationChange = { onEvent(SettingsEvent.DeleteAllDataTextChanged(it)) },
+            onConfirm = { onEvent(SettingsEvent.DeleteAllDataConfirmed) },
+            onDismiss = { onEvent(SettingsEvent.DeleteAllDataDismissed) }
         )
     }
 
-    val developerMessageText = when (val message = state.developerMessage) {
-        is DeveloperMessage.SampleDataLoaded -> pluralStringResource(
-            R.plurals.settings_sample_data_loaded,
-            message.transactionCount,
-            message.transactionCount
+    if (state.isLoadSampleDialogOpen) {
+        LoadSampleDataDialog(
+            onConfirm = { onEvent(SettingsEvent.LoadSampleDataConfirmed) },
+            onDismiss = { onEvent(SettingsEvent.LoadSampleDataDismissed) }
         )
-        DeveloperMessage.AllDataCleared -> stringResource(R.string.settings_all_data_cleared)
-        DeveloperMessage.Failed -> stringResource(R.string.settings_developer_action_failed)
-        null -> null
-    }
-    LaunchedEffect(state.developerMessage) {
-        if (developerMessageText == null) return@LaunchedEffect
-        snackbarHostState.showSnackbar(developerMessageText)
-        onEvent(SettingsEvent.DeveloperMessageShown)
-    }
-
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-        ) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Settings",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-            Text(
-                text = "Manage your application settings",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.outline,
-                modifier =Modifier.padding(horizontal = 16.dp)
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-            SettingsSection(title = "Appearance") {
-                SettingsItem(
-                    icon = Icons.Default.DarkMode,
-                    title = stringResource(R.string.settings_theme),
-                    subtitle = stringResource(state.themeMode.labelRes()),
-                    iconTint = MaterialTheme.extendedColors.categoryPalette.amber,
-                    onClick = { onEvent(SettingsEvent.ThemeClicked) }
-                )
-            }
-
-            SettingsSection(title = stringResource(R.string.settings_section_security)) {
-                SettingsSwitchItem(
-                    icon = Icons.Default.Lock,
-                    title = stringResource(R.string.settings_app_lock),
-                    subtitle = stringResource(state.biometricStatus.appLockSubtitleRes()),
-                    checked = state.appLock.enabled,
-                    onCheckedChange = { onEvent(SettingsEvent.AppLockToggled(it)) },
-                    iconTint = MaterialTheme.extendedColors.categoryPalette.teal,
-                    // Stays switchable while on, so it can always be turned off
-                    enabled = state.isAppLockAvailable || state.appLock.enabled
-                )
-                SettingsItem(
-                    icon = Icons.Default.Timer,
-                    title = stringResource(R.string.settings_lock_after),
-                    subtitle = stringResource(state.appLock.timeout.labelRes()),
-                    onClick = { onEvent(SettingsEvent.LockAfterClicked) },
-                    iconTint = MaterialTheme.extendedColors.categoryPalette.indigo,
-                    enabled = state.appLock.enabled
-                )
-            }
-
-            SettingsSection(title = "Categories") {
-                SettingsItem(
-                    icon = Icons.Default.Label,
-                    title = "Manage Categories",
-                    subtitle = "Add, edit or delete categories",
-                    onClick = onNavigateToCategories,
-                    iconTint = MaterialTheme.extendedColors.categoryPalette.blueGrey,
-                )
-            }
-
-            SettingsSection(title = "Data") {
-                SettingsItem(
-                    icon = Icons.Default.DeleteForever,
-                    title = "Reset All Data",
-                    subtitle = "Permanently delete all transactions",
-                    titleColor = MaterialTheme.colorScheme.error,
-                    onClick = { /* Show Confirmation Dialog */ },
-                    iconTint = MaterialTheme.colorScheme.error,
-                )
-            }
-
-            if (state.isDeveloperSectionVisible) {
-                SettingsSection(title = stringResource(R.string.settings_section_developer)) {
-                    SettingsItem(
-                        icon = Icons.Default.Science,
-                        title = stringResource(R.string.settings_load_sample_data),
-                        subtitle = stringResource(R.string.settings_load_sample_data_subtitle),
-                        onClick = { onEvent(SettingsEvent.DeveloperActionClicked(DeveloperAction.LOAD_SAMPLE_DATA)) },
-                        iconTint = MaterialTheme.extendedColors.categoryPalette.green,
-                        enabled = !state.isDeveloperActionRunning
-                    )
-                    SettingsItem(
-                        icon = Icons.Default.DeleteSweep,
-                        title = stringResource(R.string.settings_clear_all_data),
-                        subtitle = stringResource(R.string.settings_clear_all_data_subtitle),
-                        titleColor = MaterialTheme.colorScheme.error,
-                        onClick = { onEvent(SettingsEvent.DeveloperActionClicked(DeveloperAction.CLEAR_ALL_DATA)) },
-                        iconTint = MaterialTheme.colorScheme.error,
-                        enabled = !state.isDeveloperActionRunning
-                    )
-                }
-            }
-
-            SettingsSection(title = "About") {
-                SettingsItem(
-                    icon = Icons.Default.Info,
-                    title = "Version",
-                    subtitle = "1.0.0 (Stable)",
-                    onClick = {},
-                    iconTint = MaterialTheme.extendedColors.categoryPalette.purple,
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "❤️ Made with Jetpack Compose",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                }
-            }
-        }
     }
 }
 
 @Composable
-private fun DeveloperActionDialog(
-    action: DeveloperAction,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    val isClear = action == DeveloperAction.CLEAR_ALL_DATA
-
+private fun LoadSampleDataDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = {
-            Text(
-                stringResource(
-                    if (isClear) R.string.settings_clear_all_data_dialog_title
-                    else R.string.settings_load_sample_data_dialog_title
-                )
-            )
-        },
-        text = {
-            Text(
-                stringResource(
-                    if (isClear) R.string.settings_clear_all_data_dialog_message
-                    else R.string.settings_load_sample_data_dialog_message
-                )
-            )
-        },
+        title = { Text(stringResource(R.string.settings_load_sample_data_dialog_title)) },
+        text = { Text(stringResource(R.string.settings_load_sample_data_dialog_message)) },
         confirmButton = {
             TextButton(
                 onClick = onConfirm,
                 colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
             ) {
-                Text(
-                    stringResource(
-                        if (isClear) R.string.settings_clear_all_data_confirm
-                        else R.string.settings_load_sample_data_confirm
-                    )
-                )
+                Text(stringResource(R.string.settings_load_sample_data_confirm))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.settings_developer_action_cancel))
+                Text(stringResource(R.string.settings_dialog_cancel))
             }
         }
     )
 }
 
+/** "25 categories · 3 custom" */
 @Composable
-fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Column(modifier = Modifier.padding(vertical = 8.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
-        )
-        content()
-        HorizontalDivider(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
-            thickness = 0.5.dp,
-            color = MaterialTheme.colorScheme.outlineVariant
-        )
-    }
-}
-
-@Composable
-fun SettingsItem(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    titleColor: Color = MaterialTheme.colorScheme.onSurface,
-    onClick: () -> Unit,
-    iconTint:Color,
-    enabled: Boolean = true
-) {
-    Surface(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = Modifier.fillMaxWidth(),
-        color = Color.Transparent
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(horizontal = 20.dp, vertical = 8.dp)
-                .alpha(if (enabled) 1f else DISABLED_ALPHA),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(icon, contentDescription = null, tint = iconTint)
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(text = title, style = MaterialTheme.typography.bodyLarge, color = titleColor, fontWeight = FontWeight.Medium)
-                Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
-            }
-        }
-    }
-}
-
-// Material's opacity for disabled content
-private const val DISABLED_ALPHA = 0.38f
+private fun categoriesSubtitle(counts: CategoryCounts): String = stringResource(
+    R.string.settings_categories_subtitle,
+    pluralStringResource(R.plurals.settings_categories_count, counts.total, counts.total),
+    pluralStringResource(R.plurals.settings_categories_custom, counts.custom, counts.custom)
+)
 
 @StringRes
 private fun BiometricStatus.appLockSubtitleRes(): Int = when (this) {
@@ -394,38 +349,18 @@ private fun AuthResult.enableErrorRes(): Int? = when (this) {
     AuthResult.ERROR -> R.string.app_lock_enable_error
 }
 
-@PreviewLightDark
-@Composable
-private fun LockAfterRowPreview() {
-    ExpenseTrackerProTheme {
-        Surface {
-            Column {
-                SettingsItem(
-                    icon = Icons.Default.Timer,
-                    title = stringResource(R.string.settings_lock_after),
-                    subtitle = stringResource(R.string.lock_timeout_30_seconds),
-                    onClick = {},
-                    iconTint = MaterialTheme.extendedColors.categoryPalette.indigo
-                )
-                SettingsItem(
-                    icon = Icons.Default.Timer,
-                    title = stringResource(R.string.settings_lock_after),
-                    subtitle = stringResource(R.string.lock_timeout_30_seconds),
-                    onClick = {},
-                    iconTint = MaterialTheme.extendedColors.categoryPalette.indigo,
-                    enabled = false
-                )
-            }
-        }
-    }
-}
+private val previewState = SettingsUiState(
+    profile = UserProfile(name = "Abhishek"),
+    categoryCounts = CategoryCounts(total = 28, custom = 3),
+    versionName = "1.0"
+)
 
 @PreviewLightDark
 @Composable
-private fun SettingsContentAppLockOnPreview() {
+private fun SettingsContentPreview() {
     ExpenseTrackerProTheme {
         SettingsContent(
-            state = SettingsUiState(appLock = AppLockSettings(enabled = true)),
+            state = previewState.copy(appLock = AppLockSettings(enabled = true)),
             onEvent = {},
             onNavigateToCategories = {}
         )
@@ -437,7 +372,7 @@ private fun SettingsContentAppLockOnPreview() {
 private fun SettingsContentDeveloperPreview() {
     ExpenseTrackerProTheme {
         SettingsContent(
-            state = SettingsUiState(isDeveloperSectionVisible = true),
+            state = previewState.copy(profile = UserProfile(), isDeveloperSectionVisible = true),
             onEvent = {},
             onNavigateToCategories = {}
         )
@@ -446,10 +381,10 @@ private fun SettingsContentDeveloperPreview() {
 
 @PreviewLightDark
 @Composable
-private fun SettingsContentPreview() {
+private fun SettingsContentDeleteAllPreview() {
     ExpenseTrackerProTheme {
         SettingsContent(
-            state = SettingsUiState(),
+            state = previewState.copy(deleteAllConfirmation = "DELETE"),
             onEvent = {},
             onNavigateToCategories = {}
         )

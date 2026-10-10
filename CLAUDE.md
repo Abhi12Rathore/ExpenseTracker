@@ -20,9 +20,10 @@ Goal: production-quality portfolio project.
 - `data/local/` → Room: `entity/`, `dao/`, `expenseDatabase/`, `model/` (query result classes)
 - `data/mapper/` → entity ↔ domain mappers
 - `data/repository/` → repository implementations
-- `data/preferences/` → DataStore-backed repositories (theme, app lock); `data/security/` → Android biometric availability
+- `data/preferences/` → DataStore-backed repositories (theme, app lock, user profile); `data/security/` → Android biometric availability
 - `domain/` → `models/`, `repository/` (interfaces), `security/` (device capability interfaces), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
 - `presentation/<feature>/` → Screen, ViewModel, `components/`, `uistate/`
+- `presentation/common/category/editor/` → the add/edit category sheet shared by Manage Categories and Add/Edit Transaction: its state, events and `CategoryEditorReducer`; the host ViewModel keeps the state and wraps the events
 - `presentation/lock/` → lock screen and the biometric prompt wrapper; lock state itself lives in `MainViewModel`
 - `ui/theme/` → colors, typography, theme
 - `utils/` → shared helpers
@@ -61,11 +62,11 @@ Apply these to all new and changed code. Existing violations are tracked under K
 ## Database
 - Pre-release: every schema change bumps the version; `fallbackToDestructiveMigration` resets the data. From the first public release, write a tested Migration instead.
 - Default categories (`domain/models/DefaultCategories`) are seeded in `AppDatabase` `onCreate`.
-- Debug builds have Settings → Developer → "Load sample data" / "Clear all data" (`data/sample/`), gated by `BuildInfo.isDebug`.
+- Debug builds have Settings → Developer → "Load sample data" (`data/sample/`), gated by `BuildInfo.isDebug`. "Delete all data" (Settings → Danger zone, `AppDataRepository`) is a user feature in every build.
 
 ## Known issues (remove each line once fixed)
 Planned for the `refactor/lld` branch:
-- `TransactionDao` has 19 methods covering transactions, categories and dashboard queries. Split it per aggregate.
+- `TransactionDao` has 19 methods covering transactions, categories and dashboard queries. Split it per aggregate. `CategoryDao` (usage stats, reassign-then-delete) is the start: move the category CRUD there.
 - Money is `Double` in entities and domain models. Migrate to `Money` (paise as `Long`) with a Room `Migration`.
 - `Transaction` stores `categoryName` alongside `categoryId`, so a category rename leaves stale names. Read it via JOIN/`@Relation` and drop the column (migration).
 - No shared error model. Introduce `DomainError` + `Result`.

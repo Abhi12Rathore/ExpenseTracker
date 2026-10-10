@@ -1,7 +1,9 @@
 package com.example.expensetrackerpro.data.mapper
 
 import com.example.expensetrackerpro.data.local.entity.CategoryEntity
+import com.example.expensetrackerpro.data.local.model.CategoryUsageEntity
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.CategoryUsage
 
 fun CategoryEntity.toDomain(): Category = Category(
     id = id,
@@ -17,4 +19,11 @@ fun Category.toEntity(): CategoryEntity = CategoryEntity(
     type = type,
     icon = icon,
     isCustom = isCustom
+)
+
+fun CategoryUsageEntity.toDomain(): CategoryUsage = CategoryUsage(
+    category = category.toDomain(),
+    totalCount = totalCount,
+    periodCount = periodCount,
+    periodAmount = periodAmount
 )

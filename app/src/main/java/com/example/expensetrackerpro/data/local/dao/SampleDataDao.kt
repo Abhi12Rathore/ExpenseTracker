@@ -23,9 +23,6 @@ abstract class SampleDataDao {
     @Query("DELETE FROM transactions")
     abstract suspend fun deleteAllTransactions()
 
-    @Query("DELETE FROM categories WHERE isCustom = 1")
-    abstract suspend fun deleteCustomCategories()
-
     /** Adds those of [categories] that no stored category matches by name and type; returns all stored. */
     @Transaction
     open suspend fun addMissingCategories(categories: List<CategoryEntity>): List<CategoryEntity> {
@@ -40,12 +37,5 @@ abstract class SampleDataDao {
     open suspend fun replaceAllTransactions(transactions: List<TransactionEntity>) {
         deleteAllTransactions()
         insertTransactions(transactions)
-    }
-
-    // Transactions go first: a category that still has some can't be deleted
-    @Transaction
-    open suspend fun clearAll() {
-        deleteAllTransactions()
-        deleteCustomCategories()
     }
 }

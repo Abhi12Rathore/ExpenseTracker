@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.fakes
 
 import com.example.expensetrackerpro.domain.repository.DashboardRepository
 import com.example.expensetrackerpro.domain.repository.TransactionRepository
+import com.example.expensetrackerpro.domain.repository.UserProfileRepository
 import com.example.expensetrackerpro.domain.time.TimeProvider
 import com.example.expensetrackerpro.domain.usecase.dashboard.CalculateFinancialSummaryUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.CalculateSavingsRateUseCase
@@ -22,12 +23,14 @@ import com.example.expensetrackerpro.domain.usecase.dashboard.RankCategorySpendi
 import com.example.expensetrackerpro.domain.usecase.filter.GetComparableRangeUseCase
 import com.example.expensetrackerpro.domain.usecase.filter.GetDateRangeUseCase
 import com.example.expensetrackerpro.domain.usecase.filter.StepPeriodUseCase
+import com.example.expensetrackerpro.domain.usecase.profile.GetUserProfileUseCase
 
 /** The real dashboard facade and every use case under it, reading from the given repositories. */
 fun getDashboardUseCase(
     transactions: TransactionRepository,
     dashboard: DashboardRepository,
-    timeProvider: TimeProvider
+    timeProvider: TimeProvider,
+    profile: UserProfileRepository = FakeUserProfileRepository()
 ): GetDashboardUseCase {
     val getDateRange = GetDateRangeUseCase(timeProvider)
     val getComparableRange =
@@ -51,6 +54,7 @@ fun getDashboardUseCase(
         getMonthlyTrend = getMonthlyTrend,
         generateSmartInsights = GenerateSmartInsightsUseCase(),
         getDayPeriod = GetDayPeriodUseCase(),
+        getUserProfile = GetUserProfileUseCase(profile),
         getDateRange = getDateRange,
         timeProvider = timeProvider
     )

@@ -5,6 +5,9 @@ data class Dashboard(
     // Time of day for the greeting; null until it has been read
     val dayPeriod: DayPeriod? = null,
 
+    // Who the greeting is for; blank until a name has been set
+    val userName: String = "",
+
     val summary: FinancialSummary = FinancialSummary(),
 
     // Null for a custom range, which has no previous period to compare with

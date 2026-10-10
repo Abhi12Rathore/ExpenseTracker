@@ -2,10 +2,15 @@ package com.example.expensetrackerpro.presentation
 
 import androidx.lifecycle.SavedStateHandle
 import com.example.expensetrackerpro.domain.models.CategoryIcon
+import com.example.expensetrackerpro.domain.models.CategoryNameValidation
 import com.example.expensetrackerpro.domain.models.DateChoice
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.category.AddCategoryUseCase
 import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesByTypeUseCase
+import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesUseCase
+import com.example.expensetrackerpro.domain.usecase.category.SaveCategoryUseCase
+import com.example.expensetrackerpro.domain.usecase.category.UpdateCategoryUseCase
+import com.example.expensetrackerpro.domain.usecase.category.ValidateCategoryNameUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.AddTransactionUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.DeleteTransactionUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.FormatAmountInputUseCase
@@ -22,6 +27,8 @@ import com.example.expensetrackerpro.fakes.FakeTransactionRepository
 import com.example.expensetrackerpro.fakes.category
 import com.example.expensetrackerpro.fakes.millisAt
 import com.example.expensetrackerpro.fakes.transaction
+import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorEvent
+import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorReducer
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.AddEditTransactionViewModel
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEffect
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionError
@@ -71,7 +78,14 @@ class AddEditTransactionViewModelTest {
         sanitizeAmountInput = SanitizeAmountInputUseCase(),
         formatAmountInput = FormatAmountInputUseCase(),
         resolveTransactionDate = ResolveTransactionDateUseCase(timeProvider),
-        addCategory = AddCategoryUseCase(categories),
+        getCategories = GetCategoriesUseCase(categories),
+        saveCategory = SaveCategoryUseCase(
+            GetCategoriesUseCase(categories),
+            ValidateCategoryNameUseCase(),
+            AddCategoryUseCase(categories),
+            UpdateCategoryUseCase(categories)
+        ),
+        categoryEditorReducer = CategoryEditorReducer(ValidateCategoryNameUseCase()),
         savedStateHandle = SavedStateHandle(
             if (transactionId != null) mapOf("transactionId" to transactionId) else emptyMap()
         )
@@ -85,6 +99,9 @@ class AddEditTransactionViewModelTest {
         }
         return effects
     }
+
+    private fun AddEditTransactionViewModel.editor(event: CategoryEditorEvent) =
+        onEvent(AddEditTransactionEvent.CategoryEditor(event))
 
     private fun AddEditTransactionViewModel.fillValidExpense() {
         onEvent(AddEditTransactionEvent.AmountChanged("120.5"))
@@ -274,10 +291,24 @@ class AddEditTransactionViewModelTest {
         val viewModel = viewModel()
 
         viewModel.onEvent(AddEditTransactionEvent.CategorySheetOpened)
-        assertTrue(viewModel.uiState.value.isCategorySheetVisible)
+        val editor = requireNotNull(viewModel.uiState.value.categoryEditor)
 
-        viewModel.onEvent(AddEditTransactionEvent.CategorySheetDismissed)
-        assertFalse(viewModel.uiState.value.isCategorySheetVisible)
+        // A new category of the type the transaction has
+        assertFalse(editor.isEditMode)
+        assertEquals(TransactionType.EXPENSE, editor.type)
+
+        viewModel.editor(CategoryEditorEvent.Dismissed)
+        assertNull(viewModel.uiState.value.categoryEditor)
+    }
+
+    @Test
+    fun categorySheet_opensOnTheTransactionsType() = runTest {
+        val viewModel = viewModel()
+        viewModel.onEvent(AddEditTransactionEvent.TypeChanged(TransactionType.INCOME))
+
+        viewModel.onEvent(AddEditTransactionEvent.CategorySheetOpened)
+
+        assertEquals(TransactionType.INCOME, viewModel.uiState.value.categoryEditor?.type)
     }
 
     @Test
@@ -285,15 +316,62 @@ class AddEditTransactionViewModelTest {
         val viewModel = viewModel()
         viewModel.onEvent(AddEditTransactionEvent.CategorySheetOpened)
 
-        viewModel.onEvent(AddEditTransactionEvent.CategoryAdded("Gym", CategoryIcon.FITNESS_CENTER, TransactionType.EXPENSE))
+        viewModel.editor(CategoryEditorEvent.NameChanged("  Gym "))
+        viewModel.editor(CategoryEditorEvent.IconSelected(CategoryIcon.FITNESS_CENTER))
+        viewModel.editor(CategoryEditorEvent.SaveClicked)
         val state = viewModel.uiState.value
         val gym = categories.current.single { it.name == "Gym" }
 
-        assertFalse(state.isCategorySheetVisible)
+        assertNull(state.categoryEditor)
         assertEquals(listOf("Food", "Bills", "Gym"), state.availableCategories.map { it.name })
         assertTrue(gym.isCustom)
+        assertEquals(CategoryIcon.FITNESS_CENTER, gym.icon)
         assertEquals(gym.id, state.selectedCategoryId)
         assertEquals(gym, state.selectedCategory)
+    }
+
+    @Test
+    fun aDuplicateCategoryName_keepsTheSheetOpenWithAnError_andStoresNothing() = runTest {
+        val viewModel = viewModel()
+        viewModel.onEvent(AddEditTransactionEvent.CategorySheetOpened)
+
+        viewModel.editor(CategoryEditorEvent.NameChanged("bills"))
+        viewModel.editor(CategoryEditorEvent.SaveClicked)
+        val editor = requireNotNull(viewModel.uiState.value.categoryEditor)
+
+        assertEquals(CategoryNameValidation.DUPLICATE, editor.nameError)
+        assertFalse(editor.isSaveEnabled)
+        assertEquals(listOf(food, bills, salary), categories.current)
+    }
+
+    @Test
+    fun aNameIsCheckedAgainstTheTypeChosenInTheSheet_notTheTransactions() = runTest {
+        val viewModel = viewModel()
+        viewModel.onEvent(AddEditTransactionEvent.CategorySheetOpened)
+
+        // Free among expenses, taken among income
+        viewModel.editor(CategoryEditorEvent.NameChanged("Salary"))
+        assertNull(viewModel.uiState.value.categoryEditor?.nameError)
+
+        viewModel.editor(CategoryEditorEvent.TypeChanged(TransactionType.INCOME))
+        assertEquals(CategoryNameValidation.DUPLICATE, viewModel.uiState.value.categoryEditor?.nameError)
+    }
+
+    @Test
+    fun aCategoryAddedForTheOtherType_isStoredButNotSelected() = runTest {
+        val viewModel = viewModel()
+        viewModel.onEvent(AddEditTransactionEvent.CategorySelected(food.id))
+        viewModel.onEvent(AddEditTransactionEvent.CategorySheetOpened)
+
+        viewModel.editor(CategoryEditorEvent.TypeChanged(TransactionType.INCOME))
+        viewModel.editor(CategoryEditorEvent.NameChanged("Bonus"))
+        viewModel.editor(CategoryEditorEvent.SaveClicked)
+        val state = viewModel.uiState.value
+
+        assertEquals(TransactionType.INCOME, categories.current.single { it.name == "Bonus" }.type)
+        assertNull(state.categoryEditor)
+        assertEquals(food.id, state.selectedCategoryId)
+        assertEquals(listOf("Food", "Bills"), state.availableCategories.map { it.name })
     }
 
     // --- Date

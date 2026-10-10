@@ -91,7 +91,7 @@ fun HomeContent(
             // 1. Greeting Layer
             item {
                 DashboardHeader(
-                    userName = "Abhishek",
+                    userName = dashboard.userName,
                     dayPeriod = dashboard.dayPeriod
                 )
             }

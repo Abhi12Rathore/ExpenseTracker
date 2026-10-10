@@ -5,8 +5,12 @@ import com.example.expensetrackerpro.domain.models.LockTimeout
 import com.example.expensetrackerpro.domain.models.ThemeMode
 
 sealed interface SettingsEvent {
-    data object ThemeClicked : SettingsEvent
-    data object ThemeDialogDismissed : SettingsEvent
+    // Profile: the card opens a dialog that edits the name
+    data object ProfileClicked : SettingsEvent
+    data class ProfileNameChanged(val name: String) : SettingsEvent
+    data object ProfileNameSaved : SettingsEvent
+    data object ProfileDialogDismissed : SettingsEvent
+
     data class ThemeModeSelected(val mode: ThemeMode) : SettingsEvent
 
     // The user may have changed their screen lock in system settings while away
@@ -19,9 +23,16 @@ sealed interface SettingsEvent {
     data object LockTimeoutDialogDismissed : SettingsEvent
     data class LockTimeoutSelected(val timeout: LockTimeout) : SettingsEvent
 
-    // Developer section, debug builds only. Both actions ask before they run.
-    data class DeveloperActionClicked(val action: DeveloperAction) : SettingsEvent
-    data object DeveloperActionConfirmed : SettingsEvent
-    data object DeveloperActionDismissed : SettingsEvent
-    data object DeveloperMessageShown : SettingsEvent
+    // Danger zone: the delete only runs once the confirmation word has been typed
+    data object DeleteAllDataClicked : SettingsEvent
+    data class DeleteAllDataTextChanged(val text: String) : SettingsEvent
+    data object DeleteAllDataConfirmed : SettingsEvent
+    data object DeleteAllDataDismissed : SettingsEvent
+
+    // Developer section, debug builds only. Loading asks before it runs.
+    data object LoadSampleDataClicked : SettingsEvent
+    data object LoadSampleDataConfirmed : SettingsEvent
+    data object LoadSampleDataDismissed : SettingsEvent
+
+    data object MessageShown : SettingsEvent
 }
