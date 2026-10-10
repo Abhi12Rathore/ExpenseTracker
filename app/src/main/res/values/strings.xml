@@ -148,7 +148,8 @@
 
     <!-- Bottom navigation -->
     <string name="nav_insights">Insights</string>
-    <string name="nav_transactions">Transactions</string>
+    <string name="nav_transactions">History</string>
+    <string name="nav_add_transaction">Add transaction</string>
     <string name="nav_settings">Settings</string>
 
     <!-- Transactions -->
@@ -163,7 +164,6 @@
     <string name="transactions_clear_category_filter">Clear category filter</string>
     <string name="transactions_transaction_deleted">Transaction deleted</string>
     <string name="transactions_undo">Undo</string>
-    <string name="transactions_add">Add</string>
     <!-- Type chips: name, then how many it lists -->
     <string name="transactions_filter_all">All</string>
     <string name="transactions_filter_chip">%1$s %2$d</string>
@@ -189,7 +189,7 @@
     <string name="transactions_empty_this_year">this year</string>
     <string name="transactions_empty_in_period">in %1$s</string>
     <string name="transactions_empty_all_time">yet</string>
-    <string name="transactions_empty_hint">Tap Add to record one</string>
+    <string name="transactions_empty_hint">Tap + to record one</string>
 
     <!-- Add / edit transaction -->
     <string name="transaction_add_expense">Add expense</string>

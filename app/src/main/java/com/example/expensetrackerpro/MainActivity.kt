@@ -10,9 +10,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -119,9 +123,15 @@ class MainActivity : FragmentActivity() {
                 val navController = rememberNavController()
                 val appContentState = rememberSaveableStateHolder()
 
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    // The system bar insets are applied here once; consuming them stops the
-                    // Scaffolds and bars nested inside from adding them again
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    contentWindowInsets = WindowInsets.systemBars.only(
+                        WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+                    )
+                ) { innerPadding ->
+                    // The top and side insets are applied here once; consuming them stops the
+                    // Scaffolds and bars nested inside from adding them again. The bottom one is
+                    // left to each screen, so the bottom bar can draw behind the gesture bar
                     Box(
                         modifier = Modifier
                             .padding(innerPadding)
