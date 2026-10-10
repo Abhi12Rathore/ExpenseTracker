@@ -32,7 +32,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.withResumed
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.R
-import com.example.expensetrackerpro.presentation.main.uistate.LockMessage
 import com.example.expensetrackerpro.presentation.main.uistate.MainEvent
 
 @Composable
