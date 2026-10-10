@@ -8,13 +8,13 @@ data class CategoryShare(
 
 /** Spending per category, highest first: the leaders in [top] and the tail grouped in [others]. */
 data class CategoryRanking(
-    val total: Double = 0.0,
+    val total: Money = Money.ZERO,
     val top: List<CategoryShare> = emptyList(),
     val others: List<CategoryShare> = emptyList()
 ) {
     val categoryCount: Int get() = top.size + others.size
 
-    val othersAmount: Double get() = others.sumOf { it.category.amount }
+    val othersAmount: Money get() = others.sumOfMoney { it.category.amount }
 
-    val othersFraction: Float get() = if (total > 0) (othersAmount / total).toFloat() else 0f
+    val othersFraction: Float get() = othersAmount.ratioTo(total)
 }

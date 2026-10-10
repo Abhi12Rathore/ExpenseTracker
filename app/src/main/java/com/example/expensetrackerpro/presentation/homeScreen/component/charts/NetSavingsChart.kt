@@ -31,12 +31,12 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.MonthlyNet
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.ui.theme.extendedColors
 import com.example.expensetrackerpro.utils.CurrencyFormatter
 import com.example.expensetrackerpro.utils.DateFormatter
-import kotlin.math.abs
 import kotlin.math.max
 
 private val ChartHeight = 200.dp
@@ -56,7 +56,7 @@ fun NetSavingsCard(
     ChartCard(title = stringResource(R.string.net_savings_title), modifier = modifier) {
         when {
             isLoading -> SpendingBarsShimmer()
-            months.none { it.net != 0.0 } -> ChartEmptyMessage(stringResource(R.string.net_savings_empty))
+            months.none { !it.net.isZero } -> ChartEmptyMessage(stringResource(R.string.net_savings_empty))
             else -> {
                 NetSavingsChart(months = months, onMonthClick = onMonthClick)
                 ChartLegend {
@@ -103,10 +103,10 @@ fun NetSavingsChart(
     val futureBarColor = futureBarColor()
     val baselineColor = MaterialTheme.colorScheme.outlineVariant
 
-    // How far the bars reach above and below the baseline, in rupees
-    val highest = max(0.0, months.maxOf { it.net })
-    val lowest = max(0.0, -months.minOf { it.net })
-    val worstIndex = months.indices.filter { months[it].net < 0 }.minByOrNull { months[it].net }
+    // How far the bars reach above and below the baseline
+    val highest = maxOf(Money.ZERO, months.maxOf { it.net })
+    val lowest = maxOf(Money.ZERO, -months.minOf { it.net })
+    val worstIndex = months.indices.filter { months[it].net.isNegative }.minByOrNull { months[it].net }
 
     val textMeasurer = rememberTextMeasurer()
     val axisStyle = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.extendedColors.chartAxisText)
@@ -143,8 +143,7 @@ fun NetSavingsChart(
             val worstLabelSpace = worstLabel?.let { it.size.height + 2 * labelSpacing } ?: 0f
             val plotHeight = axisTop - plotTop - worstLabelSpace
             val span = highest + lowest
-            val pixelsPerRupee = if (span > 0) plotHeight / span.toFloat() else 0f
-            val baseline = plotTop + highest.toFloat() * pixelsPerRupee
+            val baseline = plotTop + highest.ratioTo(span) * plotHeight
 
             val slotWidth = size.width / months.size
             val gap = BarGap.toPx()
@@ -155,10 +154,10 @@ fun NetSavingsChart(
                 when {
                     month.isFuture ->
                         drawBar(left, baseline, barWidth, FutureBarHeight.toPx(), futureBarColor)
-                    month.net != 0.0 -> {
-                        val fullHeight = max(abs(month.net).toFloat() * pixelsPerRupee, MinBarHeight.toPx())
+                    !month.net.isZero -> {
+                        val fullHeight = max(month.net.abs().ratioTo(span) * plotHeight, MinBarHeight.toPx())
                         val height = fullHeight * barGrowth(growth.value, index, months.size)
-                        val saved = month.net > 0
+                        val saved = month.net.isPositive
                         drawBar(
                             left = left,
                             baseline = baseline,
@@ -203,9 +202,9 @@ fun NetSavingsChart(
         Row(modifier = Modifier.matchParentSize()) {
             months.forEach { month ->
                 val description = stringResource(
-                    if (month.net < 0) R.string.net_savings_bar_overspent else R.string.net_savings_bar_saved,
+                    if (month.net.isNegative) R.string.net_savings_bar_overspent else R.string.net_savings_bar_saved,
                     DateFormatter.formatMonthYear(month.range.startMillis),
-                    CurrencyFormatter.format(abs(month.net))
+                    CurrencyFormatter.format(month.net.abs())
                 )
                 Box(
                     modifier = Modifier
@@ -239,7 +238,7 @@ private fun NetSavingsCardPreview() {
 private fun NetSavingsCardAllSavedPreview() {
     ExpenseTrackerProTheme {
         NetSavingsCard(
-            months = PreviewData.netSavings.map { it.copy(net = abs(it.net)) },
+            months = PreviewData.netSavings.map { it.copy(net = it.net.abs()) },
             isLoading = false,
             onMonthClick = {}
         )

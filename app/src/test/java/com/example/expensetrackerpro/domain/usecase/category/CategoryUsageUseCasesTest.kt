@@ -10,6 +10,7 @@ import com.example.expensetrackerpro.fakes.FakeCategoryRepository
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
 import com.example.expensetrackerpro.fakes.category
 import com.example.expensetrackerpro.fakes.millisAt
+import com.example.expensetrackerpro.fakes.rupees
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -27,12 +28,12 @@ class CategoryUsageUseCasesTest {
     private val interest = category(id = 6, name = "Interest", type = TransactionType.INCOME)
 
     private val usages = listOf(
-        CategoryUsage(food, totalCount = 40, periodCount = 12, periodAmount = 3000.0),
-        CategoryUsage(bills, totalCount = 9, periodCount = 2, periodAmount = 8000.0),
+        CategoryUsage(food, totalCount = 40, periodCount = 12, periodAmount = rupees(3000)),
+        CategoryUsage(bills, totalCount = 9, periodCount = 2, periodAmount = rupees(8000)),
         // Used before, but not this month
         CategoryUsage(travel, totalCount = 5),
         CategoryUsage(gifts),
-        CategoryUsage(salary, totalCount = 6, periodCount = 1, periodAmount = 90000.0),
+        CategoryUsage(salary, totalCount = 6, periodCount = 1, periodAmount = rupees(90000)),
         CategoryUsage(interest)
     )
 
@@ -44,7 +45,7 @@ class CategoryUsageUseCasesTest {
     fun usage_isAskedForTheCurrentMonth_andReturnedAsStored() = runTest {
         val timeProvider = FakeTimeProvider(millisAt(2026, Calendar.OCTOBER, 10, hour = 15))
         val repository = FakeCategoryRepository(listOf(food, bills))
-        repository.setUsage(food.id, totalCount = 40, periodCount = 12, periodAmount = 3000.0)
+        repository.setUsage(food.id, totalCount = 40, periodCount = 12, periodAmount = rupees(3000))
         val getCategoryUsage = GetCategoryUsageUseCase(
             repository,
             GetCurrentPeriodUseCase(timeProvider),
@@ -59,7 +60,7 @@ class CategoryUsageUseCasesTest {
         )
         assertEquals(
             listOf(
-                CategoryUsage(food, totalCount = 40, periodCount = 12, periodAmount = 3000.0),
+                CategoryUsage(food, totalCount = 40, periodCount = 12, periodAmount = rupees(3000)),
                 CategoryUsage(bills)
             ),
             result
@@ -86,8 +87,8 @@ class CategoryUsageUseCasesTest {
     @Test
     fun equalAmounts_fallBackToTheName() {
         val tied = listOf(
-            CategoryUsage(travel, totalCount = 1, periodCount = 1, periodAmount = 500.0),
-            CategoryUsage(food, totalCount = 1, periodCount = 1, periodAmount = 500.0)
+            CategoryUsage(travel, totalCount = 1, periodCount = 1, periodAmount = rupees(500)),
+            CategoryUsage(food, totalCount = 1, periodCount = 1, periodAmount = rupees(500))
         )
 
         assertEquals(listOf(food, travel), section(tied, TransactionType.EXPENSE, "").mostUsed.map { it.category })

@@ -1,12 +1,14 @@
 package com.example.expensetrackerpro.domain.usecase.transaction
 
 import com.example.expensetrackerpro.domain.models.DayLabel
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.TransactionListSummary
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.models.TransactionTypeCounts
 import com.example.expensetrackerpro.domain.models.TransactionTypeFilter
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
 import com.example.expensetrackerpro.fakes.millisAt
+import com.example.expensetrackerpro.fakes.rupees
 import com.example.expensetrackerpro.fakes.transaction
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -28,19 +30,19 @@ class TransactionListingUseCasesTest {
     private val yesterday = millisAt(2026, Calendar.OCTOBER, 8)
     private val monday = millisAt(2026, Calendar.OCTOBER, 5)
 
-    private val coffee = transaction(id = 1, amount = 120.0, dateMillis = millisAt(2026, Calendar.OCTOBER, 9, hour = 9))
+    private val coffee = transaction(id = 1, amount = rupees(120), dateMillis = millisAt(2026, Calendar.OCTOBER, 9, hour = 9))
     private val salary = transaction(
         id = 2,
-        amount = 5000.0,
+        amount = rupees(5000),
         type = TransactionType.INCOME,
         dateMillis = millisAt(2026, Calendar.OCTOBER, 9, hour = 8)
     )
-    private val dinner = transaction(id = 3, amount = 800.0, dateMillis = millisAt(2026, Calendar.OCTOBER, 8, hour = 21))
-    private val taxi = transaction(id = 4, amount = 300.0, dateMillis = millisAt(2026, Calendar.OCTOBER, 5, hour = 7))
+    private val dinner = transaction(id = 3, amount = rupees(800), dateMillis = millisAt(2026, Calendar.OCTOBER, 8, hour = 21))
+    private val taxi = transaction(id = 4, amount = rupees(300), dateMillis = millisAt(2026, Calendar.OCTOBER, 5, hour = 7))
         .copy(categoryId = 2, categoryName = "Transport")
     private val refund = transaction(
         id = 5,
-        amount = 200.0,
+        amount = rupees(200),
         type = TransactionType.INCOME,
         dateMillis = millisAt(2026, Calendar.OCTOBER, 5, hour = 6)
     ).copy(categoryId = 2, categoryName = "Transport")
@@ -66,7 +68,7 @@ class TransactionListingUseCasesTest {
     fun dayNet_isIncomeMinusExpenseOfThatDay() {
         val nets = groupByDay(all).map { it.net }
 
-        assertEquals(listOf(4880.0, -800.0, -100.0), nets)
+        assertEquals(listOf(rupees(4880), rupees(-800), rupees(-100)), nets)
     }
 
     @Test
@@ -151,7 +153,7 @@ class TransactionListingUseCasesTest {
     @Test
     fun summary_ofAllTypes_isIncomeExpenseAndNet() {
         assertEquals(
-            TransactionListSummary.Overview(income = 5200.0, expense = 1220.0, net = 3980.0),
+            TransactionListSummary.Overview(income = rupees(5200), expense = rupees(1220), net = rupees(3980)),
             summarize(all, TransactionTypeFilter.ALL, isSearching = false)
         )
     }
@@ -159,11 +161,11 @@ class TransactionListingUseCasesTest {
     @Test
     fun summary_ofOneType_isTotalEntriesAndBiggest() {
         assertEquals(
-            TransactionListSummary.SingleType(TransactionType.EXPENSE, total = 1220.0, count = 3, biggest = 800.0),
+            TransactionListSummary.SingleType(TransactionType.EXPENSE, total = rupees(1220), count = 3, biggest = rupees(800)),
             summarize(listOf(coffee, dinner, taxi), TransactionTypeFilter.EXPENSE, isSearching = false)
         )
         assertEquals(
-            TransactionListSummary.SingleType(TransactionType.INCOME, total = 5200.0, count = 2, biggest = 5000.0),
+            TransactionListSummary.SingleType(TransactionType.INCOME, total = rupees(5200), count = 2, biggest = rupees(5000)),
             summarize(listOf(salary, refund), TransactionTypeFilter.INCOME, isSearching = false)
         )
     }
@@ -172,11 +174,11 @@ class TransactionListingUseCasesTest {
     fun summary_whileSearching_isResultsNetTotalAndThatTotalPerResult() {
         // Searching wins over the type filter
         assertEquals(
-            TransactionListSummary.Search(count = 1, total = -300.0, average = -300.0),
+            TransactionListSummary.Search(count = 1, total = rupees(-300), average = rupees(-300)),
             summarize(listOf(taxi), TransactionTypeFilter.EXPENSE, isSearching = true)
         )
         assertEquals(
-            TransactionListSummary.Search(count = 1, total = 200.0, average = 200.0),
+            TransactionListSummary.Search(count = 1, total = rupees(200), average = rupees(200)),
             summarize(listOf(refund), TransactionTypeFilter.INCOME, isSearching = true)
         )
     }
@@ -185,12 +187,12 @@ class TransactionListingUseCasesTest {
     fun summary_whileSearching_averagesIncomeAndExpenseWithTheirSigns() {
         // 200 in, 300 out: a net of -100, which is -50 per result
         assertEquals(
-            TransactionListSummary.Search(count = 2, total = -100.0, average = -50.0),
+            TransactionListSummary.Search(count = 2, total = rupees(-100), average = rupees(-50)),
             summarize(listOf(taxi, refund), TransactionTypeFilter.ALL, isSearching = true)
         )
         // 5000 and 200 in, 120 and 800 out: the average always times the count back to the total
         val mixed = summarize(listOf(coffee, salary, dinner, refund), TransactionTypeFilter.ALL, isSearching = true)
-        assertEquals(TransactionListSummary.Search(count = 4, total = 4280.0, average = 1070.0), mixed)
+        assertEquals(TransactionListSummary.Search(count = 4, total = rupees(4280), average = rupees(1070)), mixed)
     }
 
     @Test
@@ -200,11 +202,11 @@ class TransactionListingUseCasesTest {
             summarize(emptyList(), TransactionTypeFilter.ALL, isSearching = false)
         )
         assertEquals(
-            TransactionListSummary.SingleType(TransactionType.INCOME, total = 0.0, count = 0, biggest = 0.0),
+            TransactionListSummary.SingleType(TransactionType.INCOME, total = Money.ZERO, count = 0, biggest = Money.ZERO),
             summarize(emptyList(), TransactionTypeFilter.INCOME, isSearching = false)
         )
         assertEquals(
-            TransactionListSummary.Search(count = 0, total = 0.0, average = 0.0),
+            TransactionListSummary.Search(count = 0, total = Money.ZERO, average = Money.ZERO),
             summarize(emptyList(), TransactionTypeFilter.ALL, isSearching = true)
         )
     }
@@ -218,9 +220,9 @@ class TransactionListingUseCasesTest {
         assertEquals(TransactionTypeCounts(all = 5, expense = 3, income = 2), listing.counts)
         assertEquals(listOf(listOf(salary), listOf(refund)), listing.days.map { it.transactions })
         // Day totals cover only what is listed
-        assertEquals(listOf(5000.0, 200.0), listing.days.map { it.net })
+        assertEquals(listOf(rupees(5000), rupees(200)), listing.days.map { it.net })
         assertEquals(
-            TransactionListSummary.SingleType(TransactionType.INCOME, total = 5200.0, count = 2, biggest = 5000.0),
+            TransactionListSummary.SingleType(TransactionType.INCOME, total = rupees(5200), count = 2, biggest = rupees(5000)),
             listing.summary
         )
     }
@@ -232,7 +234,7 @@ class TransactionListingUseCasesTest {
         assertEquals(TransactionTypeCounts(all = 2, expense = 1, income = 1), listing.counts)
         assertEquals(listOf(listOf(taxi, refund)), listing.days.map { it.transactions })
         assertEquals(
-            TransactionListSummary.Overview(income = 200.0, expense = 300.0, net = -100.0),
+            TransactionListSummary.Overview(income = rupees(200), expense = rupees(300), net = rupees(-100)),
             listing.summary
         )
     }

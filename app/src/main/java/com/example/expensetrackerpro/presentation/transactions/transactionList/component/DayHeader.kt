@@ -53,15 +53,15 @@ fun DayHeader(day: TransactionDayGroup, modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            text = when (day.net) {
-                0.0 -> CurrencyFormatter.format(0.0)
-                else -> CurrencyFormatter.formatSigned(day.net, isIncome = day.net > 0)
+            text = when {
+                day.net.isZero -> CurrencyFormatter.format(day.net)
+                else -> CurrencyFormatter.formatSigned(day.net, isIncome = day.net.isPositive)
             },
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,
             color = when {
-                day.net > 0 -> MaterialTheme.extendedColors.income
-                day.net < 0 -> MaterialTheme.extendedColors.expense
+                day.net.isPositive -> MaterialTheme.extendedColors.income
+                day.net.isNegative -> MaterialTheme.extendedColors.expense
                 else -> MaterialTheme.colorScheme.onSurfaceVariant
             }
         )

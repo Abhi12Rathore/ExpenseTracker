@@ -1,10 +1,11 @@
 package com.example.expensetrackerpro.data.sample
 
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.domain.models.sumOfMoney
 import com.example.expensetrackerpro.domain.time.TimeProvider
 import java.util.Calendar
 import javax.inject.Inject
-import kotlin.math.ceil
 import kotlin.random.Random
 
 /**
@@ -56,8 +57,8 @@ class SampleTransactionGenerator @Inject constructor(
     }
 
     private fun MonthBuilder.addIncome(index: Int) {
-        income(1, "Salary credit", 85_000.0, SALARY, INCOME_NOTES)
-        income(7, "Parking space rent", 2_500.0, RENTAL_INCOME, INCOME_NOTES)
+        income(1, "Salary credit", 85_000, SALARY, INCOME_NOTES)
+        income(7, "Parking space rent", 2_500, RENTAL_INCOME, INCOME_NOTES)
 
         repeat(random.nextInt(1, 3)) {
             income(random.nextInt(8, 27), FREELANCE_TITLES.pick(), amount(8_000, 25_000, 500), FREELANCE, INCOME_NOTES)
@@ -76,18 +77,18 @@ class SampleTransactionGenerator @Inject constructor(
             income(random.nextInt(12, 28), BUSINESS_TITLES.pick(), amount(2_000, 9_000, 100), BUSINESS, INCOME_NOTES)
         }
         if (index == 1) {
-            income(random.nextInt(5, 25), "Sold old cycle on OLX", 3_500.0, OTHER_INCOME, INCOME_NOTES)
+            income(random.nextInt(5, 25), "Sold old cycle on OLX", 3_500, OTHER_INCOME, INCOME_NOTES)
         }
     }
 
     private fun MonthBuilder.addFixedExpenses() {
-        expense(5, "House rent", 22_000.0, RENT, FIXED_NOTES)
-        expense(10, "Car loan EMI", 12_500.0, EMI, FIXED_NOTES)
+        expense(5, "House rent", 22_000, RENT, FIXED_NOTES)
+        expense(10, "Car loan EMI", 12_500, EMI, FIXED_NOTES)
         expense(random.nextInt(12, 19), "Electricity bill", amount(1_800, 4_200), BILLS, ELECTRICITY_NOTES)
-        expense(8, "Airtel postpaid", 799.0, BILLS, FIXED_NOTES)
-        expense(15, "ACT Fibernet broadband", 1_179.0, BILLS, FIXED_NOTES)
-        expense(3, "Netflix", 649.0, SUBSCRIPTIONS, FIXED_NOTES)
-        expense(20, "Spotify Premium", 119.0, SUBSCRIPTIONS, FIXED_NOTES)
+        expense(8, "Airtel postpaid", 799, BILLS, FIXED_NOTES)
+        expense(15, "ACT Fibernet broadband", 1_179, BILLS, FIXED_NOTES)
+        expense(3, "Netflix", 649, SUBSCRIPTIONS, FIXED_NOTES)
+        expense(20, "Spotify Premium", 119, SUBSCRIPTIONS, FIXED_NOTES)
     }
 
     private fun MonthBuilder.addEverydayExpenses() {
@@ -136,11 +137,11 @@ class SampleTransactionGenerator @Inject constructor(
         val total = amount(18_000, 35_000, 500)
         val legs = if (random.nextBoolean()) TRIP_IN_FOUR else TRIP_IN_THREE
         val firstDay = random.nextInt(14, 21)
-        var spent = 0.0
+        var spent = 0
 
-        legs.forEachIndexed { index, (title, share) ->
+        legs.forEachIndexed { index, (title, percent) ->
             // The last leg takes what is left, so the parts add up to the total exactly
-            val cost = if (index == legs.lastIndex) total - spent else roundTo(total * share, 10)
+            val cost = if (index == legs.lastIndex) total - spent else shareOf(total, percent)
             spent += cost
             expense(firstDay + index, title, cost, TRAVEL, SPENDING_NOTES)
         }
@@ -151,10 +152,12 @@ class SampleTransactionGenerator @Inject constructor(
      * month of negative net savings to show.
      */
     private fun MonthBuilder.addCourseFeeThatOverspends() {
-        val income = entries.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }
-        val expense = entries.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount }
+        val income = entries.filter { it.type == TransactionType.INCOME }.sumOfMoney { it.amount }
+        val expense = entries.filter { it.type == TransactionType.EXPENSE }.sumOfMoney { it.amount }
+        // Every sample amount is a whole number of rupees
+        val surplus = ((income - expense).paise / Money.PAISE_PER_RUPEE).toInt()
         val shortfall = amount(4_000, 9_000, 500)
-        val fee = maxOf(15_000.0, ceil((income - expense + shortfall) / 500) * 500)
+        val fee = maxOf(15_000, roundUpTo(surplus + shortfall, 500))
 
         expense(random.nextInt(2, 9), "Data analytics course fee", fee, EDUCATION, FIXED_NOTES)
     }
@@ -172,12 +175,12 @@ class SampleTransactionGenerator @Inject constructor(
         val titles = if (diwali != null) DIWALI_TITLES else FESTIVAL_TITLES
 
         with(month) {
-            income(day, titles.received, 5_000.0, GIFTS_RECEIVED, INCOME_NOTES)
+            income(day, titles.received, 5_000, GIFTS_RECEIVED, INCOME_NOTES)
             // The shopping happens in the days before
             expense(day - 2, titles.gifts, amount(2_500, 6_000, 50), GIFTS, SPENDING_NOTES)
             expense(day - 1, titles.sweets, amount(800, 2_000), GIFTS, SPENDING_NOTES)
             if (random.nextBoolean()) {
-                expense(day, titles.donation, listOf(501.0, 1_100.0, 2_100.0).pick(), GIFTS, FIXED_NOTES)
+                expense(day, titles.donation, listOf(501, 1_100, 2_100).pick(), GIFTS, FIXED_NOTES)
             }
         }
     }
@@ -201,22 +204,22 @@ class SampleTransactionGenerator @Inject constructor(
         fun randomDay(): Int = random.nextInt(1, daysInMonth + 1)
 
         /** A whole number of rupees from [min] to [max], on a multiple of [step]. */
-        fun amount(min: Int, max: Int, step: Int = 10): Double =
-            (random.nextInt(min / step, max / step + 1) * step).toDouble()
+        fun amount(min: Int, max: Int, step: Int = 10): Int =
+            random.nextInt(min / step, max / step + 1) * step
 
         fun <T> List<T>.pick(): T = this[random.nextInt(size)]
 
-        fun income(day: Int, title: String, amount: Double, category: String, notes: List<String>) =
-            add(day, title, amount, category, TransactionType.INCOME, notes)
+        fun income(day: Int, title: String, rupees: Int, category: String, notes: List<String>) =
+            add(day, title, rupees, category, TransactionType.INCOME, notes)
 
-        fun expense(day: Int, title: String, amount: Double, category: String, notes: List<String>) =
-            add(day, title, amount, category, TransactionType.EXPENSE, notes)
+        fun expense(day: Int, title: String, rupees: Int, category: String, notes: List<String>) =
+            add(day, title, rupees, category, TransactionType.EXPENSE, notes)
 
         // Always draws the same four numbers, so one entry's note never shifts the next entry
         private fun add(
             day: Int,
             title: String,
-            amount: Double,
+            rupees: Int,
             category: String,
             type: TransactionType,
             notes: List<String>
@@ -234,7 +237,7 @@ class SampleTransactionGenerator @Inject constructor(
 
             entries += SampleTransaction(
                 title = title,
-                amount = amount,
+                amount = Money.ofRupees(rupees.toLong()),
                 note = if (hasNote) note else "",
                 dateMillis = calendar.timeInMillis,
                 categoryName = category,
@@ -252,7 +255,11 @@ class SampleTransactionGenerator @Inject constructor(
         timeInMillis
     }
 
-    private fun roundTo(value: Double, step: Int): Double = Math.round(value / step) * step.toDouble()
+    /** [percent] of [total], to the nearest ₹10. */
+    private fun shareOf(total: Int, percent: Int): Int = (total * percent + 500) / 1000 * 10
+
+    /** The smallest multiple of [step] at or above [value]. */
+    private fun roundUpTo(value: Int, step: Int): Int = -Math.floorDiv(-value, step) * step
 
     private companion object {
         const val SEED = 20_261_010
@@ -316,17 +323,17 @@ class SampleTransactionGenerator @Inject constructor(
             donation = "Donation — Akshaya Patra"
         )
 
-        // Title, then its share of the trip's cost
+        // Title, then its share of the trip's cost in percent
         val TRIP_IN_THREE = listOf(
-            "Flight tickets to Goa — IndiGo" to 0.48,
-            "Hotel in Goa — 3 nights" to 0.38,
-            "Scooter rental and sightseeing" to 0.14
+            "Flight tickets to Goa — IndiGo" to 48,
+            "Hotel in Goa — 3 nights" to 38,
+            "Scooter rental and sightseeing" to 14
         )
         val TRIP_IN_FOUR = listOf(
-            "Flight tickets to Goa — IndiGo" to 0.44,
-            "Hotel in Goa — 3 nights" to 0.34,
-            "Scooter rental and sightseeing" to 0.12,
-            "Airport cab and meals" to 0.10
+            "Flight tickets to Goa — IndiGo" to 44,
+            "Hotel in Goa — 3 nights" to 34,
+            "Scooter rental and sightseeing" to 12,
+            "Airport cab and meals" to 10
         )
 
         val FREELANCE_TITLES = listOf(

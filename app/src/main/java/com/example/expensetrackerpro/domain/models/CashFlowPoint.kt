@@ -2,6 +2,6 @@ package com.example.expensetrackerpro.domain.models
 
 data class CashFlowPoint(
     val dateMillis: Long,
-    val income: Double,
-    val expense: Double
+    val income: Money,
+    val expense: Money
 )

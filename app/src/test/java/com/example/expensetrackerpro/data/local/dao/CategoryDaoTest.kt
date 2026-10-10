@@ -12,8 +12,10 @@ import com.example.expensetrackerpro.data.repository.TransactionRepositoryImpl
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.CategoryUsage
 import com.example.expensetrackerpro.domain.models.DateRange
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.fakes.millisAt
+import com.example.expensetrackerpro.fakes.rupees
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -56,13 +58,13 @@ class CategoryDaoTest {
         listOf(food, groceries, pets, salary).forEach { database.categoryDao().insertCategory(it) }
 
         // Food: one before October, two in it (the first at its very first moment), one after
-        dao.insertTransaction(transaction(1, food, 100.0, millisAt(2026, Calendar.SEPTEMBER, 30, hour = 23, minute = 59)))
-        dao.insertTransaction(transaction(2, food, 250.0, october.startMillis))
-        dao.insertTransaction(transaction(3, food, 400.5, millisAt(2026, Calendar.OCTOBER, 20)))
-        dao.insertTransaction(transaction(4, food, 999.0, october.endMillis))
+        dao.insertTransaction(transaction(1, food, rupees(100), millisAt(2026, Calendar.SEPTEMBER, 30, hour = 23, minute = 59)))
+        dao.insertTransaction(transaction(2, food, rupees(250), october.startMillis))
+        dao.insertTransaction(transaction(3, food, Money(400_50), millisAt(2026, Calendar.OCTOBER, 20)))
+        dao.insertTransaction(transaction(4, food, rupees(999), october.endMillis))
         // Groceries: only last month
-        dao.insertTransaction(transaction(5, groceries, 60.0, millisAt(2026, Calendar.SEPTEMBER, 12)))
-        dao.insertTransaction(transaction(6, salary, 90000.0, millisAt(2026, Calendar.OCTOBER, 1, hour = 9)))
+        dao.insertTransaction(transaction(5, groceries, rupees(60), millisAt(2026, Calendar.SEPTEMBER, 12)))
+        dao.insertTransaction(transaction(6, salary, rupees(90000), millisAt(2026, Calendar.OCTOBER, 1, hour = 9)))
     }
 
     @After
@@ -70,15 +72,14 @@ class CategoryDaoTest {
         database.close()
     }
 
-    private fun transaction(id: Int, category: CategoryEntity, amount: Double, dateMillis: Long) =
+    private fun transaction(id: Int, category: CategoryEntity, amount: Money, dateMillis: Long) =
         TransactionEntity(
             id = id,
             title = "Transaction $id",
-            amount = amount,
+            amountPaise = amount.paise,
             note = "",
             dateMillis = dateMillis,
             categoryId = category.id,
-            categoryName = category.name,
             transactionType = category.type
         )
 
@@ -95,11 +96,11 @@ class CategoryDaoTest {
 
         // The range starts inclusive and ends exclusive
         assertEquals(
-            CategoryUsage(food.toDomain(), totalCount = 4, periodCount = 2, periodAmount = 650.5),
+            CategoryUsage(food.toDomain(), totalCount = 4, periodCount = 2, periodAmount = Money(650_50)),
             usage[food.id]
         )
         assertEquals(
-            CategoryUsage(salary.toDomain(), totalCount = 1, periodCount = 1, periodAmount = 90000.0),
+            CategoryUsage(salary.toDomain(), totalCount = 1, periodCount = 1, periodAmount = rupees(90000)),
             usage[salary.id]
         )
     }
@@ -120,8 +121,8 @@ class CategoryDaoTest {
         val usage = usage(september)
 
         assertEquals(1, usage.getValue(food.id).periodCount)
-        assertEquals(100.0, usage.getValue(food.id).periodAmount, 0.0)
-        assertEquals(60.0, usage.getValue(groceries.id).periodAmount, 0.0)
+        assertEquals(rupees(100), usage.getValue(food.id).periodAmount)
+        assertEquals(rupees(60), usage.getValue(groceries.id).periodAmount)
         assertEquals(0, usage.getValue(salary.id).periodCount)
     }
 
@@ -165,7 +166,7 @@ class CategoryDaoTest {
 
         val usage = usage()
         assertEquals(
-            CategoryUsage(groceries.toDomain(), totalCount = 5, periodCount = 2, periodAmount = 650.5),
+            CategoryUsage(groceries.toDomain(), totalCount = 5, periodCount = 2, periodAmount = Money(650_50)),
             usage[groceries.id]
         )
 
@@ -176,7 +177,7 @@ class CategoryDaoTest {
         assertTrue(moved.all { it.categoryName == "Groceries" })
         assertTrue(moved.all { it.categoryIcon == CategoryIcon.SHOPPING_BASKET })
         // Nothing else about them changed
-        assertEquals(listOf(100.0, 250.0, 400.5, 999.0), moved.sortedBy { it.id }.map { it.amount })
+        assertEquals(listOf(rupees(100), rupees(250), Money(400_50), rupees(999)), moved.sortedBy { it.id }.map { it.amount })
     }
 
     @Test

@@ -3,8 +3,10 @@ package com.example.expensetrackerpro.data.mapper
 import com.example.expensetrackerpro.data.local.entity.TransactionEntity
 import com.example.expensetrackerpro.data.local.model.TransactionWithCategory
 import com.example.expensetrackerpro.domain.models.CategoryIcon
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.fakes.rupees
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -13,18 +15,17 @@ class TransactionMapperTest {
     private val entity = TransactionEntity(
         id = 7,
         title = "Lunch",
-        amount = 250.5,
+        amountPaise = 250_50,
         note = "Team lunch",
         dateMillis = 1_700_000_000_000,
         categoryId = 3,
-        categoryName = "Food",
         transactionType = TransactionType.EXPENSE
     )
 
     private val domain = Transaction(
         id = 7,
         title = "Lunch",
-        amount = 250.5,
+        amount = Money(250_50),
         note = "Team lunch",
         dateMillis = 1_700_000_000_000,
         categoryId = 3,
@@ -33,16 +34,16 @@ class TransactionMapperTest {
         categoryIcon = CategoryIcon.RESTAURANT
     )
 
-    // As a read returns it: the stored row plus its category's icon
-    private fun TransactionEntity.read() = TransactionWithCategory(this, CategoryIcon.RESTAURANT)
+    // As a read returns it: the stored row plus its category's name and icon
+    private fun TransactionEntity.read() = TransactionWithCategory(this, "Food", CategoryIcon.RESTAURANT)
 
     @Test
-    fun readToDomain_copiesEveryField_andTakesTheIconFromTheCategory() {
+    fun readToDomain_copiesEveryField_andTakesTheNameAndIconFromTheCategory() {
         assertEquals(domain, entity.read().toDomain())
     }
 
     @Test
-    fun domainToEntity_copiesEveryField() {
+    fun domainToEntity_copiesEveryStoredField() {
         assertEquals(entity, domain.toEntity())
     }
 
@@ -70,7 +71,7 @@ class TransactionMapperTest {
     fun newTransaction_keepsZeroIdSoRoomAutoGenerates() {
         val unsaved = Transaction(
             title = "Salary",
-            amount = 1000.0,
+            amount = rupees(1000),
             note = "Salary",
             dateMillis = 0L,
             categoryId = 1,

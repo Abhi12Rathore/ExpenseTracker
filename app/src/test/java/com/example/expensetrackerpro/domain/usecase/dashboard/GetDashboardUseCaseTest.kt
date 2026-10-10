@@ -10,6 +10,7 @@ import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.DayPeriod
 import com.example.expensetrackerpro.domain.models.FinancialSummary
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
 import com.example.expensetrackerpro.domain.models.PeriodComparison
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
@@ -21,6 +22,7 @@ import com.example.expensetrackerpro.fakes.FakeTransactionRepository
 import com.example.expensetrackerpro.fakes.FakeUserProfileRepository
 import com.example.expensetrackerpro.fakes.getDashboardUseCase
 import com.example.expensetrackerpro.fakes.millisAt
+import com.example.expensetrackerpro.fakes.rupees
 import com.example.expensetrackerpro.fakes.transaction
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -67,16 +69,16 @@ class GetDashboardUseCaseTest {
     /** A September salary and rent, then an October salary and lunch. */
     private suspend fun saveTwoMonths() {
         transactions.saveTransaction(
-            transaction(id = 1, amount = 900.0, type = TransactionType.INCOME, dateMillis = millisAt(2026, Calendar.SEPTEMBER, 5))
+            transaction(id = 1, amount = rupees(900), type = TransactionType.INCOME, dateMillis = millisAt(2026, Calendar.SEPTEMBER, 5))
         )
         transactions.saveTransaction(
-            transaction(id = 2, amount = 400.0, type = TransactionType.EXPENSE, dateMillis = millisAt(2026, Calendar.SEPTEMBER, 30, hour = 23))
+            transaction(id = 2, amount = rupees(400), type = TransactionType.EXPENSE, dateMillis = millisAt(2026, Calendar.SEPTEMBER, 30, hour = 23))
         )
         transactions.saveTransaction(
-            transaction(id = 3, amount = 1000.0, type = TransactionType.INCOME, dateMillis = millisAt(2026, Calendar.OCTOBER, 1))
+            transaction(id = 3, amount = rupees(1000), type = TransactionType.INCOME, dateMillis = millisAt(2026, Calendar.OCTOBER, 1))
         )
         transactions.saveTransaction(
-            transaction(id = 4, amount = 250.0, type = TransactionType.EXPENSE, dateMillis = millisAt(2026, Calendar.OCTOBER, 7))
+            transaction(id = 4, amount = rupees(250), type = TransactionType.EXPENSE, dateMillis = millisAt(2026, Calendar.OCTOBER, 7))
         )
     }
 
@@ -132,24 +134,24 @@ class GetDashboardUseCaseTest {
     fun exposesSummaryRecentAndCategories() = runTest {
         (1..7).forEach {
             transactions.saveTransaction(
-                transaction(id = it, amount = 100.0, type = TransactionType.EXPENSE, dateMillis = october.startMillis + it)
+                transaction(id = it, amount = rupees(100), type = TransactionType.EXPENSE, dateMillis = october.startMillis + it)
             )
         }
         transactions.saveTransaction(
-            transaction(id = 8, amount = 1400.0, type = TransactionType.INCOME, dateMillis = october.startMillis + 8)
+            transaction(id = 8, amount = rupees(1400), type = TransactionType.INCOME, dateMillis = october.startMillis + 8)
         )
         val breakdown =
-            listOf(CategoryBreakdown(categoryId = 1, categoryName = "Food", icon = CategoryIcon.RESTAURANT, amount = 700.0))
+            listOf(CategoryBreakdown(categoryId = 1, categoryName = "Food", icon = CategoryIcon.RESTAURANT, amount = rupees(700)))
         dashboard.categoryBreakdown.value = breakdown
 
         val state = dashboardFor(thisMonth)
 
-        assertEquals(1400.0, state.summary.totalIncome, 0.001)
-        assertEquals(700.0, state.summary.totalExpense, 0.001)
+        assertEquals(rupees(1400), state.summary.totalIncome)
+        assertEquals(rupees(700), state.summary.totalExpense)
         assertEquals(50f, state.summary.savingsRate, 0.001f)
         assertEquals(listOf(8, 7, 6, 5, 4), state.recentTransactions.map { it.id })
         assertEquals(breakdown, state.categoryRanking.top.map { it.category })
-        assertEquals(700.0, state.categoryRanking.total, 0.001)
+        assertEquals(rupees(700), state.categoryRanking.total)
     }
 
     @Test
@@ -158,18 +160,18 @@ class GetDashboardUseCaseTest {
 
         val thisMonthState = dashboardFor(thisMonth)
 
-        assertEquals(1000.0, thisMonthState.summary.totalIncome, 0.001)
-        assertEquals(250.0, thisMonthState.summary.totalExpense, 0.001)
+        assertEquals(rupees(1000), thisMonthState.summary.totalIncome)
+        assertEquals(rupees(250), thisMonthState.summary.totalExpense)
         assertEquals(listOf(4, 3), thisMonthState.recentTransactions.map { it.id })
-        assertEquals(listOf(SmartInsight.Saved(750.0)), thisMonthState.insights)
+        assertEquals(listOf(SmartInsight.Saved(rupees(750))), thisMonthState.insights)
         assertChartsAskedFor(october)
 
         val lastMonthState = dashboardFor(lastMonth)
 
-        assertEquals(900.0, lastMonthState.summary.totalIncome, 0.001)
-        assertEquals(400.0, lastMonthState.summary.totalExpense, 0.001)
+        assertEquals(rupees(900), lastMonthState.summary.totalIncome)
+        assertEquals(rupees(400), lastMonthState.summary.totalExpense)
         assertEquals(listOf(2, 1), lastMonthState.recentTransactions.map { it.id })
-        assertEquals(listOf(SmartInsight.Saved(500.0)), lastMonthState.insights)
+        assertEquals(listOf(SmartInsight.Saved(rupees(500))), lastMonthState.insights)
         assertChartsAskedFor(september)
     }
 
@@ -189,7 +191,7 @@ class GetDashboardUseCaseTest {
 
         val state = dashboardFor(thisYear)
 
-        assertEquals(1250.0, state.summary.totalBalance, 0.001)
+        assertEquals(rupees(1250), state.summary.totalBalance)
         assertEquals(listOf(4, 3, 2, 1), state.recentTransactions.map { it.id })
         assertChartsAskedFor(year2026)
     }
@@ -201,7 +203,7 @@ class GetDashboardUseCaseTest {
         val state = dashboardFor(twoDays)
 
         assertEquals(listOf(3, 2), state.recentTransactions.map { it.id })
-        assertEquals(600.0, state.summary.totalBalance, 0.001)
+        assertEquals(rupees(600), state.summary.totalBalance)
         assertChartsAskedFor(twoDays.range)
     }
 
@@ -210,18 +212,18 @@ class GetDashboardUseCaseTest {
     @Test
     fun spending_isOneBucketPerDayOfTheMonth_withTodayTheLastStarted() = runTest {
         dashboard.dailyExpenses.value = listOf(
-            DailyExpense(millisAt(2026, Calendar.OCTOBER, 2, hour = 9), amount = 300.0, transactionCount = 2),
-            DailyExpense(millisAt(2026, Calendar.OCTOBER, 7, hour = 20), amount = 500.0, transactionCount = 1)
+            DailyExpense(millisAt(2026, Calendar.OCTOBER, 2, hour = 9), amount = rupees(300), transactionCount = 2),
+            DailyExpense(millisAt(2026, Calendar.OCTOBER, 7, hour = 20), amount = rupees(500), transactionCount = 1)
         )
 
         val spending = dashboardFor(thisMonth).spending
 
         assertEquals(BucketSize.DAY, spending.bucketSize)
         assertEquals(31, spending.buckets.size)
-        assertEquals(300.0, spending.buckets[1].amount, 0.001)
+        assertEquals(rupees(300), spending.buckets[1].amount)
         assertEquals(2, spending.buckets[1].transactionCount)
         assertEquals(8, spending.buckets.count { !it.isFuture })
-        assertEquals(100.0, spending.average, 0.001)
+        assertEquals(rupees(100), spending.average)
     }
 
     @Test
@@ -237,7 +239,7 @@ class GetDashboardUseCaseTest {
 
     @Test
     fun balanceTrend_runsFromTheStartOfThePeriodToToday() = runTest {
-        assertEquals(List(8) { 0.0 }, dashboardFor(thisMonth).balanceTrend)
+        assertEquals(List(8) { Money.ZERO }, dashboardFor(thisMonth).balanceTrend)
         assertEquals(30, dashboardFor(lastMonth).balanceTrend.size)
     }
 
@@ -252,7 +254,7 @@ class GetDashboardUseCaseTest {
             PeriodComparison(
                 granularity = PeriodGranularity.MONTH,
                 previousRange = DateRange(september.startMillis, millisAt(2026, Calendar.SEPTEMBER, 9)),
-                balanceDifference = -150.0,
+                balanceDifference = rupees(-150),
                 isPartial = true
             ),
             dashboardFor(thisMonth).comparison
@@ -266,7 +268,7 @@ class GetDashboardUseCaseTest {
         // September saved 500 against an empty August
         val comparison = requireNotNull(dashboardFor(lastMonth).comparison)
 
-        assertEquals(500.0, comparison.balanceDifference, 0.001)
+        assertEquals(rupees(500), comparison.balanceDifference)
         assertFalse(comparison.isPartial)
     }
 
@@ -286,18 +288,18 @@ class GetDashboardUseCaseTest {
     @Test
     fun pace_isThereForAMonthAndAWeek_butNotForAYear() = runTest {
         dashboard.dailyExpenses.value = listOf(
-            DailyExpense(millisAt(2026, Calendar.SEPTEMBER, 3, hour = 9), amount = 200.0, transactionCount = 1),
-            DailyExpense(millisAt(2026, Calendar.SEPTEMBER, 20, hour = 9), amount = 300.0, transactionCount = 1),
-            DailyExpense(millisAt(2026, Calendar.OCTOBER, 2, hour = 9), amount = 150.0, transactionCount = 1)
+            DailyExpense(millisAt(2026, Calendar.SEPTEMBER, 3, hour = 9), amount = rupees(200), transactionCount = 1),
+            DailyExpense(millisAt(2026, Calendar.SEPTEMBER, 20, hour = 9), amount = rupees(300), transactionCount = 1),
+            DailyExpense(millisAt(2026, Calendar.OCTOBER, 2, hour = 9), amount = rupees(150), transactionCount = 1)
         )
 
         val month = requireNotNull(dashboardFor(thisMonth).pace)
         assertEquals(8, month.current.size)
-        assertEquals(150.0, month.current.last().total, 0.001)
+        assertEquals(rupees(150), month.current.last().total)
         assertEquals(30, month.previous.size)
-        assertEquals(500.0, month.previous.last().total, 0.001)
+        assertEquals(rupees(500), month.previous.last().total)
         // 150 so far against the 200 spent by 8 Sep
-        assertEquals(-50.0, month.difference, 0.001)
+        assertEquals(rupees(-50), month.difference)
         assertTrue(month.isPartial)
 
         assertEquals(PeriodGranularity.WEEK, requireNotNull(dashboardFor(thisWeek).pace).granularity)
@@ -307,15 +309,15 @@ class GetDashboardUseCaseTest {
     @Test
     fun netSavings_isThereForAYearOnly() = runTest {
         dashboard.monthlyTrend.value = listOf(
-            MonthlyTrend(year = 2026, month = 9, income = 900.0, expense = 400.0),
-            MonthlyTrend(year = 2026, month = 10, income = 100.0, expense = 250.0)
+            MonthlyTrend(year = 2026, month = 9, income = rupees(900), expense = rupees(400)),
+            MonthlyTrend(year = 2026, month = 10, income = rupees(100), expense = rupees(250))
         )
 
         val months = dashboardFor(thisYear).netSavings
 
         assertEquals(12, months.size)
-        assertEquals(500.0, months[8].net, 0.001)
-        assertEquals(-150.0, months[9].net, 0.001)
+        assertEquals(rupees(500), months[8].net)
+        assertEquals(rupees(-150), months[9].net)
         assertEquals(listOf(true, true), months.takeLast(2).map { it.isFuture })
 
         assertTrue(dashboardFor(thisMonth).netSavings.isEmpty())
@@ -327,24 +329,24 @@ class GetDashboardUseCaseTest {
     @Test
     fun insightsFollowTheData() = runTest {
         transactions.saveTransaction(
-            transaction(id = 1, amount = 500.0, type = TransactionType.INCOME, dateMillis = october.startMillis)
+            transaction(id = 1, amount = rupees(500), type = TransactionType.INCOME, dateMillis = october.startMillis)
         )
         dashboard.categoryBreakdown.value =
-            listOf(CategoryBreakdown(categoryId = 1, categoryName = "Bills", icon = CategoryIcon.RECEIPT_LONG, amount = 90.0))
+            listOf(CategoryBreakdown(categoryId = 1, categoryName = "Bills", icon = CategoryIcon.RECEIPT_LONG, amount = rupees(90)))
 
         assertEquals(
-            listOf(SmartInsight.Saved(500.0), SmartInsight.HighestSpending("Bills")),
+            listOf(SmartInsight.Saved(rupees(500)), SmartInsight.HighestSpending("Bills")),
             dashboardFor(thisMonth).insights
         )
 
         dashboard.monthlyTrend.value = listOf(
-            MonthlyTrend(year = 2026, month = 6, income = 0.0, expense = 100.0),
-            MonthlyTrend(year = 2026, month = 7, income = 0.0, expense = 300.0)
+            MonthlyTrend(year = 2026, month = 6, income = Money.ZERO, expense = rupees(100)),
+            MonthlyTrend(year = 2026, month = 7, income = Money.ZERO, expense = rupees(300))
         )
 
         assertEquals(
             listOf(
-                SmartInsight.Saved(500.0),
+                SmartInsight.Saved(rupees(500)),
                 SmartInsight.HighestSpending("Bills"),
                 SmartInsight.SpendingIncreased
             ),
@@ -358,13 +360,13 @@ class GetDashboardUseCaseTest {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
             getDashboard()(thisMonth).collect { emitted += it }
         }
-        assertEquals(0.0, emitted.last().summary.totalExpense, 0.001)
+        assertEquals(Money.ZERO, emitted.last().summary.totalExpense)
 
         transactions.saveTransaction(
-            transaction(id = 1, amount = 80.0, type = TransactionType.EXPENSE, dateMillis = october.startMillis)
+            transaction(id = 1, amount = rupees(80), type = TransactionType.EXPENSE, dateMillis = october.startMillis)
         )
 
-        assertEquals(80.0, emitted.last().summary.totalExpense, 0.001)
+        assertEquals(rupees(80), emitted.last().summary.totalExpense)
         assertEquals(listOf(1), emitted.last().recentTransactions.map { it.id })
     }
 }

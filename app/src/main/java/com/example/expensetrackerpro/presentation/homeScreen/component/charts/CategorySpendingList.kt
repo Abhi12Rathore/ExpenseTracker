@@ -50,6 +50,7 @@ import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
 import com.example.expensetrackerpro.domain.models.CategoryRanking
 import com.example.expensetrackerpro.domain.models.CategoryShare
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.presentation.common.category.CategoryIconTile
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.utils.CurrencyFormatter
@@ -172,7 +173,7 @@ private fun OtherIconTile() {
 private fun RankedRow(
     leading: @Composable () -> Unit,
     name: String,
-    amount: Double,
+    amount: Money,
     fraction: Float,
     onClick: () -> Unit,
     onClickLabel: String? = null,

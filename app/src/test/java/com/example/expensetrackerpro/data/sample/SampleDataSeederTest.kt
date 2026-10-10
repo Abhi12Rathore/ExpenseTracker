@@ -66,11 +66,10 @@ class SampleDataSeederTest {
         dao.insertTransaction(
             TransactionEntity(
                 title = "Clay",
-                amount = 400.0,
+                amountPaise = 400_00,
                 note = "",
                 dateMillis = 0L,
                 categoryId = id,
-                categoryName = "Pottery",
                 transactionType = TransactionType.EXPENSE
             )
         )

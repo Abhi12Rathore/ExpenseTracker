@@ -1,9 +1,11 @@
 package com.example.expensetrackerpro.domain.usecase.transaction
 
 import com.example.expensetrackerpro.domain.models.DayLabel
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionDayGroup
 import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.domain.models.sumOfMoney
 import com.example.expensetrackerpro.domain.time.TimeProvider
 import java.util.Calendar
 import javax.inject.Inject
@@ -31,7 +33,7 @@ class GroupTransactionsByDayUseCase @Inject constructor(
                         yesterdayStart -> DayLabel.YESTERDAY
                         else -> DayLabel.OTHER
                     },
-                    net = onThatDay.sumOf { it.signedAmount },
+                    net = onThatDay.sumOfMoney { it.signedAmount },
                     transactions = onThatDay
                 )
             }
@@ -51,5 +53,5 @@ class GroupTransactionsByDayUseCase @Inject constructor(
 }
 
 /** The amount as it moves the balance: positive for income, negative for an expense. */
-internal val Transaction.signedAmount: Double
+internal val Transaction.signedAmount: Money
     get() = if (transactionType == TransactionType.INCOME) amount else -amount

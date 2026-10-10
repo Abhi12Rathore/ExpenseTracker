@@ -6,5 +6,5 @@ data class CategoryExpenseEntity(
     val categoryId: Long,
     val categoryName: String,
     val icon: CategoryIcon,
-    val totalAmount: Double
+    val totalPaise: Long
 )

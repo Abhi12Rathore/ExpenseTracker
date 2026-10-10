@@ -7,30 +7,31 @@ import com.example.expensetrackerpro.data.local.model.MonthlyTrendEntity
 import com.example.expensetrackerpro.domain.models.CashFlowPoint
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
 import com.example.expensetrackerpro.domain.models.DailyExpense
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
 
 fun CategoryExpenseEntity.toDomain(): CategoryBreakdown = CategoryBreakdown(
     categoryId = categoryId,
     categoryName = categoryName,
     icon = icon,
-    amount = totalAmount
+    amount = Money(totalPaise)
 )
 
 fun DailyCashFlowEntity.toDomain(): CashFlowPoint = CashFlowPoint(
     dateMillis = dateMillis,
-    income = income,
-    expense = expense
+    income = Money(incomePaise),
+    expense = Money(expensePaise)
 )
 
 fun DailyExpenseEntity.toDomain(): DailyExpense = DailyExpense(
     dateMillis = dayMillis,
-    amount = amount,
+    amount = Money(amountPaise),
     transactionCount = transactionCount
 )
 
 fun MonthlyTrendEntity.toDomain(): MonthlyTrend = MonthlyTrend(
     year = year,
     month = month,
-    income = income,
-    expense = expense
+    income = Money(incomePaise),
+    expense = Money(expensePaise)
 )

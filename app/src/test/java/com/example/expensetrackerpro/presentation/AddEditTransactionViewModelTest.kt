@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.CategoryNameValidation
 import com.example.expensetrackerpro.domain.models.DateChoice
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.category.AddCategoryUseCase
 import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesByTypeUseCase
@@ -26,6 +27,7 @@ import com.example.expensetrackerpro.fakes.FakeTimeProvider
 import com.example.expensetrackerpro.fakes.FakeTransactionRepository
 import com.example.expensetrackerpro.fakes.category
 import com.example.expensetrackerpro.fakes.millisAt
+import com.example.expensetrackerpro.fakes.rupees
 import com.example.expensetrackerpro.fakes.transaction
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorEvent
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorReducer
@@ -113,7 +115,7 @@ class AddEditTransactionViewModelTest {
         transactions.failWrites = false
         kotlinx.coroutines.runBlocking {
             transactions.saveTransaction(
-                transaction(id = 5, amount = 4201.0, dateMillis = 42L, note = note, title = "Lunch")
+                transaction(id = 5, amount = rupees(4201), dateMillis = 42L, note = note, title = "Lunch")
                     .copy(categoryId = food.id, categoryName = "Food")
             )
         }
@@ -206,7 +208,7 @@ class AddEditTransactionViewModelTest {
         }
 
         assertEquals("12", viewModel.uiState.value.amount)
-        assertEquals(12.0, viewModel.uiState.value.validAmount)
+        assertEquals(rupees(12), viewModel.uiState.value.validAmount)
     }
 
     @Test
@@ -420,7 +422,7 @@ class AddEditTransactionViewModelTest {
 
         val saved = transactions.current.single()
         assertEquals(0, saved.id)
-        assertEquals(120.5, saved.amount, 0.0)
+        assertEquals(Money(120_50), saved.amount)
         assertEquals("Lunch", saved.title)
         assertEquals("With the team", saved.note)
         assertEquals(food.id, saved.categoryId)
@@ -510,7 +512,7 @@ class AddEditTransactionViewModelTest {
     @Test
     fun editMode_prefillsFromTheStoredTransaction() = runTest {
         transactions.saveTransaction(
-            transaction(id = 5, amount = 5000.0, type = TransactionType.INCOME, dateMillis = 42L, note = "", title = "July pay")
+            transaction(id = 5, amount = rupees(5000), type = TransactionType.INCOME, dateMillis = 42L, note = "", title = "July pay")
                 .copy(categoryId = salary.id, categoryName = "Salary")
         )
 
@@ -534,7 +536,7 @@ class AddEditTransactionViewModelTest {
         storeLunch()
         assertEquals("4201", viewModel(transactionId = 5).uiState.value.amount)
 
-        transactions.updateTransaction(transactions.current.single().copy(amount = 4201.5))
+        transactions.updateTransaction(transactions.current.single().copy(amount = Money(4201_50)))
         assertEquals("4201.5", viewModel(transactionId = 5).uiState.value.amount)
     }
 
@@ -561,7 +563,7 @@ class AddEditTransactionViewModelTest {
 
         val updated = transactions.current.single()
         assertEquals(5, updated.id)
-        assertEquals(180.0, updated.amount, 0.0)
+        assertEquals(rupees(180), updated.amount)
         assertEquals("Lunch", updated.title)
         assertEquals("", updated.note)
         assertEquals("Bills", updated.categoryName)

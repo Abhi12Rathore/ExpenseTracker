@@ -44,6 +44,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.PacePoint
 import com.example.expensetrackerpro.domain.models.SpendingPace
 import com.example.expensetrackerpro.presentation.common.filter.comparedWithLabel
@@ -51,7 +52,6 @@ import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.ui.theme.extendedColors
 import com.example.expensetrackerpro.utils.CurrencyFormatter
 import com.example.expensetrackerpro.utils.DateFormatter
-import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -111,12 +111,12 @@ private fun paceSummary(pace: SpendingPace): String {
         previousStartMillis = pace.previous.firstOrNull()?.dateMillis ?: 0L,
         isPartial = pace.isPartial
     )
-    val amount = CurrencyFormatter.formatWhole(abs(pace.difference))
+    val amount = CurrencyFormatter.formatWhole(pace.difference.abs())
 
     return when {
         // Less than a rupee apart reads as no difference
-        abs(pace.difference) < 0.5 -> stringResource(R.string.pace_same, comparedWith)
-        pace.difference < 0 -> stringResource(R.string.pace_less, amount, comparedWith)
+        pace.difference.roundedToRupees().isZero -> stringResource(R.string.pace_same, comparedWith)
+        pace.difference.isNegative -> stringResource(R.string.pace_less, amount, comparedWith)
         else -> stringResource(R.string.pace_more, amount, comparedWith)
     }
 }
@@ -179,16 +179,16 @@ fun SpendingPaceChart(
     val dotRingColor = MaterialTheme.colorScheme.surfaceContainer
     val labelBackdrop = labelBackdropColor()
 
-    val currentTotal = pace.current.lastOrNull()?.total ?: 0.0
-    val previousTotal = pace.previous.lastOrNull()?.total ?: 0.0
+    val currentTotal = pace.current.lastOrNull()?.total ?: Money.ZERO
+    val previousTotal = pace.previous.lastOrNull()?.total ?: Money.ZERO
 
     // Text is laid out once per period rather than on every animation frame
     val textMeasurer = rememberTextMeasurer()
     val axisStyle = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.extendedColors.chartAxisText)
-    val axisMax = remember(currentTotal, previousTotal) { niceAxisMax(max(currentTotal, previousTotal)) }
+    val axisMax = remember(currentTotal, previousTotal) { niceAxisMax(maxOf(currentTotal, previousTotal)) }
     val gridLabels = remember(axisMax, axisStyle) {
         GridlineFractions.map { fraction ->
-            fraction to textMeasurer.measure(CurrencyFormatter.formatShort(axisMax * fraction), axisStyle)
+            fraction to textMeasurer.measure(CurrencyFormatter.formatShort(axisMax.atFraction(fraction)), axisStyle)
         }
     }
     val xLabels = remember(periodKey, axisStyle) {
@@ -233,7 +233,7 @@ fun SpendingPaceChart(
             val plotWidth = size.width - 2 * dotRadius
 
             fun xOf(index: Int): Float = dotRadius + plotWidth * index / (dayCount - 1)
-            fun yOf(total: Double): Float = plotBottom - (total / axisMax).toFloat() * plotHeight
+            fun yOf(total: Money): Float = plotBottom - total.ratioTo(axisMax) * plotHeight
             fun pointOf(index: Int, point: PacePoint) = Offset(xOf(index), yOf(point.total))
             fun lineThrough(points: List<PacePoint>) = Path().apply {
                 points.forEachIndexed { index, point ->

@@ -4,6 +4,7 @@ import com.example.expensetrackerpro.domain.models.CategoryBreakdown
 import com.example.expensetrackerpro.domain.models.Dashboard
 import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.FinancialSummary
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.MonthlyNet
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
 import com.example.expensetrackerpro.domain.models.PeriodComparison
@@ -80,7 +81,7 @@ class GetDashboardUseCase @Inject constructor(
     private data class Totals(
         val summary: FinancialSummary,
         val comparison: PeriodComparison?,
-        val balanceTrend: List<Double>,
+        val balanceTrend: List<Money>,
         val recentTransactions: List<Transaction>,
         val profile: UserProfile
     )

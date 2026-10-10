@@ -17,7 +17,7 @@ class GenerateSmartInsightsUseCase @Inject constructor() {
         categoryBreakdown: List<CategoryBreakdown>,
         monthlyTrend: List<MonthlyTrend>
     ): List<SmartInsight> = buildList {
-        if (summary.totalBalance > 0) {
+        if (summary.totalBalance.isPositive) {
             add(SmartInsight.Saved(summary.totalBalance))
         }
 

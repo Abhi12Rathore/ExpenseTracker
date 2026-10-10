@@ -53,11 +53,10 @@ class AppDataRepositoryImplTest {
         dao.insertTransaction(
             TransactionEntity(
                 title = "Something",
-                amount = 400.0,
+                amountPaise = 400_00,
                 note = "",
                 dateMillis = 0L,
                 categoryId = category.id,
-                categoryName = category.name,
                 transactionType = category.type
             )
         )

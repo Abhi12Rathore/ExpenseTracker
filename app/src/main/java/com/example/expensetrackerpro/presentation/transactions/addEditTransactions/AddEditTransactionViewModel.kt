@@ -278,7 +278,7 @@ class AddEditTransactionViewModel @Inject constructor(
         )
 
         return copy(
-            validAmount = validation.amount?.toDouble(),
+            validAmount = validation.amount,
             isSaveEnabled = validation.isValid && !isSaving
         )
     }

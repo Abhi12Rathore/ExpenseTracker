@@ -3,6 +3,6 @@ package com.example.expensetrackerpro.domain.models
 data class MonthlyTrend(
     val year: Int,
     val month: Int,
-    val income: Double,
-    val expense: Double
+    val income: Money,
+    val expense: Money
 )

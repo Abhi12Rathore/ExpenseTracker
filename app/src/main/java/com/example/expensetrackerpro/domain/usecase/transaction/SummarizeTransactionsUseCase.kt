@@ -1,9 +1,11 @@
 package com.example.expensetrackerpro.domain.usecase.transaction
 
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionListSummary
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.models.TransactionTypeFilter
+import com.example.expensetrackerpro.domain.models.sumOfMoney
 import javax.inject.Inject
 
 class SummarizeTransactionsUseCase @Inject constructor() {
@@ -18,12 +20,12 @@ class SummarizeTransactionsUseCase @Inject constructor() {
         isSearching: Boolean
     ): TransactionListSummary = when {
         isSearching -> {
-            val total = transactions.sumOf { it.signedAmount }
+            val total = transactions.sumOfMoney { it.signedAmount }
 
             TransactionListSummary.Search(
                 count = transactions.size,
                 total = total,
-                average = if (transactions.isEmpty()) 0.0 else total / transactions.size
+                average = if (transactions.isEmpty()) Money.ZERO else total / transactions.size
             )
         }
         typeFilter == TransactionTypeFilter.EXPENSE -> singleType(TransactionType.EXPENSE, transactions)
@@ -39,11 +41,11 @@ class SummarizeTransactionsUseCase @Inject constructor() {
     private fun singleType(type: TransactionType, transactions: List<Transaction>) =
         TransactionListSummary.SingleType(
             type = type,
-            total = transactions.sumOf { it.amount },
+            total = transactions.sumOfMoney { it.amount },
             count = transactions.size,
-            biggest = transactions.maxOfOrNull { it.amount } ?: 0.0
+            biggest = transactions.maxOfOrNull { it.amount } ?: Money.ZERO
         )
 
-    private fun List<Transaction>.totalOf(type: TransactionType): Double =
-        filter { it.transactionType == type }.sumOf { it.amount }
+    private fun List<Transaction>.totalOf(type: TransactionType): Money =
+        filter { it.transactionType == type }.sumOfMoney { it.amount }
 }

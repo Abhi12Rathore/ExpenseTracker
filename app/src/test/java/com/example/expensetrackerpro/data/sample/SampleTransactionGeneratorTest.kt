@@ -1,10 +1,13 @@
 package com.example.expensetrackerpro.data.sample
 
 import com.example.expensetrackerpro.domain.models.DefaultCategories
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.domain.models.sumOfMoney
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
 import com.example.expensetrackerpro.fakes.KOLKATA
 import com.example.expensetrackerpro.fakes.millisAt
+import com.example.expensetrackerpro.fakes.rupees
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -119,7 +122,7 @@ class SampleTransactionGeneratorTest {
         val salaries = inCategory("Salary")
 
         assertEquals(months, salaries.map { it.month })
-        assertTrue(salaries.all { it.day == 1 && it.amount == 85_000.0 && it.type == TransactionType.INCOME })
+        assertTrue(salaries.all { it.day == 1 && it.amount == rupees(85_000) && it.type == TransactionType.INCOME })
     }
 
     @Test
@@ -129,7 +132,7 @@ class SampleTransactionGeneratorTest {
 
         assertEquals(months.dropLast(1).toSet(), perMonth.keys)
         assertTrue(perMonth.values.all { it.size in 1..2 })
-        assertTrue(inCategory("Freelance").all { it.amount in 8_000.0..25_000.0 })
+        assertTrue(inCategory("Freelance").all { it.amount in rupees(8_000)..rupees(25_000) })
     }
 
     @Test
@@ -138,7 +141,7 @@ class SampleTransactionGeneratorTest {
 
         // June and September end a quarter inside the six months
         assertEquals(listOf(Calendar.JUNE, Calendar.SEPTEMBER), interest.map { it.month })
-        assertTrue(interest.all { it.amount in 1_200.0..2_500.0 })
+        assertTrue(interest.all { it.amount in rupees(1_200)..rupees(2_500) })
     }
 
     // --- Expenses
@@ -149,22 +152,22 @@ class SampleTransactionGeneratorTest {
         val emi = inCategory("EMI & Loans")
 
         assertEquals(months, rent.map { it.month })
-        assertTrue(rent.all { it.day == 5 && it.amount == 22_000.0 })
+        assertTrue(rent.all { it.day == 5 && it.amount == rupees(22_000) })
         assertEquals(months, emi.map { it.month })
-        assertTrue(emi.all { it.day == 10 && it.amount == 12_500.0 })
+        assertTrue(emi.all { it.day == 10 && it.amount == rupees(12_500) })
     }
 
     @Test
     fun amounts_stayWithinTheirRanges() {
-        assertTrue(inCategory("Groceries").all { it.amount in 1_200.0..3_500.0 })
-        assertTrue(inCategory("Food & Dining").all { it.amount in 180.0..2_200.0 })
-        assertTrue(inCategory("Transport").all { it.amount in 60.0..450.0 })
-        assertTrue(inCategory("Fuel").all { it.amount in 1_500.0..3_000.0 })
-        assertTrue(inCategory("Shopping").all { it.amount in 500.0..6_500.0 })
-        assertTrue(inCategory("Refunds & Cashback").all { it.amount in 150.0..1_800.0 })
-        assertEquals(setOf(649.0, 119.0), inCategory("Subscriptions").map { it.amount }.toSet())
+        assertTrue(inCategory("Groceries").all { it.amount in rupees(1_200)..rupees(3_500) })
+        assertTrue(inCategory("Food & Dining").all { it.amount in rupees(180)..rupees(2_200) })
+        assertTrue(inCategory("Transport").all { it.amount in rupees(60)..rupees(450) })
+        assertTrue(inCategory("Fuel").all { it.amount in rupees(1_500)..rupees(3_000) })
+        assertTrue(inCategory("Shopping").all { it.amount in rupees(500)..rupees(6_500) })
+        assertTrue(inCategory("Refunds & Cashback").all { it.amount in rupees(150)..rupees(1_800) })
+        assertEquals(setOf(rupees(649), rupees(119)), inCategory("Subscriptions").map { it.amount }.toSet())
         // Whole rupees throughout
-        assertTrue(samples.all { it.amount > 0 && it.amount % 1.0 == 0.0 })
+        assertTrue(samples.all { it.amount.isPositive && it.amount.paise % Money.PAISE_PER_RUPEE == 0L })
     }
 
     @Test
@@ -188,15 +191,15 @@ class SampleTransactionGeneratorTest {
 
         assertTrue(trip.size in 3..4)
         assertEquals(1, trip.map { it.month }.toSet().size)
-        assertTrue(trip.sumOf { it.amount } in 18_000.0..35_000.0)
+        assertTrue(trip.sumOfMoney { it.amount } in rupees(18_000)..rupees(35_000))
     }
 
     @Test
     fun atLeastOneMonth_spendsMoreThanItEarns_whileMostDoNot() {
-        val netByMonth = samples.groupBy { it.month }.mapValues { (_, list) -> list.sumOf { it.signed() } }
+        val netByMonth = samples.groupBy { it.month }.mapValues { (_, list) -> list.sumOfMoney { it.signed() } }
 
-        assertTrue(netByMonth.values.any { it < 0 })
-        assertTrue(netByMonth.values.count { it > 0 } >= 4)
+        assertTrue(netByMonth.values.any { it.isNegative })
+        assertTrue(netByMonth.values.count { it.isPositive } >= 4)
     }
 
     @Test
@@ -211,9 +214,9 @@ class SampleTransactionGeneratorTest {
         days.forEach { day ->
             val netByMonth = SampleTransactionGenerator(FakeTimeProvider(day))()
                 .groupBy { it.calendar().get(Calendar.YEAR) to it.month }
-                .mapValues { (_, list) -> list.sumOf { it.signed() } }
+                .mapValues { (_, list) -> list.sumOfMoney { it.signed() } }
 
-            assertTrue(netByMonth.values.any { it < 0 })
+            assertTrue(netByMonth.values.any { it.isNegative })
         }
     }
 
@@ -225,7 +228,7 @@ class SampleTransactionGeneratorTest {
         val received = inCategory("Gifts Received").single()
         val given = inCategory("Gifts & Donations")
 
-        assertEquals(5_000.0, received.amount, 0.0)
+        assertEquals(rupees(5_000), received.amount)
         assertEquals(Calendar.JULY, received.month)
         assertTrue(given.size in 2..3)
         assertTrue(given.all { it.month == Calendar.JULY })

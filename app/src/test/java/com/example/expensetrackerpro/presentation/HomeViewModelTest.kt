@@ -15,6 +15,7 @@ import com.example.expensetrackerpro.fakes.FakeTimeProvider
 import com.example.expensetrackerpro.fakes.FakeTransactionRepository
 import com.example.expensetrackerpro.fakes.getDashboardUseCase
 import com.example.expensetrackerpro.fakes.millisAt
+import com.example.expensetrackerpro.fakes.rupees
 import com.example.expensetrackerpro.fakes.transaction
 import com.example.expensetrackerpro.presentation.common.filter.PeriodFilterEvent
 import com.example.expensetrackerpro.presentation.common.filter.PeriodFilterState
@@ -74,16 +75,16 @@ class HomeViewModelTest {
     /** A September salary and rent, then an October salary and lunch. */
     private suspend fun saveTwoMonths() {
         transactions.saveTransaction(
-            transaction(id = 1, amount = 900.0, type = TransactionType.INCOME, dateMillis = millisAt(2026, Calendar.SEPTEMBER, 5))
+            transaction(id = 1, amount = rupees(900), type = TransactionType.INCOME, dateMillis = millisAt(2026, Calendar.SEPTEMBER, 5))
         )
         transactions.saveTransaction(
-            transaction(id = 2, amount = 400.0, type = TransactionType.EXPENSE, dateMillis = millisAt(2026, Calendar.SEPTEMBER, 30, hour = 23))
+            transaction(id = 2, amount = rupees(400), type = TransactionType.EXPENSE, dateMillis = millisAt(2026, Calendar.SEPTEMBER, 30, hour = 23))
         )
         transactions.saveTransaction(
-            transaction(id = 3, amount = 1000.0, type = TransactionType.INCOME, dateMillis = millisAt(2026, Calendar.OCTOBER, 1))
+            transaction(id = 3, amount = rupees(1000), type = TransactionType.INCOME, dateMillis = millisAt(2026, Calendar.OCTOBER, 1))
         )
         transactions.saveTransaction(
-            transaction(id = 4, amount = 250.0, type = TransactionType.EXPENSE, dateMillis = millisAt(2026, Calendar.OCTOBER, 7))
+            transaction(id = 4, amount = rupees(250), type = TransactionType.EXPENSE, dateMillis = millisAt(2026, Calendar.OCTOBER, 7))
         )
     }
 
@@ -113,7 +114,7 @@ class HomeViewModelTest {
         val state = viewModel.uiState.value
 
         assertEquals(thisMonth, state.filter)
-        assertEquals(1000.0, state.dashboard.summary.totalIncome, 0.001)
+        assertEquals(rupees(1000), state.dashboard.summary.totalIncome)
         assertEquals(listOf(4, 3), state.dashboard.recentTransactions.map { it.id })
         assertEquals(31, state.dashboard.spending.buckets.size)
     }
@@ -130,7 +131,7 @@ class HomeViewModelTest {
         val state = viewModel.uiState.value
 
         assertEquals(lastMonth, state.filter)
-        assertEquals(900.0, state.dashboard.summary.totalIncome, 0.001)
+        assertEquals(rupees(900), state.dashboard.summary.totalIncome)
         assertEquals(listOf(2, 1), state.dashboard.recentTransactions.map { it.id })
         assertEquals(30, state.dashboard.spending.buckets.size)
     }
@@ -186,7 +187,7 @@ class HomeViewModelTest {
             ),
             year.filter
         )
-        assertEquals(1250.0, year.dashboard.summary.totalBalance, 0.001)
+        assertEquals(rupees(1250), year.dashboard.summary.totalBalance)
         assertEquals(BucketSize.MONTH, year.dashboard.spending.bucketSize)
         assertEquals(12, year.dashboard.netSavings.size)
         assertNull(year.dashboard.pace)
@@ -269,7 +270,7 @@ class HomeViewModelTest {
             state.filter
         )
         assertEquals(listOf(3, 2), state.dashboard.recentTransactions.map { it.id })
-        assertEquals(600.0, state.dashboard.summary.totalBalance, 0.001)
+        assertEquals(rupees(600), state.dashboard.summary.totalBalance)
         assertNull(state.dashboard.comparison)
     }
 

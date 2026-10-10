@@ -11,7 +11,7 @@ data class TransactionDayGroup(
     val dayStartMillis: Long,
     val label: DayLabel,
     // Income minus expense of the transactions listed
-    val net: Double,
+    val net: Money,
     val transactions: List<Transaction>
 )
 
@@ -20,17 +20,17 @@ sealed interface TransactionListSummary {
 
     /** Every type is listed. */
     data class Overview(
-        val income: Double = 0.0,
-        val expense: Double = 0.0,
-        val net: Double = 0.0
+        val income: Money = Money.ZERO,
+        val expense: Money = Money.ZERO,
+        val net: Money = Money.ZERO
     ) : TransactionListSummary
 
     /** Only [type] is listed. [biggest] is the largest single amount, 0 when there is none. */
     data class SingleType(
         val type: TransactionType,
-        val total: Double,
+        val total: Money,
         val count: Int,
-        val biggest: Double
+        val biggest: Money
     ) : TransactionListSummary
 
     /**
@@ -40,8 +40,8 @@ sealed interface TransactionListSummary {
      */
     data class Search(
         val count: Int,
-        val total: Double,
-        val average: Double
+        val total: Money,
+        val average: Money
     ) : TransactionListSummary
 }
 

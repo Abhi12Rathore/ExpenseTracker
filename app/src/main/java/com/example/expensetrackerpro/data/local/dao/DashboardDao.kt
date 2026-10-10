@@ -12,16 +12,16 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface DashboardDao {
 
-    @Query("SELECT SUM(amount) FROM transactions WHERE transactionType = 'INCOME' AND dateMillis >= :startMillis")
-    fun getMonthlyIncome(startMillis: Long): Flow<Double?>
+    @Query("SELECT SUM(amountPaise) FROM transactions WHERE transactionType = 'INCOME' AND dateMillis >= :startMillis")
+    fun getMonthlyIncome(startMillis: Long): Flow<Long?>
 
-    @Query("SELECT SUM(amount) FROM transactions WHERE transactionType = 'EXPENSE' AND dateMillis >= :startMillis")
-    fun getMonthlyExpense(startMillis: Long): Flow<Double?>
+    @Query("SELECT SUM(amountPaise) FROM transactions WHERE transactionType = 'EXPENSE' AND dateMillis >= :startMillis")
+    fun getMonthlyExpense(startMillis: Long): Flow<Long?>
 
 
     @Query(
         """
-SELECT COALESCE(SUM(amount),0)
+SELECT COALESCE(SUM(amountPaise),0)
 FROM transactions
 WHERE transactionType = 'INCOME'
 AND dateMillis BETWEEN :startDate AND :endDate
@@ -30,11 +30,11 @@ AND dateMillis BETWEEN :startDate AND :endDate
     suspend fun getTotalIncome(
         startDate: Long,
         endDate: Long
-    ): Double
+    ): Long
 
     @Query(
         """
-SELECT COALESCE(SUM(amount),0)
+SELECT COALESCE(SUM(amountPaise),0)
 FROM transactions
 WHERE transactionType = 'EXPENSE'
 AND dateMillis BETWEEN :startDate AND :endDate
@@ -43,7 +43,7 @@ AND dateMillis BETWEEN :startDate AND :endDate
     suspend fun getTotalExpense(
         startDate: Long,
         endDate: Long
-    ): Double
+    ): Long
 
     @Query(
         """
@@ -51,7 +51,7 @@ SELECT
  c.id AS categoryId,
  c.name AS categoryName,
  c.icon AS icon,
- SUM(t.amount) AS totalAmount
+ SUM(t.amountPaise) AS totalPaise
 
 FROM transactions t
 JOIN categories c
@@ -62,7 +62,7 @@ AND t.dateMillis >= :startMillis AND t.dateMillis < :endMillis
 
 GROUP BY c.id
 
-ORDER BY totalAmount DESC
+ORDER BY totalPaise DESC
 
 """
     )
@@ -77,18 +77,18 @@ dateMillis,
 
 SUM(
 CASE 
-WHEN transactionType='INCOME' THEN amount
+WHEN transactionType='INCOME' THEN amountPaise
 ELSE 0
 END
-) income,
+) incomePaise,
 
 
 SUM(
 CASE 
-WHEN transactionType='EXPENSE' THEN amount
+WHEN transactionType='EXPENSE' THEN amountPaise
 ELSE 0
 END
-) expense
+) expensePaise
 
 
 FROM transactions
@@ -108,7 +108,7 @@ SELECT
 
 MIN(dateMillis) AS dayMillis,
 
-SUM(amount) AS amount,
+SUM(amountPaise) AS amountPaise,
 
 COUNT(*) AS transactionCount
 
@@ -138,19 +138,19 @@ CAST(strftime('%m', datetime(dateMillis / 1000, 'unixepoch', 'localtime')) AS IN
 SUM(
 CASE 
 WHEN transactionType = 'INCOME'
-THEN amount
+THEN amountPaise
 ELSE 0
 END
-) AS income,
+) AS incomePaise,
 
 
 SUM(
 CASE 
 WHEN transactionType = 'EXPENSE'
-THEN amount
+THEN amountPaise
 ELSE 0
 END
-) AS expense
+) AS expensePaise
 
 
 FROM transactions

@@ -4,5 +4,5 @@ data class CategoryBreakdown(
     val categoryId: Long,
     val categoryName: String,
     val icon: CategoryIcon,
-    val amount: Double
+    val amount: Money
 )

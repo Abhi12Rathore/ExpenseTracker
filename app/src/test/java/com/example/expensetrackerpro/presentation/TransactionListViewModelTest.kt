@@ -3,6 +3,7 @@ package com.example.expensetrackerpro.presentation
 import androidx.lifecycle.SavedStateHandle
 import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.DateRange
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
 import com.example.expensetrackerpro.domain.models.DayLabel
 import com.example.expensetrackerpro.domain.models.Transaction
@@ -20,6 +21,7 @@ import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionLi
 import com.example.expensetrackerpro.domain.usecase.transaction.GroupTransactionsByDayUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.SummarizeTransactionsUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionsUseCase
+import com.example.expensetrackerpro.fakes.rupees
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -60,16 +62,16 @@ class TransactionListViewModelTest {
     // Thursday 8 Oct 2026
     private val now = millisAt(2026, Calendar.OCTOBER, 8, hour = 12)
     private val timeProvider = FakeTimeProvider(now)
-    private val salary = transaction(id = 1, amount = 1000.0, type = TransactionType.INCOME, dateMillis = now)
+    private val salary = transaction(id = 1, amount = rupees(1000), type = TransactionType.INCOME, dateMillis = now)
     private val lunch = transaction(
         id = 2,
-        amount = 250.0,
+        amount = rupees(250),
         type = TransactionType.EXPENSE,
         dateMillis = millisAt(2026, Calendar.OCTOBER, 2)
     )
     private val oldRent = transaction(
         id = 3,
-        amount = 400.0,
+        amount = rupees(400),
         type = TransactionType.EXPENSE,
         dateMillis = millisAt(2026, Calendar.SEPTEMBER, 30, hour = 23)
     )
@@ -134,9 +136,9 @@ class TransactionListViewModelTest {
 
         assertEquals(thisMonth, state.filter)
         assertEquals(listOf(salary, lunch), state.transactions)
-        assertEquals(1000.0, state.overview.income, 0.001)
-        assertEquals(250.0, state.overview.expense, 0.001)
-        assertEquals(750.0, state.overview.net, 0.001)
+        assertEquals(rupees(1000), state.overview.income)
+        assertEquals(rupees(250), state.overview.expense)
+        assertEquals(rupees(750), state.overview.net)
     }
 
     @Test
@@ -153,7 +155,7 @@ class TransactionListViewModelTest {
         )
         assertEquals(true, september.filter.canStepForward)
         assertEquals(listOf(oldRent), september.transactions)
-        assertEquals(-400.0, september.overview.net, 0.001)
+        assertEquals(rupees(-400), september.overview.net)
 
         viewModel.onFilterEvent(PeriodFilterEvent.NextPeriod)
         assertEquals(thisMonth, viewModel.uiState.value.filter)
@@ -184,7 +186,7 @@ class TransactionListViewModelTest {
 
         viewModel.onFilterEvent(PeriodFilterEvent.GranularitySelected(PeriodGranularity.YEAR))
         assertEquals(listOf(salary, lunch, oldRent), viewModel.uiState.value.transactions)
-        assertEquals(350.0, viewModel.uiState.value.overview.net, 0.001)
+        assertEquals(rupees(350), viewModel.uiState.value.overview.net)
     }
 
     @Test
@@ -209,7 +211,7 @@ class TransactionListViewModelTest {
             state.filter
         )
         assertEquals(listOf(lunch, oldRent), state.transactions)
-        assertEquals(650.0, state.overview.expense, 0.001)
+        assertEquals(rupees(650), state.overview.expense)
 
         // The arrows have nothing to step in a custom range
         viewModel.onFilterEvent(PeriodFilterEvent.PreviousPeriod)
@@ -266,7 +268,7 @@ class TransactionListViewModelTest {
 
     @Test
     fun openedWithACategory_listsOnlyThatCategory_untilTheFilterIsCleared() = runTest {
-        val travel = lunch.copy(id = 4, categoryId = 7, categoryName = "Travel", amount = 90.0)
+        val travel = lunch.copy(id = 4, categoryId = 7, categoryName = "Travel", amount = rupees(90))
         val repository = FakeTransactionRepository(listOf(salary, lunch, oldRent, travel))
         val viewModel = viewModel(
             repository = repository,
@@ -286,8 +288,8 @@ class TransactionListViewModelTest {
         assertEquals(CategoryFilter(id = 7, name = "Travel"), filtered.categoryFilter)
         assertEquals(listOf(travel), filtered.transactions)
         // Totals follow what is listed
-        assertEquals(90.0, filtered.overview.expense, 0.001)
-        assertEquals(0.0, filtered.overview.income, 0.001)
+        assertEquals(rupees(90), filtered.overview.expense)
+        assertEquals(Money.ZERO, filtered.overview.income)
 
         viewModel.onEvent(TransactionListEvent.CategoryFilterCleared)
         val cleared = viewModel.uiState.value
@@ -347,7 +349,7 @@ class TransactionListViewModelTest {
             days.map { it.dayStartMillis }
         )
         assertEquals(listOf(DayLabel.TODAY, DayLabel.OTHER), days.map { it.label })
-        assertEquals(listOf(1000.0, -250.0), days.map { it.net })
+        assertEquals(listOf(rupees(1000), rupees(-250)), days.map { it.net })
         assertEquals(TransactionTypeCounts(all = 2, expense = 1, income = 1), viewModel.uiState.value.counts)
     }
 
@@ -363,7 +365,7 @@ class TransactionListViewModelTest {
         assertEquals(listOf(salary), income.transactions)
         assertEquals(TransactionTypeCounts(all = 2, expense = 1, income = 1), income.counts)
         assertEquals(
-            TransactionListSummary.SingleType(TransactionType.INCOME, total = 1000.0, count = 1, biggest = 1000.0),
+            TransactionListSummary.SingleType(TransactionType.INCOME, total = rupees(1000), count = 1, biggest = rupees(1000)),
             income.summary
         )
 
@@ -390,9 +392,9 @@ class TransactionListViewModelTest {
 
     @Test
     fun typeFilter_combinesWithPeriodSearchAndCategory() = runTest {
-        val travelRefund = salary.copy(id = 4, title = "Trip refund", amount = 60.0, categoryId = 7, categoryName = "Travel")
-        val travelTaxi = lunch.copy(id = 5, title = "Trip taxi", amount = 90.0, categoryId = 7, categoryName = "Travel")
-        val foodTrip = lunch.copy(id = 6, title = "Trip snacks", amount = 30.0)
+        val travelRefund = salary.copy(id = 4, title = "Trip refund", amount = rupees(60), categoryId = 7, categoryName = "Travel")
+        val travelTaxi = lunch.copy(id = 5, title = "Trip taxi", amount = rupees(90), categoryId = 7, categoryName = "Travel")
+        val foodTrip = lunch.copy(id = 6, title = "Trip snacks", amount = rupees(30))
         val oldTravel = oldRent.copy(id = 7, title = "Trip hotel", categoryId = 7, categoryName = "Travel")
         val viewModel = viewModel(
             repository = FakeTransactionRepository(listOf(salary, lunch, travelRefund, travelTaxi, foodTrip, oldTravel)),
@@ -416,7 +418,7 @@ class TransactionListViewModelTest {
         // In October, matching "trip", in Travel, and an expense
         assertEquals(listOf(travelTaxi), state.transactions)
         assertEquals(TransactionTypeCounts(all = 2, expense = 1, income = 1), state.counts)
-        assertEquals(TransactionListSummary.Search(count = 1, total = -90.0, average = -90.0), state.summary)
+        assertEquals(TransactionListSummary.Search(count = 1, total = rupees(-90), average = rupees(-90)), state.summary)
     }
 
     // --- Swipe to delete
@@ -432,7 +434,7 @@ class TransactionListViewModelTest {
         val state = viewModel.uiState.value
 
         assertEquals(listOf(salary), state.transactions)
-        assertEquals(0.0, state.overview.expense, 0.001)
+        assertEquals(Money.ZERO, state.overview.expense)
         assertEquals(listOf(salary, oldRent), repository.current.sortedBy { it.id })
         assertEquals(listOf(lunch), deleted)
         assertEquals(0, state.swipeResetToken)
@@ -537,7 +539,7 @@ class TransactionListViewModelTest {
 
         assertEquals(listOf(teamLunch), viewModel.uiState.value.transactions)
         assertEquals(
-            TransactionListSummary.Search(count = 1, total = -250.0, average = -250.0),
+            TransactionListSummary.Search(count = 1, total = rupees(-250), average = rupees(-250)),
             viewModel.uiState.value.summary
         )
     }

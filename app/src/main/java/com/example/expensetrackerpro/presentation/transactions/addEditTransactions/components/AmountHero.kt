@@ -31,6 +31,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.ui.theme.extendedColors
 import com.example.expensetrackerpro.utils.CurrencyFormatter
@@ -97,14 +98,14 @@ fun AmountHero(
 /** One line standing in for [AmountHero] while the keyboard is open for another field. */
 @Composable
 fun AmountSummary(
-    amount: Double?,
+    amount: Money?,
     transactionType: TransactionType,
     categoryName: String?,
     dateLabel: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val amountText = CurrencyFormatter.format(amount ?: 0.0)
+    val amountText = CurrencyFormatter.format(amount ?: Money.ZERO)
     val summary = stringResource(
         R.string.transaction_summary,
         amountText,

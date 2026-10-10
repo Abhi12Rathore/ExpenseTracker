@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.presentation.transactions.addEditTransacti
 
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.DateChoice
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorState
@@ -10,8 +11,8 @@ data class AddEditTransactionUiState(
     val title: String = "",
     // As typed: plain digits with an optional decimal point, no grouping
     val amount: String = "",
-    // The amount as a number, or null while it is not a valid amount
-    val validAmount: Double? = null,
+    // The amount as money, or null while it is not a valid amount
+    val validAmount: Money? = null,
     val note: String = "",
     val isNoteExpanded: Boolean = false,
     val selectedCategoryId: Int? = null,
