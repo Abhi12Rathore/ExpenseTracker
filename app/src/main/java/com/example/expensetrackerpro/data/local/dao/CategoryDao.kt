@@ -3,6 +3,7 @@ package com.example.expensetrackerpro.data.local.dao
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import com.example.expensetrackerpro.data.local.entity.CategoryEntity
 import com.example.expensetrackerpro.data.local.model.CategoryUsageEntity
 import kotlinx.coroutines.flow.Flow
@@ -23,6 +24,19 @@ GROUP BY c.id
 """
     )
     abstract fun getCategoryUsage(startMillis: Long, endMillis: Long): Flow<List<CategoryUsageEntity>>
+
+    @Update
+    abstract suspend fun updateCategoryRow(category: CategoryEntity)
+
+    @Query("UPDATE transactions SET categoryName = :name WHERE categoryId = :id")
+    abstract suspend fun renameOnTransactions(id: Int, name: String)
+
+    /** Stores [category], and its name on every transaction that keeps a copy of it. All or nothing. */
+    @Transaction
+    open suspend fun update(category: CategoryEntity) {
+        updateCategoryRow(category)
+        renameOnTransactions(id = category.id, name = category.name)
+    }
 
     @Query("SELECT * FROM categories WHERE id = :id")
     abstract suspend fun getCategoryById(id: Int): CategoryEntity?

@@ -125,6 +125,36 @@ class CategoryDaoTest {
         assertEquals(0, usage.getValue(salary.id).periodCount)
     }
 
+    // --- Rename
+
+    @Test
+    fun renaming_updatesTheNameOnTheCategorysTransactions_andOnNoOthers() = runTest {
+        repository.updateCategory(food.toDomain().copy(name = "Eating out", icon = CategoryIcon.FASTFOOD))
+
+        val stored = repository.getAllCategories().first().single { it.id == food.id }
+        assertEquals("Eating out", stored.name)
+        assertEquals(CategoryIcon.FASTFOOD, stored.icon)
+        // Still built in, and still an expense
+        assertFalse(stored.isCustom)
+        assertEquals(TransactionType.EXPENSE, stored.type)
+
+        val all = transactions.getAllTransactions().first()
+        val renamed = all.filter { it.categoryId == food.id }
+        assertEquals(4, renamed.size)
+        assertTrue(renamed.all { it.categoryName == "Eating out" })
+        assertEquals(listOf("Groceries", "Salary"), all.filter { it.categoryId != food.id }.map { it.categoryName }.sorted())
+        // Usage is untouched by a rename
+        assertEquals(4, usage().getValue(food.id).totalCount)
+    }
+
+    @Test
+    fun updatingOnlyTheIcon_leavesTheTransactionsNamesAsTheyWere() = runTest {
+        repository.updateCategory(groceries.toDomain().copy(icon = CategoryIcon.STOREFRONT))
+
+        assertEquals("Groceries", transactions.getTransactionById(5)?.categoryName)
+        assertEquals(CategoryIcon.STOREFRONT, transactions.getTransactionById(5)?.categoryIcon)
+    }
+
     // --- Reassign, then delete
 
     @Test

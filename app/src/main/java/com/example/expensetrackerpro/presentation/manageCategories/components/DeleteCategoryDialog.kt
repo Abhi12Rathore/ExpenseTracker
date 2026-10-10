@@ -97,6 +97,10 @@ private fun ReassignTargets(
                 request.transactionCount
             )
         )
+        Text(
+            text = stringResource(R.string.category_delete_move_warning),
+            color = MaterialTheme.colorScheme.error
+        )
         // Scrolls on its own, so a long list never pushes the buttons off the dialog
         LazyColumn(
             modifier = Modifier

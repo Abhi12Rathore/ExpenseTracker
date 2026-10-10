@@ -30,7 +30,7 @@ class CategoryRepositoryImpl @Inject constructor(
         transactionDao.insertCategory(category.toEntity()).toInt()
 
     override suspend fun updateCategory(category: Category) {
-        transactionDao.updateCategory(category.toEntity())
+        categoryDao.update(category.toEntity())
     }
 
     override suspend fun deleteCategory(category: Category): Boolean =

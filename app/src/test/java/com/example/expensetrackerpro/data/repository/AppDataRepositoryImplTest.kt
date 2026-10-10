@@ -81,7 +81,7 @@ class AppDataRepositoryImplTest {
     @Test
     fun aBuiltInCategoryThatWasRenamed_keepsItsNewName() = runTest {
         val first = categories().first()
-        dao.updateCategory(first.copy(name = "Eating out"))
+        database.categoryDao().update(first.copy(name = "Eating out"))
 
         assertTrue(deleteAllData())
 

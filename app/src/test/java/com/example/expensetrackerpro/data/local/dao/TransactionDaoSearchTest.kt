@@ -75,7 +75,7 @@ class TransactionDaoSearchTest {
 
     @Test
     fun changingACategorysIcon_changesItOnItsTransactions() = runTest {
-        database.transactionDao().updateCategory(category(id = 2, name = "Commute", icon = CategoryIcon.DIRECTIONS_BUS))
+        database.categoryDao().update(category(id = 2, name = "Commute", icon = CategoryIcon.DIRECTIONS_BUS))
 
         assertEquals(CategoryIcon.DIRECTIONS_BUS, repository.getTransactionById(2)?.categoryIcon)
     }

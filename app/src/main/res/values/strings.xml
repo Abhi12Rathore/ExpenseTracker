@@ -298,6 +298,7 @@
         <item quantity="one">%1$d transaction uses this category and there is no other category of its type to move it to. Create one first.</item>
         <item quantity="other">%1$d transactions use this category and there is no other category of its type to move them to. Create one first.</item>
     </plurals>
+    <string name="category_delete_move_warning">Deleting the category can\'t be undone.</string>
     <string name="category_delete_confirm">Delete</string>
     <string name="category_delete_move_confirm">Move and delete</string>
     <string name="category_delete_cancel">Cancel</string>

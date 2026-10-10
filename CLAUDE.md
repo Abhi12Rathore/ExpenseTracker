@@ -68,7 +68,7 @@ Apply these to all new and changed code. Existing violations are tracked under K
 Planned for the `refactor/lld` branch:
 - `TransactionDao` has 19 methods covering transactions, categories and dashboard queries. Split it per aggregate. `CategoryDao` (usage stats, reassign-then-delete) is the start: move the category CRUD there.
 - Money is `Double` in entities and domain models. Migrate to `Money` (paise as `Long`) with a Room `Migration`.
-- `Transaction` stores `categoryName` alongside `categoryId`, so a category rename leaves stale names. Read it via JOIN/`@Relation` and drop the column (migration).
+- `Transaction` stores `categoryName` alongside `categoryId`. `CategoryDao.update` and `reassignAndDelete` keep the copy in step; any new write to a category's name must too. Read it via JOIN/`@Relation` and drop the column (migration).
 - No shared error model. Introduce `DomainError` + `Result`.
 
 ## Workflow
