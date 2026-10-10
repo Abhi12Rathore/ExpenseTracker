@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.fakes
 
+import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.CategoryUsage
 import com.example.expensetrackerpro.domain.models.DateRange
@@ -32,6 +34,9 @@ class FakeCategoryRepository(
     /** While true the reassigning delete fails, as a failing database would make it. */
     var failReassign = false
 
+    /** When set, a plain delete fails with it, whether or not the category is in use. */
+    var deleteFailure: DomainError? = null
+
     /** Says how much the category [id] has been used, ever and in the period asked for. */
     fun setUsage(id: Int, totalCount: Int, periodCount: Int = 0, periodAmount: Money = Money.ZERO) {
         usage.update { it + (id to Usage(totalCount, periodCount, periodAmount)) }
@@ -55,10 +60,11 @@ class FakeCategoryRepository(
         categories.update { list -> list.map { if (it.id == category.id) category else it } }
     }
 
-    override suspend fun deleteCategory(category: Category): Boolean {
-        if (totalCountOf(category.id) > 0) return false
+    override suspend fun deleteCategory(category: Category): Outcome<Unit> {
+        deleteFailure?.let { return Outcome.Failure(it) }
+        if (totalCountOf(category.id) > 0) return Outcome.Failure(DomainError.CategoryInUse)
         categories.update { list -> list.filterNot { it.id == category.id } }
-        return true
+        return Outcome.Success(Unit)
     }
 
     override fun getCategoryUsage(range: DateRange): Flow<List<CategoryUsage>> {
@@ -72,8 +78,9 @@ class FakeCategoryRepository(
         }
     }
 
-    override suspend fun deleteCategoryReassigning(category: Category, target: Category): Boolean {
-        if (failReassign || categories.value.none { it.id == target.id }) return false
+    override suspend fun deleteCategoryReassigning(category: Category, target: Category): Outcome<Unit> {
+        if (failReassign) return Outcome.Failure(DomainError.StorageFailure())
+        if (categories.value.none { it.id == target.id }) return Outcome.Failure(DomainError.NotFound)
 
         usage.update { used ->
             val moved = used[category.id] ?: Usage()
@@ -87,7 +94,7 @@ class FakeCategoryRepository(
             )
         }
         categories.update { list -> list.filterNot { it.id == category.id } }
-        return true
+        return Outcome.Success(Unit)
     }
 
     private data class Usage(

@@ -9,11 +9,3 @@ data class CategoryDraft(
 )
 
 enum class CategoryNameValidation { VALID, BLANK, TOO_LONG, DUPLICATE }
-
-sealed interface SaveCategoryResult {
-    data class Saved(val categoryId: Int) : SaveCategoryResult
-    data class Invalid(val reason: CategoryNameValidation) : SaveCategoryResult
-
-    /** The category being edited no longer exists. */
-    data object NotFound : SaveCategoryResult
-}

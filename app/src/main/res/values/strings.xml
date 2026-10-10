@@ -163,7 +163,6 @@
     <string name="transactions_clear_category_filter">Clear category filter</string>
     <string name="transactions_transaction_deleted">Transaction deleted</string>
     <string name="transactions_undo">Undo</string>
-    <string name="transactions_restore_failed">Couldn\'t restore the transaction</string>
     <string name="transactions_add">Add</string>
     <!-- Type chips: name, then how many it lists -->
     <string name="transactions_filter_all">All</string>
@@ -229,8 +228,6 @@
     <string name="transaction_save_amount">Save %1$s</string>
     <string name="transaction_update">Update</string>
     <string name="transaction_update_amount">Update %1$s</string>
-    <string name="transaction_save_failed">Couldn\'t save the transaction. Try again.</string>
-    <string name="transaction_delete_failed">Couldn\'t delete the transaction. Try again.</string>
     <string name="transaction_delete_dialog_title">Delete transaction?</string>
     <string name="transaction_delete_dialog_message">It will be removed from your transactions and totals.</string>
     <string name="transaction_delete_dialog_cancel">Cancel</string>
@@ -302,7 +299,6 @@
     <string name="category_delete_confirm">Delete</string>
     <string name="category_delete_move_confirm">Move and delete</string>
     <string name="category_delete_cancel">Cancel</string>
-    <string name="category_delete_failed">Couldn\'t delete the category. Try again.</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
@@ -342,7 +338,6 @@
     </plurals>
     <string name="settings_export">Export &amp; backup</string>
     <string name="settings_export_subtitle">Save a copy of your data</string>
-    <string name="settings_data_action_failed">Couldn\'t change the data. Try again.</string>
 
     <!-- Settings: about -->
     <string name="settings_section_about">About</string>
@@ -399,4 +394,11 @@
     <string name="lock_message_lockout">Too many attempts. Wait a moment, then tap Unlock to try again.</string>
     <string name="lock_message_lockout_permanent">Biometrics are locked after too many attempts. Tap Unlock and use your screen lock.</string>
     <string name="lock_message_error">Couldn\'t verify it\'s you. Tap Unlock to try again.</string>
+
+    <!-- What went wrong with a save or delete, shown in a snackbar -->
+    <string name="error_category_not_found">That category no longer exists</string>
+    <string name="error_category_in_use">This category still has transactions</string>
+    <string name="error_name_too_long">That name is too long</string>
+    <string name="error_incompatible_reassign_target">Transactions can\'t be moved to that category</string>
+    <string name="error_storage_failure">Couldn\'t save your changes. Storage may be full.</string>
 </resources>

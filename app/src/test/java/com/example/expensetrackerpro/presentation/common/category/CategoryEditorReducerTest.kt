@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.presentation.common.category
 
+import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.error.InvalidInputReason
 import com.example.expensetrackerpro.domain.models.CategoryDraft
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.CategoryIconGroup
@@ -27,6 +29,47 @@ class CategoryEditorReducerTest {
     private fun CategoryEditorState.on(event: CategoryEditorEvent) = reducer.reduce(this, event, existing)
 
     private fun newExpense() = reducer.open(TransactionType.EXPENSE, existing = existing)
+
+    // --- A save that failed
+
+    @Test
+    fun aNameTheSaveTurnedDown_isCalledOut_andSavingCanBeTriedAgain() {
+        val saving = newExpense().on(CategoryEditorEvent.NameChanged("Pets")).copy(isSaving = true)
+
+        val cases = mapOf(
+            DomainError.DuplicateName to CategoryNameValidation.DUPLICATE,
+            DomainError.InvalidInput(InvalidInputReason.NAME_BLANK) to CategoryNameValidation.BLANK,
+            DomainError.InvalidInput(InvalidInputReason.NAME_TOO_LONG) to CategoryNameValidation.TOO_LONG
+        )
+
+        cases.forEach { (error, expected) ->
+            val state = reducer.saveFailed(saving, error)
+
+            assertEquals(expected, state.nameError)
+            assertFalse(state.isSaving)
+            assertFalse(state.isSaveEnabled)
+        }
+    }
+
+    @Test
+    fun aSaveThatFailedForAnotherReason_leavesTheNameAlone_andSavingCanBeTriedAgain() {
+        val saving = newExpense().on(CategoryEditorEvent.NameChanged("Pets")).copy(isSaving = true)
+
+        val errors = listOf(
+            DomainError.StorageFailure("disk I/O error"),
+            DomainError.NotFound,
+            DomainError.CategoryInUse,
+            DomainError.InvalidInput(InvalidInputReason.INCOMPATIBLE_REASSIGN_TARGET)
+        )
+
+        errors.forEach { error ->
+            val state = reducer.saveFailed(saving, error)
+
+            assertNull(state.nameError)
+            assertFalse(state.isSaving)
+            assertTrue(state.isSaveEnabled)
+        }
+    }
 
     // --- Opening
 

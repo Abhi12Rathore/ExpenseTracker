@@ -1,6 +1,8 @@
 package com.example.expensetrackerpro.presentation
 
 import androidx.lifecycle.SavedStateHandle
+import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.CategoryNameValidation
 import com.example.expensetrackerpro.domain.models.DateChoice
@@ -33,7 +35,6 @@ import com.example.expensetrackerpro.presentation.common.category.editor.Categor
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorReducer
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.AddEditTransactionViewModel
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEffect
-import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionError
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEvent
 import com.example.expensetrackerpro.util.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -479,7 +480,7 @@ class AddEditTransactionViewModelTest {
 
         assertEquals(
             listOf<AddEditTransactionEffect>(
-                AddEditTransactionEffect.ShowError(AddEditTransactionError.SAVE_FAILED)
+                AddEditTransactionEffect.ShowError(R.string.error_storage_failure)
             ),
             effects
         )
@@ -613,6 +614,25 @@ class AddEditTransactionViewModelTest {
     }
 
     @Test
+    fun aSaveWhoseCategoryIsGone_saysTheCategoryNoLongerExists() = runTest {
+        val viewModel = viewModel()
+        val effects = effectsOf(viewModel)
+        viewModel.fillValidExpense()
+        transactions.failWrites = true
+        transactions.writeFailure = DomainError.NotFound
+
+        viewModel.onEvent(AddEditTransactionEvent.SaveClicked)
+
+        assertEquals(
+            listOf<AddEditTransactionEffect>(
+                AddEditTransactionEffect.ShowError(R.string.error_category_not_found)
+            ),
+            effects
+        )
+        assertFalse(viewModel.uiState.value.isSaving)
+    }
+
+    @Test
     fun failedDelete_showsAnErrorAndStays() = runTest {
         storeLunch()
         val viewModel = viewModel(transactionId = 5)
@@ -625,7 +645,7 @@ class AddEditTransactionViewModelTest {
         assertEquals(1, transactions.current.size)
         assertEquals(
             listOf<AddEditTransactionEffect>(
-                AddEditTransactionEffect.ShowError(AddEditTransactionError.DELETE_FAILED)
+                AddEditTransactionEffect.ShowError(R.string.error_storage_failure)
             ),
             effects
         )

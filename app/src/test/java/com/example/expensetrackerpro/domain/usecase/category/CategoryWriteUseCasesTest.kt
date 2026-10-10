@@ -1,13 +1,13 @@
 package com.example.expensetrackerpro.domain.usecase.category
 
+import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.fakes.FakeCategoryRepository
 import com.example.expensetrackerpro.fakes.category
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CategoryWriteUseCasesTest {
@@ -42,7 +42,7 @@ class CategoryWriteUseCasesTest {
 
         val deleted = DeleteCategoryUseCase(repository)(food)
 
-        assertTrue(deleted)
+        assertEquals(Outcome.Success(Unit), deleted)
         assertEquals(listOf(salary), repository.current)
     }
 
@@ -52,7 +52,7 @@ class CategoryWriteUseCasesTest {
 
         val deleted = DeleteCategoryUseCase(repository)(food)
 
-        assertFalse(deleted)
+        assertEquals(Outcome.Failure(DomainError.CategoryInUse), deleted)
         assertEquals(listOf(food, salary), repository.current)
     }
 }

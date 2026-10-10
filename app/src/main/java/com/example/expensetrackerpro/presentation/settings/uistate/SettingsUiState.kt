@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation.settings.uistate
 
+import androidx.annotation.StringRes
 import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.AuthResult
 import com.example.expensetrackerpro.domain.models.BiometricStatus
@@ -45,5 +46,5 @@ data class SettingsUiState(
 sealed interface SettingsMessage {
     data class SampleDataLoaded(val transactionCount: Int) : SettingsMessage
     data object AllDataDeleted : SettingsMessage
-    data object Failed : SettingsMessage
+    data class Failed(@StringRes val messageRes: Int) : SettingsMessage
 }

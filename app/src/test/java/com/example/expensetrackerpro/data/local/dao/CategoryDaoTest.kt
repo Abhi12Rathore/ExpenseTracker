@@ -9,6 +9,8 @@ import com.example.expensetrackerpro.data.local.expenseDatabase.AppDatabase
 import com.example.expensetrackerpro.data.mapper.toDomain
 import com.example.expensetrackerpro.data.repository.CategoryRepositoryImpl
 import com.example.expensetrackerpro.data.repository.TransactionRepositoryImpl
+import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.CategoryUsage
 import com.example.expensetrackerpro.domain.models.DateRange
@@ -158,9 +160,11 @@ class CategoryDaoTest {
 
     // --- Reassign, then delete
 
+    private val notFound = Outcome.Failure(DomainError.NotFound)
+
     @Test
     fun reassign_movesEveryTransactionToTheTarget_thenDeletesTheCategory() = runTest {
-        assertTrue(repository.deleteCategoryReassigning(food.toDomain(), groceries.toDomain()))
+        assertEquals(Outcome.Success(Unit), repository.deleteCategoryReassigning(food.toDomain(), groceries.toDomain()))
 
         assertEquals(listOf(groceries.id, pets.id, salary.id), categoryIds())
 
@@ -200,7 +204,7 @@ class CategoryDaoTest {
 
     @Test
     fun reassign_toACategoryOfAnotherType_changesNothing() = runTest {
-        assertFalse(repository.deleteCategoryReassigning(food.toDomain(), salary.toDomain()))
+        assertEquals(notFound, repository.deleteCategoryReassigning(food.toDomain(), salary.toDomain()))
 
         assertEquals(listOf(food.id, groceries.id, pets.id, salary.id), categoryIds())
         assertEquals(4, usage().getValue(food.id).totalCount)
@@ -211,9 +215,9 @@ class CategoryDaoTest {
     fun reassign_toItselfOrToAMissingCategory_changesNothing() = runTest {
         val missing = pets.toDomain().copy(id = 99)
 
-        assertFalse(repository.deleteCategoryReassigning(food.toDomain(), food.toDomain()))
-        assertFalse(repository.deleteCategoryReassigning(food.toDomain(), missing))
-        assertFalse(repository.deleteCategoryReassigning(missing, groceries.toDomain()))
+        assertEquals(notFound, repository.deleteCategoryReassigning(food.toDomain(), food.toDomain()))
+        assertEquals(notFound, repository.deleteCategoryReassigning(food.toDomain(), missing))
+        assertEquals(notFound, repository.deleteCategoryReassigning(missing, groceries.toDomain()))
 
         assertEquals(listOf(food.id, groceries.id, pets.id, salary.id), categoryIds())
         assertEquals(4, usage().getValue(food.id).totalCount)
@@ -222,8 +226,8 @@ class CategoryDaoTest {
 
     @Test
     fun aPlainDelete_isStillRefusedWhileTransactionsRemain_andWorksOnceTheyAreGone() = runTest {
-        assertFalse(repository.deleteCategory(groceries.toDomain()))
-        assertTrue(repository.deleteCategory(pets.toDomain()))
+        assertEquals(Outcome.Failure(DomainError.CategoryInUse), repository.deleteCategory(groceries.toDomain()))
+        assertEquals(Outcome.Success(Unit), repository.deleteCategory(pets.toDomain()))
 
         assertEquals(listOf(food.id, groceries.id, salary.id), categoryIds())
     }

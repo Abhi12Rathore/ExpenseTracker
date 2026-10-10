@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.fakes
 
+import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
@@ -20,8 +22,10 @@ class FakeTransactionRepository(
 
     val current: List<Transaction> get() = transactions.value
 
-    /** While true every write is rejected, as a failing database would. */
+    /** While true every write is rejected with [writeFailure], as a failing database would. */
     var failWrites = false
+
+    var writeFailure: DomainError = DomainError.StorageFailure()
 
     /** How many times a delete was asked for, whether or not it went through. */
     var deleteCalls = 0
@@ -33,27 +37,27 @@ class FakeTransactionRepository(
     private val _deletions = MutableSharedFlow<Transaction>(extraBufferCapacity = 16)
     override val deletions: Flow<Transaction> = _deletions
 
-    override suspend fun saveTransaction(transaction: Transaction): Boolean {
-        if (failWrites) return false
+    override suspend fun saveTransaction(transaction: Transaction): Outcome<Unit> {
+        if (failWrites) return Outcome.Failure(writeFailure)
         transactions.update { list -> list.filterNot { it.id == transaction.id } + transaction }
-        return true
+        return Outcome.Success(Unit)
     }
 
-    override suspend fun updateTransaction(transaction: Transaction): Boolean {
-        if (failWrites) return false
+    override suspend fun updateTransaction(transaction: Transaction): Outcome<Unit> {
+        if (failWrites) return Outcome.Failure(writeFailure)
         transactions.update { list ->
             list.map { if (it.id == transaction.id) transaction else it }
         }
-        return true
+        return Outcome.Success(Unit)
     }
 
-    override suspend fun deleteTransaction(transaction: Transaction): Boolean {
+    override suspend fun deleteTransaction(transaction: Transaction): Outcome<Unit> {
         deleteCalls++
         deleteGate?.await()
-        if (failWrites) return false
+        if (failWrites) return Outcome.Failure(writeFailure)
         transactions.update { list -> list.filterNot { it.id == transaction.id } }
         _deletions.tryEmit(transaction)
-        return true
+        return Outcome.Success(Unit)
     }
 
     override suspend fun getTransactionById(id: Int): Transaction? =

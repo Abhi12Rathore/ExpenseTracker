@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.repository
 
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
@@ -10,13 +11,13 @@ interface TransactionRepository {
     /** Each transaction as it is deleted. Nothing is replayed to late collectors. */
     val deletions: Flow<Transaction>
 
-    // The writes return false when the database rejects them
+    // A write fails with NotFound when the transaction's category is no longer stored
 
-    suspend fun saveTransaction(transaction: Transaction): Boolean
+    suspend fun saveTransaction(transaction: Transaction): Outcome<Unit>
 
-    suspend fun updateTransaction(transaction: Transaction): Boolean
+    suspend fun updateTransaction(transaction: Transaction): Outcome<Unit>
 
-    suspend fun deleteTransaction(transaction: Transaction): Boolean
+    suspend fun deleteTransaction(transaction: Transaction): Outcome<Unit>
 
     suspend fun getTransactionById(id: Int): Transaction?
 

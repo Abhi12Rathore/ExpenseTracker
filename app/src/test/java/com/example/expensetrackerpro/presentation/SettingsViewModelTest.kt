@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.presentation
 
+import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.AuthResult
 import com.example.expensetrackerpro.domain.models.BiometricStatus
@@ -484,7 +486,10 @@ class SettingsViewModelTest {
 
         viewModel.onEvent(SettingsEvent.DeleteAllDataConfirmed)
 
-        assertEquals(SettingsMessage.Failed, viewModel.uiState.value.message)
+        assertEquals(
+            SettingsMessage.Failed(R.string.error_storage_failure),
+            viewModel.uiState.value.message
+        )
         assertFalse(viewModel.uiState.value.isDataActionRunning)
     }
 
@@ -553,6 +558,31 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun aDataActionThatFails_saysWhy() = runTest {
+        appData.fail = true
+        appData.failure = DomainError.CategoryInUse
+        sampleData.fail = true
+        sampleData.failure = DomainError.NotFound
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        viewModel.onEvent(SettingsEvent.DeleteAllDataClicked)
+        viewModel.typeToConfirm("DELETE")
+        viewModel.onEvent(SettingsEvent.DeleteAllDataConfirmed)
+        assertEquals(
+            SettingsMessage.Failed(R.string.error_category_in_use),
+            viewModel.uiState.value.message
+        )
+
+        viewModel.onEvent(SettingsEvent.LoadSampleDataClicked)
+        viewModel.onEvent(SettingsEvent.LoadSampleDataConfirmed)
+        assertEquals(
+            SettingsMessage.Failed(R.string.error_category_not_found),
+            viewModel.uiState.value.message
+        )
+    }
+
+    @Test
     fun loadSampleData_thatFails_saysSo() = runTest {
         val viewModel = viewModel()
         subscribe(viewModel.uiState)
@@ -561,7 +591,10 @@ class SettingsViewModelTest {
         viewModel.onEvent(SettingsEvent.LoadSampleDataClicked)
         viewModel.onEvent(SettingsEvent.LoadSampleDataConfirmed)
 
-        assertEquals(SettingsMessage.Failed, viewModel.uiState.value.message)
+        assertEquals(
+            SettingsMessage.Failed(R.string.error_storage_failure),
+            viewModel.uiState.value.message
+        )
         assertFalse(viewModel.uiState.value.isDataActionRunning)
     }
 

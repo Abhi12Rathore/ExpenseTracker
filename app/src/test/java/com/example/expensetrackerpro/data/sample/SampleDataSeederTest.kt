@@ -8,6 +8,8 @@ import com.example.expensetrackerpro.data.local.entity.TransactionEntity
 import com.example.expensetrackerpro.data.local.expenseDatabase.AppDatabase
 import com.example.expensetrackerpro.data.local.expenseDatabase.ExpenseDatabaseCallback
 import com.example.expensetrackerpro.data.repository.TransactionRepositoryImpl
+import com.example.expensetrackerpro.domain.error.Outcome
+import com.example.expensetrackerpro.domain.error.getOrNull
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.DefaultCategories
 import com.example.expensetrackerpro.domain.models.TransactionType
@@ -79,7 +81,7 @@ class SampleDataSeederTest {
     fun load_writesEveryGeneratedTransaction_underItsCategory() = runTest {
         val expected = generator()
 
-        assertEquals(expected.size, loadSampleData())
+        assertEquals(Outcome.Success(expected.size), loadSampleData())
 
         val stored = transactions().sortedBy { it.dateMillis }
         assertEquals(expected.map { it.title to it.amount }.sortedBy { it.first }, stored.map { it.title to it.amount }.sortedBy { it.first })
@@ -94,7 +96,7 @@ class SampleDataSeederTest {
     fun load_replacesWhatWasThere_andLoadingAgainDoesNotDouble() = runTest {
         addCustomCategoryWithATransaction()
 
-        val count = loadSampleData()
+        val count = loadSampleData().getOrNull()
         loadSampleData()
 
         assertEquals(count, transactions().size)
@@ -108,7 +110,7 @@ class SampleDataSeederTest {
         val fuel = categories().single { it.name == "Fuel" }
         database.categoryDao().deleteCategory(fuel)
 
-        val count = loadSampleData()
+        val count = loadSampleData().getOrNull()
 
         assertEquals(generator().size, count)
         assertEquals(1, categories().count { it.name == "Fuel" })

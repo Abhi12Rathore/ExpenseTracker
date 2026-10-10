@@ -1,9 +1,10 @@
 package com.example.expensetrackerpro.domain.usecase.category
 
+import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.error.InvalidInputReason
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.CategoryDraft
 import com.example.expensetrackerpro.domain.models.CategoryIcon
-import com.example.expensetrackerpro.domain.models.CategoryNameValidation
-import com.example.expensetrackerpro.domain.models.SaveCategoryResult
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.fakes.FakeCategoryRepository
 import com.example.expensetrackerpro.fakes.category
@@ -41,7 +42,7 @@ class SaveCategoryUseCaseTest {
         val result = saveCategory(draft("  Pets  "))
 
         val stored = repository.current.single { it.name == "Pets" }
-        assertEquals(SaveCategoryResult.Saved(stored.id), result)
+        assertEquals(Outcome.Success(stored.id), result)
         assertEquals(TransactionType.EXPENSE, stored.type)
         assertEquals(CategoryIcon.PETS, stored.icon)
         assertTrue(stored.isCustom)
@@ -49,16 +50,13 @@ class SaveCategoryUseCaseTest {
 
     @Test
     fun aDuplicateOrBlankName_isRefusedAndNothingIsStored() = runTest {
+        assertEquals(Outcome.Failure(DomainError.DuplicateName), saveCategory(draft("food")))
         assertEquals(
-            SaveCategoryResult.Invalid(CategoryNameValidation.DUPLICATE),
-            saveCategory(draft("food"))
-        )
-        assertEquals(
-            SaveCategoryResult.Invalid(CategoryNameValidation.BLANK),
+            Outcome.Failure(DomainError.InvalidInput(InvalidInputReason.NAME_BLANK)),
             saveCategory(draft("  "))
         )
         assertEquals(
-            SaveCategoryResult.Invalid(CategoryNameValidation.TOO_LONG),
+            Outcome.Failure(DomainError.InvalidInput(InvalidInputReason.NAME_TOO_LONG)),
             saveCategory(draft("a".repeat(31)))
         )
         assertEquals(listOf(food, gym, salary), repository.current)
@@ -68,7 +66,7 @@ class SaveCategoryUseCaseTest {
     fun theSameNameInTheOtherType_isStored() = runTest {
         val result = saveCategory(draft("Food", type = TransactionType.INCOME))
 
-        assertTrue(result is SaveCategoryResult.Saved)
+        assertTrue(result is Outcome.Success)
         assertEquals(2, repository.current.count { it.name == "Food" })
     }
 
@@ -76,7 +74,7 @@ class SaveCategoryUseCaseTest {
     fun editing_changesNameAndIcon_underTheSameId() = runTest {
         val result = saveCategory(draft("Fitness", id = gym.id, icon = CategoryIcon.SPA))
 
-        assertEquals(SaveCategoryResult.Saved(gym.id), result)
+        assertEquals(Outcome.Success(gym.id), result)
         assertEquals(
             gym.copy(name = "Fitness", icon = CategoryIcon.SPA),
             repository.current.single { it.id == gym.id }
@@ -102,16 +100,13 @@ class SaveCategoryUseCaseTest {
 
     @Test
     fun editing_mayKeepItsOwnName_butNotTakeAnothers() = runTest {
-        assertEquals(SaveCategoryResult.Saved(gym.id), saveCategory(draft("gym", id = gym.id)))
-        assertEquals(
-            SaveCategoryResult.Invalid(CategoryNameValidation.DUPLICATE),
-            saveCategory(draft("Food", id = gym.id))
-        )
+        assertEquals(Outcome.Success(gym.id), saveCategory(draft("gym", id = gym.id)))
+        assertEquals(Outcome.Failure(DomainError.DuplicateName), saveCategory(draft("Food", id = gym.id)))
     }
 
     @Test
     fun editingACategoryThatIsGone_reportsItAndStoresNothing() = runTest {
-        assertEquals(SaveCategoryResult.NotFound, saveCategory(draft("Ghost", id = 99)))
+        assertEquals(Outcome.Failure(DomainError.NotFound), saveCategory(draft("Ghost", id = 99)))
         assertEquals(3, repository.current.size)
     }
 }

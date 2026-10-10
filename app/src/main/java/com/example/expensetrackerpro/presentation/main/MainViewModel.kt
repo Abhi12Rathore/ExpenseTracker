@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.presentation.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.expensetrackerpro.domain.error.onFailure
 import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.AuthResult
 import com.example.expensetrackerpro.domain.models.BiometricStatus
@@ -14,6 +15,7 @@ import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesUseCas
 import com.example.expensetrackerpro.domain.usecase.theme.GetThemeModeUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.ObserveDeletedTransactionsUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.RestoreTransactionUseCase
+import com.example.expensetrackerpro.presentation.common.error.toMessageRes
 import com.example.expensetrackerpro.presentation.main.uistate.LockMessage
 import com.example.expensetrackerpro.presentation.main.uistate.MainEffect
 import com.example.expensetrackerpro.presentation.main.uistate.MainEvent
@@ -171,8 +173,8 @@ class MainViewModel @Inject constructor(
 
     private fun undoDelete(transaction: Transaction) {
         viewModelScope.launch {
-            if (!restoreTransaction(transaction)) {
-                _effects.send(MainEffect.ShowRestoreFailed)
+            restoreTransaction(transaction).onFailure {
+                _effects.send(MainEffect.ShowRestoreFailed(it.toMessageRes()))
             }
         }
     }

@@ -55,7 +55,6 @@ import com.example.expensetrackerpro.presentation.transactions.addEditTransactio
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.TransactionTopBar
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.transactionDateLabel
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEffect
-import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionError
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEvent
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionUiState
 import com.example.expensetrackerpro.utils.CurrencyFormatter
@@ -77,14 +76,7 @@ fun AddEditTransactionScreen(
                 // Sent only once the save or delete has succeeded
                 AddEditTransactionEffect.NavigateBack -> currentOnNavigateBack()
                 is AddEditTransactionEffect.ShowError -> launch {
-                    snackbarHostState.showSnackbar(
-                        context.getString(
-                            when (effect.error) {
-                                AddEditTransactionError.SAVE_FAILED -> R.string.transaction_save_failed
-                                AddEditTransactionError.DELETE_FAILED -> R.string.transaction_delete_failed
-                            }
-                        )
-                    )
+                    snackbarHostState.showSnackbar(context.getString(effect.messageRes))
                 }
             }
         }

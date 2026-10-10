@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.presentation
 
+import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.CategoryNameValidation
@@ -24,7 +26,6 @@ import com.example.expensetrackerpro.presentation.common.category.editor.Categor
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorReducer
 import com.example.expensetrackerpro.presentation.manageCategories.ManageCategoryViewModel
 import com.example.expensetrackerpro.presentation.manageCategories.uistate.ManageCategoryEvent
-import com.example.expensetrackerpro.presentation.manageCategories.uistate.ManageCategoryMessage
 import com.example.expensetrackerpro.util.MainDispatcherRule
 import com.example.expensetrackerpro.util.subscribe
 import kotlinx.coroutines.test.TestScope
@@ -365,10 +366,38 @@ class ManageCategoryViewModelTest {
 
         assertTrue(food in repository.current)
         assertEquals(20, repository.totalCountOf(food.id))
-        assertEquals(ManageCategoryMessage.DELETE_FAILED, viewModel.uiState.value.message)
+        assertEquals(R.string.error_storage_failure, viewModel.uiState.value.message)
 
         viewModel.onEvent(ManageCategoryEvent.MessageShown)
         assertNull(viewModel.uiState.value.message)
+    }
+
+    @Test
+    fun aReassignWhoseTargetIsGone_saysTheCategoryNoLongerExists() = runTest {
+        val viewModel = subscribedViewModel()
+        viewModel.askToDelete(food)
+        viewModel.onEvent(ManageCategoryEvent.DeleteTargetSelected(gym.id))
+        // Removed behind the dialog, which still lists it
+        repository.deleteCategory(gym)
+
+        viewModel.onEvent(ManageCategoryEvent.DeleteConfirmed)
+
+        assertTrue(food in repository.current)
+        assertEquals(20, repository.totalCountOf(food.id))
+        assertEquals(R.string.error_category_not_found, viewModel.uiState.value.message)
+    }
+
+    @Test
+    fun aPlainDeleteTheDatabaseCannotCarryOut_saysSo_withoutAskingToMoveAnything() = runTest {
+        repository.deleteFailure = DomainError.StorageFailure("disk I/O error")
+        val viewModel = subscribedViewModel()
+        viewModel.askToDelete(gym)
+
+        viewModel.onEvent(ManageCategoryEvent.DeleteConfirmed)
+
+        assertTrue(gym in repository.current)
+        assertNull(viewModel.uiState.value.pendingDelete)
+        assertEquals(R.string.error_storage_failure, viewModel.uiState.value.message)
     }
 
     @Test
@@ -383,5 +412,21 @@ class ManageCategoryViewModelTest {
         assertTrue(gym in repository.current)
         assertTrue(request.needsReassign)
         assertEquals(listOf(food, transport), request.targets)
+        // The dialog explains itself, so there is no snackbar as well
+        assertNull(viewModel.uiState.value.message)
+    }
+
+    @Test
+    fun editingACategoryThatWasDeletedMeanwhile_closesTheSheet() = runTest {
+        val viewModel = subscribedViewModel()
+        viewModel.onEvent(ManageCategoryEvent.CategoryClicked(gym))
+        viewModel.editor(CategoryEditorEvent.NameChanged("Fitness"))
+        repository.deleteCategory(gym)
+
+        viewModel.editor(CategoryEditorEvent.SaveClicked)
+
+        assertNull(viewModel.uiState.value.categoryEditor)
+        assertNull(viewModel.uiState.value.message)
+        assertTrue(repository.current.none { it.name == "Fitness" })
     }
 }

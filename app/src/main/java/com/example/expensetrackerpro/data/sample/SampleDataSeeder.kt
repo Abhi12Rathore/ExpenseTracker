@@ -1,9 +1,10 @@
 package com.example.expensetrackerpro.data.sample
 
-import android.database.sqlite.SQLiteException
 import com.example.expensetrackerpro.data.local.dao.SampleDataDao
 import com.example.expensetrackerpro.data.local.entity.TransactionEntity
+import com.example.expensetrackerpro.data.mapper.storageOutcome
 import com.example.expensetrackerpro.data.mapper.toEntity
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.DefaultCategories
 import com.example.expensetrackerpro.domain.repository.SampleDataRepository
 import javax.inject.Inject
@@ -14,8 +15,8 @@ class SampleDataSeeder @Inject constructor(
     private val generateTransactions: SampleTransactionGenerator
 ) : SampleDataRepository {
 
-    override suspend fun loadSampleData(): Int? =
-        try {
+    override suspend fun loadSampleData(): Outcome<Int> =
+        storageOutcome {
             // The samples name default categories, any of which may have been renamed or deleted
             val categories = sampleDataDao.addMissingCategories(DefaultCategories.all.map { it.toEntity() })
             val categoryIds = categories.associate { (it.name to it.type) to it.id }
@@ -34,7 +35,5 @@ class SampleDataSeeder @Inject constructor(
             sampleDataDao.replaceAllTransactions(transactions)
 
             transactions.size
-        } catch (e: SQLiteException) {
-            null
         }
 }

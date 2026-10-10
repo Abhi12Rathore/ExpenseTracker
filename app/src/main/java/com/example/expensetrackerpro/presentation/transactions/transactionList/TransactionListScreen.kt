@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -64,12 +65,13 @@ fun TransactionListScreen(
     viewModel: TransactionListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val deleteFailedMessage = stringResource(R.string.transaction_delete_failed)
+    val context = LocalContext.current
 
-    LaunchedEffect(viewModel, deleteFailedMessage) {
+    LaunchedEffect(viewModel, context) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                TransactionListEffect.DeleteFailed -> snackbarHostState.showSnackbar(deleteFailedMessage)
+                is TransactionListEffect.DeleteFailed ->
+                    snackbarHostState.showSnackbar(context.getString(effect.messageRes))
             }
         }
     }

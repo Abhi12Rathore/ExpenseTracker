@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.presentation.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.AuthResult
 import com.example.expensetrackerpro.domain.models.BuildInfo
@@ -16,6 +17,7 @@ import com.example.expensetrackerpro.domain.usecase.profile.SetUserNameUseCase
 import com.example.expensetrackerpro.domain.usecase.sample.LoadSampleDataUseCase
 import com.example.expensetrackerpro.domain.usecase.theme.GetThemeModeUseCase
 import com.example.expensetrackerpro.domain.usecase.theme.SetThemeModeUseCase
+import com.example.expensetrackerpro.presentation.common.error.toMessageRes
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsEvent
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsMessage
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsUiState
@@ -161,7 +163,10 @@ class SettingsViewModel @Inject constructor(
 
         screenState.update { it.copy(deleteAllConfirmation = null, isDataActionRunning = true) }
         viewModelScope.launch {
-            val message = if (deleteAllData()) SettingsMessage.AllDataDeleted else SettingsMessage.Failed
+            val message = when (val result = deleteAllData()) {
+                is Outcome.Success -> SettingsMessage.AllDataDeleted
+                is Outcome.Failure -> SettingsMessage.Failed(result.error.toMessageRes())
+            }
             screenState.update { it.copy(isDataActionRunning = false, message = message) }
         }
     }
@@ -178,7 +183,10 @@ class SettingsViewModel @Inject constructor(
 
         screenState.update { it.copy(isLoadSampleDialogOpen = false, isDataActionRunning = true) }
         viewModelScope.launch {
-            val message = loadSampleData()?.let { SettingsMessage.SampleDataLoaded(it) } ?: SettingsMessage.Failed
+            val message = when (val result = loadSampleData()) {
+                is Outcome.Success -> SettingsMessage.SampleDataLoaded(result.value)
+                is Outcome.Failure -> SettingsMessage.Failed(result.error.toMessageRes())
+            }
             screenState.update { it.copy(isDataActionRunning = false, message = message) }
         }
     }

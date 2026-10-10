@@ -1,6 +1,9 @@
 package com.example.expensetrackerpro.presentation.common.category.editor
 
+import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.error.InvalidInputReason
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.CategoryNameValidation
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.category.ValidateCategoryNameUseCase
 import javax.inject.Inject
@@ -61,6 +64,23 @@ class CategoryEditorReducer @Inject constructor(
         state.copy(
             nameValidation = validateCategoryName(state.name, state.type, state.editing?.id, existing)
         )
+
+    /** The form after a save failed with [error]: a name that was turned down is called out. */
+    fun saveFailed(state: CategoryEditorState, error: DomainError): CategoryEditorState {
+        val nameValidation = when (error) {
+            DomainError.DuplicateName -> CategoryNameValidation.DUPLICATE
+            is DomainError.InvalidInput -> when (error.reason) {
+                InvalidInputReason.NAME_BLANK -> CategoryNameValidation.BLANK
+                InvalidInputReason.NAME_TOO_LONG -> CategoryNameValidation.TOO_LONG
+                InvalidInputReason.INCOMPATIBLE_REASSIGN_TARGET -> null
+            }
+            DomainError.NotFound,
+            DomainError.CategoryInUse,
+            is DomainError.StorageFailure -> null
+        } ?: return state.copy(isSaving = false)
+
+        return state.copy(nameValidation = nameValidation, isNameEdited = true, isSaving = false)
+    }
 
     private companion object {
         const val NAME_MAX_LENGTH = ValidateCategoryNameUseCase.NAME_MAX_LENGTH

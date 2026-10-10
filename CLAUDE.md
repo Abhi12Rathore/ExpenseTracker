@@ -19,12 +19,13 @@ Goal: production-quality portfolio project.
 ## Package structure (`com.example.expensetrackerpro`)
 - `data/local/` → Room: `entity/`, `dao/`, `expenseDatabase/`, `model/` (query result classes)
 - `data/local/dao/` → one DAO per aggregate: `TransactionDao` (transaction CRUD, range and search reads), `CategoryDao` (category CRUD, usage, rename, reassign-then-delete), `DashboardDao` (report queries, reads only); plus `AppDataDao` ("Delete all data") and `SampleDataDao` (debug sample data)
-- `data/mapper/` → entity ↔ domain mappers
+- `data/mapper/` → entity ↔ domain mappers; `StorageErrorMapper` (`storageOutcome { }`) turns a `SQLiteException` into a `DomainError`
 - `data/repository/` → repository implementations
 - `data/preferences/` → DataStore-backed repositories (theme, app lock, user profile); `data/security/` → Android biometric availability
-- `domain/` → `models/`, `repository/` (interfaces), `security/` (device capability interfaces), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
+- `domain/` → `models/`, `error/` (`DomainError`, `Outcome`), `repository/` (interfaces), `security/` (device capability interfaces), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
 - `presentation/<feature>/` → Screen, ViewModel, `components/`, `uistate/`
 - `presentation/common/category/editor/` → the add/edit category sheet shared by Manage Categories and Add/Edit Transaction: its state, events and `CategoryEditorReducer`; the host ViewModel keeps the state and wraps the events
+- `presentation/common/error/` → `DomainError.toMessageRes()`, the one place an error becomes a message
 - `presentation/lock/` → lock screen and the biometric prompt wrapper; lock state itself lives in `MainViewModel`
 - `ui/theme/` → colors, typography, theme
 - `utils/` → shared helpers
@@ -47,7 +48,7 @@ Apply these to all new and changed code. Existing violations are tracked under K
 - **Value types over primitives:** money is `Money` (whole paise as `Long`, never `Double`), IDs are typed (`@JvmInline value class TransactionId(val value: Long)`), dates go through `DateRange` / `TimeProvider`.
 - **No stringly-typed data:** fixed sets are enums or sealed types (e.g. `CategoryIcon` enum stored via a Room `TypeConverter`), not free strings.
 - **Data access:** one DAO per aggregate (`TransactionDao`, `CategoryDao`, `DashboardDao`), and a repository depends only on the DAOs it reads or writes. Don't store the same data twice; get related data through a JOIN or `@Relation`.
-- **Errors:** expected failures are typed. Use cases return `Result<T, DomainError>` (a sealed `DomainError` in `domain/`), ViewModels map them to UI state. No silent `catch {}` and no exceptions used for control flow.
+- **Errors:** expected failures are typed. Writes return `Outcome<T>` (`Success(value)` / `Failure(DomainError)`, both in `domain/error/`), not `kotlin.Result`, `Boolean` or a nullable. Repositories wrap database writes in `storageOutcome { }`, which catches `SQLiteException` only; ViewModels turn the error into a `@StringRes` with `toMessageRes()`. No silent `catch {}`, no catch-all of `Throwable`, and no exceptions used for control flow.
 - **Time:** never call `System.currentTimeMillis()` or `Calendar.getInstance()` outside `data/time/`. Inject `TimeProvider`.
 - **Global objects:** `object` is only for stateless pure helpers. Anything that reads the clock, locale or other state is an injectable class.
 - **Immutability:** domain models and UI state are immutable `data class`es with `val`s and read-only `List`s.
@@ -66,8 +67,7 @@ Apply these to all new and changed code. Existing violations are tracked under K
 - Debug builds have Settings → Developer → "Load sample data" (`data/sample/`), gated by `BuildInfo.isDebug`. "Delete all data" (Settings → Danger zone, `AppDataRepository`) is a user feature in every build.
 
 ## Known issues (remove each line once fixed)
-Planned for the `refactor/lld` branch:
-- No shared error model. Introduce `DomainError` + `Result`.
+None at the moment.
 
 ## Workflow
 - Never commit to `main`. Use branches like `refactor/hilt` or `feature/theme-toggle`.

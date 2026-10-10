@@ -1,10 +1,11 @@
 package com.example.expensetrackerpro.data.repository
 
-import android.database.sqlite.SQLiteConstraintException
-import android.database.sqlite.SQLiteException
 import com.example.expensetrackerpro.data.local.dao.CategoryDao
+import com.example.expensetrackerpro.data.mapper.storageOutcome
 import com.example.expensetrackerpro.data.mapper.toDomain
 import com.example.expensetrackerpro.data.mapper.toEntity
+import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.CategoryUsage
 import com.example.expensetrackerpro.domain.models.DateRange
@@ -31,23 +32,22 @@ class CategoryRepositoryImpl @Inject constructor(
         categoryDao.update(category.toEntity())
     }
 
-    override suspend fun deleteCategory(category: Category): Boolean =
-        try {
-            categoryDao.deleteCategory(category.toEntity())
-            true
-        } catch (e: SQLiteConstraintException) {
-            // Transactions reference this category (foreign key RESTRICT)
-            false
-        }
+    // Transactions that reference the category stop the delete (foreign key RESTRICT)
+    override suspend fun deleteCategory(category: Category): Outcome<Unit> =
+        storageOutcome { categoryDao.deleteCategory(category.toEntity()) }
 
     override fun getCategoryUsage(range: DateRange): Flow<List<CategoryUsage>> =
         categoryDao.getCategoryUsage(range.startMillis, range.endMillis)
             .map { list -> list.map { it.toDomain() } }
 
-    override suspend fun deleteCategoryReassigning(category: Category, target: Category): Boolean =
-        try {
-            categoryDao.reassignAndDelete(fromId = category.id, toId = target.id)
-        } catch (e: SQLiteException) {
-            false
+    override suspend fun deleteCategoryReassigning(category: Category, target: Category): Outcome<Unit> =
+        when (
+            val moved = storageOutcome {
+                categoryDao.reassignAndDelete(fromId = category.id, toId = target.id)
+            }
+        ) {
+            is Outcome.Success ->
+                if (moved.value) Outcome.Success(Unit) else Outcome.Failure(DomainError.NotFound)
+            is Outcome.Failure -> moved
         }
 }

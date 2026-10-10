@@ -44,7 +44,6 @@ import com.example.expensetrackerpro.presentation.manageCategories.components.De
 import com.example.expensetrackerpro.presentation.manageCategories.components.ManageCategoriesTopBar
 import com.example.expensetrackerpro.presentation.manageCategories.uistate.CategoryDeleteRequest
 import com.example.expensetrackerpro.presentation.manageCategories.uistate.ManageCategoryEvent
-import com.example.expensetrackerpro.presentation.manageCategories.uistate.ManageCategoryMessage
 import com.example.expensetrackerpro.presentation.manageCategories.uistate.ManageCategoryUiState
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
 
@@ -71,10 +70,7 @@ fun ManageCategoryContent(
     val sections = uiState.sections
 
     val snackbarHostState = remember { SnackbarHostState() }
-    val messageText = when (uiState.message) {
-        ManageCategoryMessage.DELETE_FAILED -> stringResource(R.string.category_delete_failed)
-        null -> null
-    }
+    val messageText = uiState.message?.let { stringResource(it) }
     LaunchedEffect(uiState.message) {
         if (messageText == null) return@LaunchedEffect
         snackbarHostState.showSnackbar(messageText)

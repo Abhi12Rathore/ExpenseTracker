@@ -1,5 +1,8 @@
 package com.example.expensetrackerpro.presentation
 
+import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.AuthResult
 import com.example.expensetrackerpro.domain.models.BiometricStatus
@@ -540,8 +543,22 @@ class MainViewModelTest {
 
         viewModel.onEvent(MainEvent.UndoDelete(lunch))
 
-        assertEquals(MainEffect.ShowRestoreFailed, effects.last())
+        assertEquals(MainEffect.ShowRestoreFailed(R.string.error_storage_failure), effects.last())
         assertEquals(listOf(rent), repository.current)
+    }
+
+    @Test
+    fun anUndoWhoseCategoryWasDeletedMeanwhile_saysTheCategoryNoLongerExists() = runTest {
+        val repository = FakeTransactionRepository(listOf(lunch, rent))
+        val viewModel = mainViewModel(transactionRepository = repository)
+        val effects = effectsOf(viewModel)
+        repository.deleteTransaction(lunch)
+        repository.failWrites = true
+        repository.writeFailure = DomainError.NotFound
+
+        viewModel.onEvent(MainEvent.UndoDelete(lunch))
+
+        assertEquals(MainEffect.ShowRestoreFailed(R.string.error_category_not_found), effects.last())
     }
 }
 
@@ -573,12 +590,13 @@ private class PendingCategoryRepository : CategoryRepository {
 
     override suspend fun updateCategory(category: Category) = Unit
 
-    override suspend fun deleteCategory(category: Category): Boolean = true
+    override suspend fun deleteCategory(category: Category): Outcome<Unit> = Outcome.Success(Unit)
 
     override fun getCategoryUsage(range: DateRange): Flow<List<CategoryUsage>> =
         categories.map { list -> list.map { CategoryUsage(it) } }
 
-    override suspend fun deleteCategoryReassigning(category: Category, target: Category): Boolean = true
+    override suspend fun deleteCategoryReassigning(category: Category, target: Category): Outcome<Unit> =
+        Outcome.Success(Unit)
 }
 
 /** Emits nothing until [emit] is called, like preferences that are still being read from disk. */

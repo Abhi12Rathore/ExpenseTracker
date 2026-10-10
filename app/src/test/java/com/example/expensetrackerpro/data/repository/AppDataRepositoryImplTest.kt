@@ -7,6 +7,7 @@ import com.example.expensetrackerpro.data.local.entity.CategoryEntity
 import com.example.expensetrackerpro.data.local.entity.TransactionEntity
 import com.example.expensetrackerpro.data.local.expenseDatabase.AppDatabase
 import com.example.expensetrackerpro.data.local.expenseDatabase.ExpenseDatabaseCallback
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.DefaultCategories
 import com.example.expensetrackerpro.domain.models.TransactionType
@@ -71,7 +72,7 @@ class AppDataRepositoryImplTest {
         addTransaction(categories().single { it.id == potteryId })
         addTransaction(categories().first { !it.isCustom })
 
-        assertTrue(deleteAllData())
+        assertEquals(Outcome.Success(Unit), deleteAllData())
 
         assertTrue(dao.getAllTransactions().first().isEmpty())
         assertEquals(DefaultCategories.all.map { it.name }, categories().map { it.name })
@@ -82,14 +83,14 @@ class AppDataRepositoryImplTest {
         val first = categories().first()
         database.categoryDao().update(first.copy(name = "Eating out"))
 
-        assertTrue(deleteAllData())
+        assertEquals(Outcome.Success(Unit), deleteAllData())
 
         assertEquals("Eating out", categories().single { it.id == first.id }.name)
     }
 
     @Test
     fun onAnEmptyDatabase_isFine() = runTest {
-        assertTrue(deleteAllData())
+        assertEquals(Outcome.Success(Unit), deleteAllData())
         assertEquals(DefaultCategories.all.size, categories().size)
     }
 }

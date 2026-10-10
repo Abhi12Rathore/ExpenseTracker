@@ -1,12 +1,13 @@
 package com.example.expensetrackerpro.domain.usecase.category
 
+import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.error.InvalidInputReason
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.fakes.FakeCategoryRepository
 import com.example.expensetrackerpro.fakes.category
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ReassignAndDeleteCategoryUseCaseTest {
@@ -22,9 +23,12 @@ class ReassignAndDeleteCategoryUseCaseTest {
 
     private val reassignAndDelete = ReassignAndDeleteCategoryUseCase(repository)
 
+    private val incompatibleTarget =
+        Outcome.Failure(DomainError.InvalidInput(InvalidInputReason.INCOMPATIBLE_REASSIGN_TARGET))
+
     @Test
     fun movesTheTransactionsToTheTarget_thenDeletesTheCategory() = runTest {
-        assertTrue(reassignAndDelete(food, groceries))
+        assertEquals(Outcome.Success(Unit), reassignAndDelete(food, groceries))
 
         assertEquals(listOf(groceries, salary), repository.current)
         assertEquals(9, repository.totalCountOf(groceries.id))
@@ -32,7 +36,7 @@ class ReassignAndDeleteCategoryUseCaseTest {
 
     @Test
     fun aTargetOfAnotherType_isRefusedAndNothingChanges() = runTest {
-        assertFalse(reassignAndDelete(food, salary))
+        assertEquals(incompatibleTarget, reassignAndDelete(food, salary))
 
         assertEquals(listOf(food, groceries, salary), repository.current)
         assertEquals(7, repository.totalCountOf(food.id))
@@ -40,7 +44,7 @@ class ReassignAndDeleteCategoryUseCaseTest {
 
     @Test
     fun theCategoryItself_isNotATarget() = runTest {
-        assertFalse(reassignAndDelete(food, food))
+        assertEquals(incompatibleTarget, reassignAndDelete(food, food))
 
         assertEquals(3, repository.current.size)
     }
@@ -49,9 +53,18 @@ class ReassignAndDeleteCategoryUseCaseTest {
     fun aFailingDatabase_isReportedAndNothingChanges() = runTest {
         repository.failReassign = true
 
-        assertFalse(reassignAndDelete(food, groceries))
+        assertEquals(Outcome.Failure(DomainError.StorageFailure()), reassignAndDelete(food, groceries))
 
         assertEquals(listOf(food, groceries, salary), repository.current)
         assertEquals(7, repository.totalCountOf(food.id))
+    }
+
+    @Test
+    fun aTargetThatIsGone_isReportedAsNotFound() = runTest {
+        val missing = category(id = 99, name = "Ghost")
+
+        assertEquals(Outcome.Failure(DomainError.NotFound), reassignAndDelete(food, missing))
+
+        assertEquals(listOf(food, groceries, salary), repository.current)
     }
 }
