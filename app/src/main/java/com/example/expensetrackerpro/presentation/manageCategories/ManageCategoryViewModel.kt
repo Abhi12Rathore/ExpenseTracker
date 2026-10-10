@@ -113,7 +113,12 @@ class ManageCategoryViewModel @Inject constructor(
                 is Outcome.Failure -> when (result.error) {
                     // Deleted while the sheet was open, so there is nothing left to edit
                     DomainError.NotFound -> closeEditor()
-                    else -> updateEditor { categoryEditorReducer.saveFailed(it, result.error) }
+                    else -> {
+                        updateEditor { categoryEditorReducer.saveFailed(it, result.error) }
+                        if (!categoryEditorReducer.isNameProblem(result.error)) {
+                            screenState.update { it.copy(message = result.error.toMessageRes()) }
+                        }
+                    }
                 }
             }
         }

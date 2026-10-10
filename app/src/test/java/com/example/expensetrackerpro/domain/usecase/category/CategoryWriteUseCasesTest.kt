@@ -21,7 +21,7 @@ class CategoryWriteUseCasesTest {
 
         val id = AddCategoryUseCase(repository)(food)
 
-        assertEquals(food.id, id)
+        assertEquals(Outcome.Success(food.id), id)
 
         assertEquals(listOf(food), repository.current)
     }
@@ -34,6 +34,20 @@ class CategoryWriteUseCasesTest {
         UpdateCategoryUseCase(repository)(renamed)
 
         assertEquals(listOf(renamed, salary), repository.current)
+    }
+
+    @Test
+    fun addAndUpdate_reportADatabaseThatCannotWrite_andStoreNothing() = runTest {
+        val storageFailure = DomainError.StorageFailure("disk I/O error")
+        val repository = FakeCategoryRepository(listOf(food)).apply { saveFailure = storageFailure }
+
+        assertEquals(Outcome.Failure(storageFailure), AddCategoryUseCase(repository)(salary))
+        assertEquals(
+            Outcome.Failure(storageFailure),
+            UpdateCategoryUseCase(repository)(food.copy(name = "Groceries"))
+        )
+
+        assertEquals(listOf(food), repository.current)
     }
 
     @Test

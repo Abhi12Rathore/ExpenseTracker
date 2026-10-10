@@ -348,6 +348,29 @@ class AddEditTransactionViewModelTest {
     }
 
     @Test
+    fun aNewCategoryTheDatabaseCannotWrite_keepsTheSheetAsTyped_andShowsAnError() = runTest {
+        categories.saveFailure = DomainError.StorageFailure("database or disk is full")
+        val viewModel = viewModel()
+        val effects = effectsOf(viewModel)
+        viewModel.onEvent(AddEditTransactionEvent.CategorySheetOpened)
+        viewModel.editor(CategoryEditorEvent.NameChanged("Gym"))
+
+        viewModel.editor(CategoryEditorEvent.SaveClicked)
+        val editor = requireNotNull(viewModel.uiState.value.categoryEditor)
+
+        assertEquals("Gym", editor.name)
+        assertNull(editor.nameError)
+        assertTrue(editor.isSaveEnabled)
+        assertEquals(
+            listOf<AddEditTransactionEffect>(
+                AddEditTransactionEffect.ShowError(R.string.error_storage_failure)
+            ),
+            effects
+        )
+        assertEquals(listOf(food, bills, salary), categories.current)
+    }
+
+    @Test
     fun aNameIsCheckedAgainstTheTypeChosenInTheSheet_notTheTransactions() = runTest {
         val viewModel = viewModel()
         viewModel.onEvent(AddEditTransactionEvent.CategorySheetOpened)

@@ -586,9 +586,9 @@ private class PendingCategoryRepository : CategoryRepository {
     override fun getCategoriesByType(type: TransactionType): Flow<List<Category>> =
         categories.map { list -> list.filter { it.type == type } }
 
-    override suspend fun insertCategory(category: Category): Int = category.id
+    override suspend fun insertCategory(category: Category): Outcome<Int> = Outcome.Success(category.id)
 
-    override suspend fun updateCategory(category: Category) = Unit
+    override suspend fun updateCategory(category: Category): Outcome<Unit> = Outcome.Success(Unit)
 
     override suspend fun deleteCategory(category: Category): Outcome<Unit> = Outcome.Success(Unit)
 

@@ -34,6 +34,9 @@ class FakeCategoryRepository(
     /** While true the reassigning delete fails, as a failing database would make it. */
     var failReassign = false
 
+    /** When set, adding or updating a category fails with it, storing nothing. */
+    var saveFailure: DomainError? = null
+
     /** When set, a plain delete fails with it, whether or not the category is in use. */
     var deleteFailure: DomainError? = null
 
@@ -50,14 +53,17 @@ class FakeCategoryRepository(
         categories.map { list -> list.filter { it.type == type } }
 
     // Like Room, a category without an id is given the next free one
-    override suspend fun insertCategory(category: Category): Int {
+    override suspend fun insertCategory(category: Category): Outcome<Int> {
+        saveFailure?.let { return Outcome.Failure(it) }
         val id = if (category.id != 0) category.id else (categories.value.maxOfOrNull { it.id } ?: 0) + 1
         categories.update { list -> list.filterNot { it.id == id } + category.copy(id = id) }
-        return id
+        return Outcome.Success(id)
     }
 
-    override suspend fun updateCategory(category: Category) {
+    override suspend fun updateCategory(category: Category): Outcome<Unit> {
+        saveFailure?.let { return Outcome.Failure(it) }
         categories.update { list -> list.map { if (it.id == category.id) category else it } }
+        return Outcome.Success(Unit)
     }
 
     override suspend fun deleteCategory(category: Category): Outcome<Unit> {

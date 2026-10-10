@@ -211,7 +211,12 @@ class AddEditTransactionViewModel @Inject constructor(
                 }
                 is Outcome.Failure -> when (result.error) {
                     DomainError.NotFound -> updateForm { it.copy(categoryEditor = null) }
-                    else -> updateEditor { categoryEditorReducer.saveFailed(it, result.error) }
+                    else -> {
+                        updateEditor { categoryEditorReducer.saveFailed(it, result.error) }
+                        if (!categoryEditorReducer.isNameProblem(result.error)) {
+                            _effects.send(AddEditTransactionEffect.ShowError(result.error.toMessageRes()))
+                        }
+                    }
                 }
             }
         }

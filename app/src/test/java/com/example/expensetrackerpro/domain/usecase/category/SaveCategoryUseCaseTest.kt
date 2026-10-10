@@ -109,4 +109,15 @@ class SaveCategoryUseCaseTest {
         assertEquals(Outcome.Failure(DomainError.NotFound), saveCategory(draft("Ghost", id = 99)))
         assertEquals(3, repository.current.size)
     }
+
+    @Test
+    fun aDatabaseThatCannotWrite_isReported_andNothingIsStored() = runTest {
+        val storageFailure = DomainError.StorageFailure("database or disk is full")
+        repository.saveFailure = storageFailure
+
+        assertEquals(Outcome.Failure(storageFailure), saveCategory(draft("Pets")))
+        assertEquals(Outcome.Failure(storageFailure), saveCategory(draft("Fitness", id = gym.id)))
+
+        assertEquals(listOf(food, gym, salary), repository.current)
+    }
 }

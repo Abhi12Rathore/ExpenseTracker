@@ -417,6 +417,47 @@ class ManageCategoryViewModelTest {
     }
 
     @Test
+    fun aSaveTheDatabaseCannotCarryOut_keepsTheSheetAsTyped_andSaysSo() = runTest {
+        repository.saveFailure = DomainError.StorageFailure("database or disk is full")
+        val viewModel = subscribedViewModel()
+        viewModel.onEvent(ManageCategoryEvent.AddClicked)
+        viewModel.editor(CategoryEditorEvent.NameChanged("Pets"))
+
+        viewModel.editor(CategoryEditorEvent.SaveClicked)
+        val editor = requireNotNull(viewModel.uiState.value.categoryEditor)
+
+        assertEquals("Pets", editor.name)
+        assertNull(editor.nameError)
+        assertTrue(editor.isSaveEnabled)
+        assertEquals(R.string.error_storage_failure, viewModel.uiState.value.message)
+        assertTrue(repository.current.none { it.name == "Pets" })
+
+        // Trying again once the database is writable goes through
+        repository.saveFailure = null
+        viewModel.editor(CategoryEditorEvent.SaveClicked)
+
+        assertNull(viewModel.uiState.value.categoryEditor)
+        assertTrue(repository.current.any { it.name == "Pets" })
+    }
+
+    @Test
+    fun aNameTheSaveTurnsDown_isShownUnderTheField_withoutASnackbar() = runTest {
+        val viewModel = subscribedViewModel()
+        viewModel.onEvent(ManageCategoryEvent.CategoryClicked(gym))
+        viewModel.editor(CategoryEditorEvent.NameChanged("Fitness"))
+        // Taken behind the sheet, before the list could tell it
+        repository.saveFailure = DomainError.DuplicateName
+
+        viewModel.editor(CategoryEditorEvent.SaveClicked)
+
+        assertEquals(
+            CategoryNameValidation.DUPLICATE,
+            viewModel.uiState.value.categoryEditor?.nameError
+        )
+        assertNull(viewModel.uiState.value.message)
+    }
+
+    @Test
     fun editingACategoryThatWasDeletedMeanwhile_closesTheSheet() = runTest {
         val viewModel = subscribedViewModel()
         viewModel.onEvent(ManageCategoryEvent.CategoryClicked(gym))

@@ -104,6 +104,22 @@ class RepositoryStorageFailureTest {
     // --- Categories
 
     @Test
+    fun categorySaves_areStorageFailures() = runTest {
+        val repository = CategoryRepositoryImpl(ThrowingCategoryDao(full))
+
+        assertEquals(storageFailure, repository.insertCategory(food))
+        assertEquals(storageFailure, repository.updateCategory(food))
+    }
+
+    @Test
+    fun categorySaves_throwAnythingThatIsNotSqlites() = runTest {
+        val repository = CategoryRepositoryImpl(ThrowingCategoryDao(bug))
+
+        assertThrowsTheBug { repository.insertCategory(food) }
+        assertThrowsTheBug { repository.updateCategory(food) }
+    }
+
+    @Test
     fun categoryDeletes_areStorageFailures() = runTest {
         val repository = CategoryRepositoryImpl(ThrowingCategoryDao(full))
 

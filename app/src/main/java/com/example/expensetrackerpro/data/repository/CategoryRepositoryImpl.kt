@@ -25,12 +25,11 @@ class CategoryRepositoryImpl @Inject constructor(
     override fun getCategoriesByType(type: TransactionType): Flow<List<Category>> =
         categoryDao.getCategoriesByType(type).map { list -> list.map { it.toDomain() } }
 
-    override suspend fun insertCategory(category: Category): Int =
-        categoryDao.insertCategory(category.toEntity()).toInt()
+    override suspend fun insertCategory(category: Category): Outcome<Int> =
+        storageOutcome { categoryDao.insertCategory(category.toEntity()).toInt() }
 
-    override suspend fun updateCategory(category: Category) {
-        categoryDao.update(category.toEntity())
-    }
+    override suspend fun updateCategory(category: Category): Outcome<Unit> =
+        storageOutcome { categoryDao.update(category.toEntity()) }
 
     // Transactions that reference the category stop the delete (foreign key RESTRICT)
     override suspend fun deleteCategory(category: Category): Outcome<Unit> =
