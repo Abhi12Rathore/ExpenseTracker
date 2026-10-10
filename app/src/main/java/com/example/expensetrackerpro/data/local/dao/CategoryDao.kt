@@ -1,15 +1,31 @@
 package com.example.expensetrackerpro.data.local.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import com.example.expensetrackerpro.data.local.entity.CategoryEntity
 import com.example.expensetrackerpro.data.local.model.CategoryUsageEntity
+import com.example.expensetrackerpro.domain.models.TransactionType
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 abstract class CategoryDao {
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun insertCategory(category: CategoryEntity): Long
+
+    @Delete
+    abstract suspend fun deleteCategory(category: CategoryEntity)
+
+    @Query("SELECT * FROM categories")
+    abstract fun getAllCategories(): Flow<List<CategoryEntity>>
+
+    @Query("SELECT * FROM categories WHERE type = :type")
+    abstract fun getCategoriesByType(type: TransactionType): Flow<List<CategoryEntity>>
 
     // Every category comes back, the unused ones with zeros
     @Query(

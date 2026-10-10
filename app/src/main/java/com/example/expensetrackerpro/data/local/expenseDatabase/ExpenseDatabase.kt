@@ -10,6 +10,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 import com.example.expensetrackerpro.data.local.dao.AppDataDao
 import com.example.expensetrackerpro.data.local.dao.CategoryDao
+import com.example.expensetrackerpro.data.local.dao.DashboardDao
 import com.example.expensetrackerpro.data.local.dao.SampleDataDao
 import com.example.expensetrackerpro.data.local.dao.TransactionDao
 import com.example.expensetrackerpro.data.local.entity.CategoryEntity
@@ -30,6 +31,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
 
     abstract fun categoryDao(): CategoryDao
+
+    abstract fun dashboardDao(): DashboardDao
 
     abstract fun appDataDao(): AppDataDao
 

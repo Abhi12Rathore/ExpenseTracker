@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.example.expensetrackerpro.data.local.dao.AppDataDao
 import com.example.expensetrackerpro.data.local.dao.CategoryDao
+import com.example.expensetrackerpro.data.local.dao.DashboardDao
 import com.example.expensetrackerpro.data.local.dao.SampleDataDao
 import com.example.expensetrackerpro.data.local.dao.TransactionDao
 import com.example.expensetrackerpro.data.local.expenseDatabase.AppDatabase
@@ -40,6 +41,10 @@ object DatabaseModule {
     @Provides
     fun provideCategoryDao(database: AppDatabase): CategoryDao =
         database.categoryDao()
+
+    @Provides
+    fun provideDashboardDao(database: AppDatabase): DashboardDao =
+        database.dashboardDao()
 
     @Provides
     fun provideAppDataDao(database: AppDatabase): AppDataDao =

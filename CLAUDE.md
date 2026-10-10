@@ -18,6 +18,7 @@ Goal: production-quality portfolio project.
 
 ## Package structure (`com.example.expensetrackerpro`)
 - `data/local/` → Room: `entity/`, `dao/`, `expenseDatabase/`, `model/` (query result classes)
+- `data/local/dao/` → one DAO per aggregate: `TransactionDao` (transaction CRUD, range and search reads), `CategoryDao` (category CRUD, usage, rename, reassign-then-delete), `DashboardDao` (report queries, reads only); plus `AppDataDao` ("Delete all data") and `SampleDataDao` (debug sample data)
 - `data/mapper/` → entity ↔ domain mappers
 - `data/repository/` → repository implementations
 - `data/preferences/` → DataStore-backed repositories (theme, app lock, user profile); `data/security/` → Android biometric availability
@@ -45,7 +46,7 @@ Apply these to all new and changed code. Existing violations are tracked under K
 - **Use cases:** one operation each. When a ViewModel needs more than ~5 dependencies, add a facade use case that combines them (e.g. `GetDashboardUseCase`).
 - **Value types over primitives:** money is `Money` (whole paise as `Long`, never `Double`), IDs are typed (`@JvmInline value class TransactionId(val value: Long)`), dates go through `DateRange` / `TimeProvider`.
 - **No stringly-typed data:** fixed sets are enums or sealed types (e.g. `CategoryIcon` enum stored via a Room `TypeConverter`), not free strings.
-- **Data access:** one DAO per aggregate (`TransactionDao`, `CategoryDao`, `DashboardDao`). Don't store the same data twice; get related data through a JOIN or `@Relation`.
+- **Data access:** one DAO per aggregate (`TransactionDao`, `CategoryDao`, `DashboardDao`), and a repository depends only on the DAOs it reads or writes. Don't store the same data twice; get related data through a JOIN or `@Relation`.
 - **Errors:** expected failures are typed. Use cases return `Result<T, DomainError>` (a sealed `DomainError` in `domain/`), ViewModels map them to UI state. No silent `catch {}` and no exceptions used for control flow.
 - **Time:** never call `System.currentTimeMillis()` or `Calendar.getInstance()` outside `data/time/`. Inject `TimeProvider`.
 - **Global objects:** `object` is only for stateless pure helpers. Anything that reads the clock, locale or other state is an injectable class.
@@ -66,7 +67,6 @@ Apply these to all new and changed code. Existing violations are tracked under K
 
 ## Known issues (remove each line once fixed)
 Planned for the `refactor/lld` branch:
-- `TransactionDao` has 19 methods covering transactions, categories and dashboard queries. Split it per aggregate. `CategoryDao` (usage stats, reassign-then-delete) is the start: move the category CRUD there.
 - Money is `Double` in entities and domain models. Migrate to `Money` (paise as `Long`) with a Room `Migration`.
 - `Transaction` stores `categoryName` alongside `categoryId`. `CategoryDao.update` and `reassignAndDelete` keep the copy in step; any new write to a category's name must too. Read it via JOIN/`@Relation` and drop the column (migration).
 - No shared error model. Introduce `DomainError` + `Result`.
