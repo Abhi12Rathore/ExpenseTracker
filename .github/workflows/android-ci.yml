@@ -1,0 +1,64 @@
+# The name shown in the GitHub "Actions" tab and on the PR's checks
+name: Android CI
+
+# WHEN it runs
+on:
+  pull_request:            # every PR, on every new push to it
+  push:
+    branches: [ main ]     # and after a merge into main
+  workflow_dispatch:       # adds a "Run workflow" button for manual runs
+
+# If you push again to the same PR, cancel the older run that's still going
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Test, lint and build
+    runs-on: ubuntu-latest       # a fresh Linux VM from GitHub
+    timeout-minutes: 30          # stop a run that hangs
+
+    steps:
+      # 1. Get the code onto the machine
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      # 2. Install Java 17 (Temurin is a free OpenJDK build)
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # 3. Set up Gradle and cache its downloads, so later runs are much faster
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # 4. The same three checks your CLAUDE.md asks for
+      - name: Unit tests
+        run: ./gradlew testDebugUnitTest
+
+      - name: Lint
+        run: ./gradlew lintDebug
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
+
+      # 5. Save the APK so you can download it from the run page
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 7
+
+      # 6. If tests or lint failed, still upload the reports so you can see why
+      - name: Upload reports
+        if: failure()            # this step runs only when an earlier one failed
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: |
+            app/build/reports/tests/
+            app/build/reports/lint-results-debug.html
