@@ -9,6 +9,7 @@ import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.error.onSuccess
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.Transaction
+import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.repository.TransactionRepository
 import kotlinx.coroutines.flow.Flow
@@ -34,8 +35,8 @@ class TransactionRepositoryImpl @Inject constructor(
         write { transactionDao.deleteTransaction(transaction.toEntity()) }
             .onSuccess { _deletions.tryEmit(transaction) }
 
-    override suspend fun getTransactionById(id: Int): Transaction? =
-        transactionDao.getTransactionById(id)?.toDomain()
+    override suspend fun getTransactionById(id: TransactionId): Transaction? =
+        transactionDao.getTransactionById(id.value)?.toDomain()
 
     override fun getAllTransactions(): Flow<List<Transaction>> =
         transactionDao.getAllTransactions().map { list -> list.map { it.toDomain() } }

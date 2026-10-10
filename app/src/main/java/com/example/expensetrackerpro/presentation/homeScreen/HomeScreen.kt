@@ -22,6 +22,7 @@ import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.presentation.common.filter.components.PeriodFilter
 import com.example.expensetrackerpro.presentation.common.filter.shortLabel
 import com.example.expensetrackerpro.presentation.homeScreen.component.DashboardHeader
@@ -51,7 +52,7 @@ import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 @Composable
 fun HomeScreen(
     onViewAllTransactions: () -> Unit,
-    onTransactionClick: (Int) -> Unit,
+    onTransactionClick: (TransactionId) -> Unit,
     onOpenTransactions: (TransactionsFilter) -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
@@ -71,7 +72,7 @@ fun HomeContent(
     uiState: HomeUiState,
     onEvent: (HomeEvent) -> Unit,
     onViewAllTransactions: () -> Unit,
-    onTransactionClick: (Int) -> Unit,
+    onTransactionClick: (TransactionId) -> Unit,
     onOpenTransactions: (TransactionsFilter) -> Unit
 ) {
     val dashboard = uiState.dashboard

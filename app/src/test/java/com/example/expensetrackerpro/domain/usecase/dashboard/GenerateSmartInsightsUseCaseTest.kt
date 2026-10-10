@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.domain.usecase.dashboard
 
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.FinancialSummary
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
@@ -17,8 +18,8 @@ class GenerateSmartInsightsUseCaseTest {
     private val generateSmartInsights = GenerateSmartInsightsUseCase()
 
     private val saving = FinancialSummary(totalBalance = rupees(1200), totalIncome = rupees(2000), totalExpense = rupees(800))
-    private val food = CategoryBreakdown(categoryId = 1, categoryName = "Food", icon = CategoryIcon.RESTAURANT, amount = rupees(500))
-    private val bills = CategoryBreakdown(categoryId = 2, categoryName = "Bills", icon = CategoryIcon.RECEIPT_LONG, amount = rupees(300))
+    private val food = CategoryBreakdown(categoryId = CategoryId(1), categoryName = "Food", icon = CategoryIcon.RESTAURANT, amount = rupees(500))
+    private val bills = CategoryBreakdown(categoryId = CategoryId(2), categoryName = "Bills", icon = CategoryIcon.RECEIPT_LONG, amount = rupees(300))
 
     private fun month(month: Int, expense: Money) =
         MonthlyTrend(year = 2026, month = month, income = Money.ZERO, expense = expense)

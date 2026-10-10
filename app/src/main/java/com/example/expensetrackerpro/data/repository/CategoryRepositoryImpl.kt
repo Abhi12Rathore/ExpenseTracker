@@ -7,6 +7,7 @@ import com.example.expensetrackerpro.data.mapper.toEntity
 import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.CategoryUsage
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.TransactionType
@@ -25,8 +26,8 @@ class CategoryRepositoryImpl @Inject constructor(
     override fun getCategoriesByType(type: TransactionType): Flow<List<Category>> =
         categoryDao.getCategoriesByType(type).map { list -> list.map { it.toDomain() } }
 
-    override suspend fun insertCategory(category: Category): Outcome<Int> =
-        storageOutcome { categoryDao.insertCategory(category.toEntity()).toInt() }
+    override suspend fun insertCategory(category: Category): Outcome<CategoryId> =
+        storageOutcome { CategoryId(categoryDao.insertCategory(category.toEntity()).toInt()) }
 
     override suspend fun updateCategory(category: Category): Outcome<Unit> =
         storageOutcome { categoryDao.update(category.toEntity()) }
@@ -42,7 +43,7 @@ class CategoryRepositoryImpl @Inject constructor(
     override suspend fun deleteCategoryReassigning(category: Category, target: Category): Outcome<Unit> =
         when (
             val moved = storageOutcome {
-                categoryDao.reassignAndDelete(fromId = category.id, toId = target.id)
+                categoryDao.reassignAndDelete(fromId = category.id.value, toId = target.id.value)
             }
         ) {
             is Outcome.Success ->

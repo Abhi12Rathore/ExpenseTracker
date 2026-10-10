@@ -3,6 +3,7 @@ package com.example.expensetrackerpro.domain.usecase.dashboard
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.CashFlowPoint
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
@@ -32,8 +33,8 @@ class DashboardChartUseCasesTest {
     @Test
     fun getCategoryBreakdown_returnsRepositoryOrder() = runTest {
         val breakdown = listOf(
-            CategoryBreakdown(categoryId = 2, categoryName = "Bills", icon = CategoryIcon.RECEIPT_LONG, amount = rupees(900)),
-            CategoryBreakdown(categoryId = 1, categoryName = "Food", icon = CategoryIcon.RESTAURANT, amount = rupees(300))
+            CategoryBreakdown(categoryId = CategoryId(2), categoryName = "Bills", icon = CategoryIcon.RECEIPT_LONG, amount = rupees(900)),
+            CategoryBreakdown(categoryId = CategoryId(1), categoryName = "Food", icon = CategoryIcon.RESTAURANT, amount = rupees(300))
         )
         repository.categoryBreakdown.value = breakdown
 

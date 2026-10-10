@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.presentation.common.category.CategoryIconTile
 import com.example.expensetrackerpro.presentation.common.category.color
 
@@ -38,8 +39,8 @@ private val TileShape = RoundedCornerShape(16.dp)
 @Composable
 fun CategorySection(
     categories: List<Category>,
-    selectedCategoryId: Int?,
-    onCategorySelected: (Int) -> Unit,
+    selectedCategoryId: CategoryId?,
+    onCategorySelected: (CategoryId) -> Unit,
     onAddCategoryClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {

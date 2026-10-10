@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.transaction
 
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.DayLabel
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.TransactionListSummary
@@ -39,13 +40,13 @@ class TransactionListingUseCasesTest {
     )
     private val dinner = transaction(id = 3, amount = rupees(800), dateMillis = millisAt(2026, Calendar.OCTOBER, 8, hour = 21))
     private val taxi = transaction(id = 4, amount = rupees(300), dateMillis = millisAt(2026, Calendar.OCTOBER, 5, hour = 7))
-        .copy(categoryId = 2, categoryName = "Transport")
+        .copy(categoryId = CategoryId(2), categoryName = "Transport")
     private val refund = transaction(
         id = 5,
         amount = rupees(200),
         type = TransactionType.INCOME,
         dateMillis = millisAt(2026, Calendar.OCTOBER, 5, hour = 6)
-    ).copy(categoryId = 2, categoryName = "Transport")
+    ).copy(categoryId = CategoryId(2), categoryName = "Transport")
 
     // Newest first, as the repository returns them
     private val all = listOf(coffee, salary, dinner, taxi, refund)
@@ -143,9 +144,9 @@ class TransactionListingUseCasesTest {
 
     @Test
     fun filter_byCategory_aloneAndWithType() {
-        assertEquals(listOf(taxi, refund), filterTransactions(all, TransactionTypeFilter.ALL, categoryId = 2))
-        assertEquals(listOf(refund), filterTransactions(all, TransactionTypeFilter.INCOME, categoryId = 2))
-        assertTrue(filterTransactions(all, TransactionTypeFilter.ALL, categoryId = 99).isEmpty())
+        assertEquals(listOf(taxi, refund), filterTransactions(all, TransactionTypeFilter.ALL, categoryId = CategoryId(2)))
+        assertEquals(listOf(refund), filterTransactions(all, TransactionTypeFilter.INCOME, categoryId = CategoryId(2)))
+        assertTrue(filterTransactions(all, TransactionTypeFilter.ALL, categoryId = CategoryId(99)).isEmpty())
     }
 
     // --- Summary
@@ -229,7 +230,7 @@ class TransactionListingUseCasesTest {
 
     @Test
     fun listing_countsOnlyTheCategory() {
-        val listing = getListing(all, TransactionTypeFilter.ALL, categoryId = 2, isSearching = false)
+        val listing = getListing(all, TransactionTypeFilter.ALL, categoryId = CategoryId(2), isSearching = false)
 
         assertEquals(TransactionTypeCounts(all = 2, expense = 1, income = 1), listing.counts)
         assertEquals(listOf(listOf(taxi, refund)), listing.days.map { it.transactions })

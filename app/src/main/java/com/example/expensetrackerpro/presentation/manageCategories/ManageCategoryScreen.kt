@@ -182,7 +182,7 @@ private fun LazyListScope.categorySection(
                 .animateItem()
         )
     }
-    items(usages, key = { "category-${it.category.id}" }) { usage ->
+    items(usages, key = { "category-${it.category.id.value}" }) { usage ->
         CategoryManageTile(
             usage = usage,
             onClick = { onClick(usage.category) },

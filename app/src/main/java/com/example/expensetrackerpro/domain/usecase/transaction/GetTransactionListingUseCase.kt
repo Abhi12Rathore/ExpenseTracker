@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.transaction
 
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionListing
 import com.example.expensetrackerpro.domain.models.TransactionType
@@ -21,7 +22,7 @@ class GetTransactionListingUseCase @Inject constructor(
     operator fun invoke(
         transactions: List<Transaction>,
         typeFilter: TransactionTypeFilter,
-        categoryId: Long?,
+        categoryId: CategoryId?,
         isSearching: Boolean
     ): TransactionListing {
         val inCategory = filterTransactions(transactions, TransactionTypeFilter.ALL, categoryId)

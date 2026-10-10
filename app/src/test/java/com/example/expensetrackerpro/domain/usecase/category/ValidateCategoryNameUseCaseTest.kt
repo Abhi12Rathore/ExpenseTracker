@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.category
 
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.CategoryNameValidation
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.fakes.category
@@ -14,7 +15,7 @@ class ValidateCategoryNameUseCaseTest {
     private val salary = category(id = 2, name = "Salary", type = TransactionType.INCOME)
     private val existing = listOf(food, salary)
 
-    private fun expense(name: String, editingId: Int? = null) =
+    private fun expense(name: String, editingId: CategoryId? = null) =
         validate(name, TransactionType.EXPENSE, editingId, existing)
 
     @Test

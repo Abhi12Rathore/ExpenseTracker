@@ -3,8 +3,10 @@ package com.example.expensetrackerpro.data.mapper
 import com.example.expensetrackerpro.data.local.entity.TransactionEntity
 import com.example.expensetrackerpro.data.local.model.TransactionWithCategory
 import com.example.expensetrackerpro.domain.models.CategoryIcon
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.Transaction
+import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.fakes.rupees
 import org.junit.Assert.assertEquals
@@ -23,12 +25,12 @@ class TransactionMapperTest {
     )
 
     private val domain = Transaction(
-        id = 7,
+        id = TransactionId(7),
         title = "Lunch",
         amount = Money(250_50),
         note = "Team lunch",
         dateMillis = 1_700_000_000_000,
-        categoryId = 3,
+        categoryId = CategoryId(3),
         categoryName = "Food",
         transactionType = TransactionType.EXPENSE,
         categoryIcon = CategoryIcon.RESTAURANT
@@ -74,7 +76,7 @@ class TransactionMapperTest {
             amount = rupees(1000),
             note = "Salary",
             dateMillis = 0L,
-            categoryId = 1,
+            categoryId = CategoryId(1),
             categoryName = "Salary",
             transactionType = TransactionType.INCOME
         )

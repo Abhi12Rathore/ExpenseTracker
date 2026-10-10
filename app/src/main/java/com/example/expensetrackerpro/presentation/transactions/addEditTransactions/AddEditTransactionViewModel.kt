@@ -11,6 +11,7 @@ import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.DateChoice
 import com.example.expensetrackerpro.domain.models.DateSelection
 import com.example.expensetrackerpro.domain.models.Transaction
+import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesByTypeUseCase
 import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesUseCase
@@ -61,8 +62,8 @@ class AddEditTransactionViewModel @Inject constructor(
 ) : ViewModel() {
 
     // Nav argument; -1 (the default) means "add" mode
-    private val transactionId: Int? =
-        savedStateHandle.get<Int>("transactionId")?.takeIf { it != -1 }
+    private val transactionId: TransactionId? =
+        savedStateHandle.get<Int>("transactionId")?.takeIf { it != -1 }?.let(::TransactionId)
 
     // The stored transaction being edited, once it has loaded
     private var original: Transaction? = null
@@ -142,7 +143,7 @@ class AddEditTransactionViewModel @Inject constructor(
         }
     }
 
-    private fun loadExistingTransaction(id: Int) {
+    private fun loadExistingTransaction(id: TransactionId) {
         viewModelScope.launch {
             val transaction = getTransactionById(id) ?: return@launch
             original = transaction
@@ -238,7 +239,7 @@ class AddEditTransactionViewModel @Inject constructor(
         viewModelScope.launch {
             val result = saveTransaction(
                 Transaction(
-                    id = transactionId ?: 0,
+                    id = transactionId ?: TransactionId.UNSAVED,
                     title = state.title.trim(),
                     amount = amount,
                     note = state.note.trim(),

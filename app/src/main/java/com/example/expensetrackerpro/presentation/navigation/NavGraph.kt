@@ -24,7 +24,8 @@ fun AppNavHost(
             MainScreen(
                 snackbarHostState = snackbarHostState,
                 onNavigateToTransactionForm = { id ->
-                    navController.navigate(Screens.TransactionForm.getRoute(id ?: -1))
+                    // Routes carry the plain number
+                    navController.navigate(Screens.TransactionForm.getRoute(id?.value))
                 },
                 onNavigateToManageCategories = {
                     navController.navigate(Screens.ManageCategories.route)

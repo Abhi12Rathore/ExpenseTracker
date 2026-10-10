@@ -115,7 +115,7 @@ class HomeViewModelTest {
 
         assertEquals(thisMonth, state.filter)
         assertEquals(rupees(1000), state.dashboard.summary.totalIncome)
-        assertEquals(listOf(4, 3), state.dashboard.recentTransactions.map { it.id })
+        assertEquals(listOf(4, 3), state.dashboard.recentTransactions.map { it.id.value })
         assertEquals(31, state.dashboard.spending.buckets.size)
     }
 
@@ -132,7 +132,7 @@ class HomeViewModelTest {
 
         assertEquals(lastMonth, state.filter)
         assertEquals(rupees(900), state.dashboard.summary.totalIncome)
-        assertEquals(listOf(2, 1), state.dashboard.recentTransactions.map { it.id })
+        assertEquals(listOf(2, 1), state.dashboard.recentTransactions.map { it.id.value })
         assertEquals(30, state.dashboard.spending.buckets.size)
     }
 
@@ -149,7 +149,7 @@ class HomeViewModelTest {
         // November hasn't started
         viewModel.onFilterEvent(PeriodFilterEvent.NextPeriod)
         assertEquals(thisMonth, viewModel.uiState.value.filter)
-        assertEquals(listOf(4, 3), viewModel.uiState.value.dashboard.recentTransactions.map { it.id })
+        assertEquals(listOf(4, 3), viewModel.uiState.value.dashboard.recentTransactions.map { it.id.value })
     }
 
     @Test
@@ -199,7 +199,7 @@ class HomeViewModelTest {
             DateRange(millisAt(2026, Calendar.OCTOBER, 4), millisAt(2026, Calendar.OCTOBER, 11)),
             week.filter.dateRange
         )
-        assertEquals(listOf(4), week.dashboard.recentTransactions.map { it.id })
+        assertEquals(listOf(4), week.dashboard.recentTransactions.map { it.id.value })
         assertTrue(week.dashboard.netSavings.isEmpty())
         assertEquals(PeriodGranularity.WEEK, week.dashboard.pace?.granularity)
     }
@@ -228,7 +228,7 @@ class HomeViewModelTest {
         val state = viewModel.uiState.value
 
         assertEquals(lastMonth, state.filter)
-        assertEquals(listOf(2, 1), state.dashboard.recentTransactions.map { it.id })
+        assertEquals(listOf(2, 1), state.dashboard.recentTransactions.map { it.id.value })
         assertTrue(state.dashboard.netSavings.isEmpty())
     }
 
@@ -269,7 +269,7 @@ class HomeViewModelTest {
             PeriodFilterState(filter = DateFilter.Custom(picked), dateRange = picked, canStepForward = false),
             state.filter
         )
-        assertEquals(listOf(3, 2), state.dashboard.recentTransactions.map { it.id })
+        assertEquals(listOf(3, 2), state.dashboard.recentTransactions.map { it.id.value })
         assertEquals(rupees(600), state.dashboard.summary.totalBalance)
         assertNull(state.dashboard.comparison)
     }

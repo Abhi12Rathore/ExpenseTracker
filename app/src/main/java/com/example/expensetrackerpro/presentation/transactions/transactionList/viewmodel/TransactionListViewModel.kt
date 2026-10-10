@@ -8,6 +8,7 @@ import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
 import com.example.expensetrackerpro.domain.models.Transaction
+import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.domain.models.TransactionTypeFilter
 import com.example.expensetrackerpro.domain.usecase.filter.GetCurrentPeriodUseCase
 import com.example.expensetrackerpro.domain.usecase.filter.GetCustomDateRangeUseCase
@@ -64,7 +65,7 @@ class TransactionListViewModel @Inject constructor(
     private val swipeResetToken = MutableStateFlow(0)
 
     // Deletes that have been asked for and have not finished yet
-    private val pendingDeleteIds = mutableSetOf<Int>()
+    private val pendingDeleteIds = mutableSetOf<TransactionId>()
 
     // A Channel, not state: each effect is handled once, and waits if nobody is collecting yet
     private val _effects = Channel<TransactionListEffect>(Channel.BUFFERED)

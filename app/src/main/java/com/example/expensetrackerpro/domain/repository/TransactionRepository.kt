@@ -3,6 +3,7 @@ package com.example.expensetrackerpro.domain.repository
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.Transaction
+import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.domain.models.TransactionType
 import kotlinx.coroutines.flow.Flow
 
@@ -19,7 +20,7 @@ interface TransactionRepository {
 
     suspend fun deleteTransaction(transaction: Transaction): Outcome<Unit>
 
-    suspend fun getTransactionById(id: Int): Transaction?
+    suspend fun getTransactionById(id: TransactionId): Transaction?
 
     fun getAllTransactions(): Flow<List<Transaction>>
 

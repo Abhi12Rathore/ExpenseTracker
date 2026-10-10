@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.domain.repository
 
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.CategoryUsage
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.TransactionType
@@ -14,7 +15,7 @@ interface CategoryRepository {
     fun getCategoriesByType(type: TransactionType): Flow<List<Category>>
 
     /** Returns the id the category was stored under. */
-    suspend fun insertCategory(category: Category): Outcome<Int>
+    suspend fun insertCategory(category: Category): Outcome<CategoryId>
 
     suspend fun updateCategory(category: Category): Outcome<Unit>
 

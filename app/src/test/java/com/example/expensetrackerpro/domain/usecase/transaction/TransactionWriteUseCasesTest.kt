@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.domain.usecase.transaction
 
 import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.Outcome
+import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.fakes.FakeTransactionRepository
 import com.example.expensetrackerpro.fakes.rupees
 import com.example.expensetrackerpro.fakes.transaction
@@ -53,7 +54,7 @@ class TransactionWriteUseCasesTest {
     fun saveTransaction_addsWithoutAnId_andUpdatesWithOne() = runTest {
         val repository = FakeTransactionRepository(listOf(lunch))
         val save = SaveTransactionUseCase(AddTransactionUseCase(repository), UpdateTransactionUseCase(repository))
-        val unsaved = taxi.copy(id = 0)
+        val unsaved = taxi.copy(id = TransactionId.UNSAVED)
         val edited = lunch.copy(amount = rupees(150))
 
         assertEquals(Outcome.Success(Unit), save(unsaved))
@@ -98,7 +99,7 @@ class TransactionWriteUseCasesTest {
         assertEquals(rejected, UpdateTransactionUseCase(repository)(lunch.copy(amount = rupees(1))))
         assertEquals(rejected, DeleteTransactionUseCase(repository)(lunch))
         assertEquals(rejected, RestoreTransactionUseCase(repository)(taxi))
-        assertEquals(rejected, save(taxi.copy(id = 0)))
+        assertEquals(rejected, save(taxi.copy(id = TransactionId.UNSAVED)))
         assertEquals(rejected, save(lunch.copy(amount = rupees(1))))
 
         assertEquals(listOf(lunch), repository.current)

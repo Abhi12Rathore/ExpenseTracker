@@ -4,6 +4,7 @@ import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.Transaction
+import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.repository.TransactionRepository
 import kotlinx.coroutines.CompletableDeferred
@@ -60,7 +61,7 @@ class FakeTransactionRepository(
         return Outcome.Success(Unit)
     }
 
-    override suspend fun getTransactionById(id: Int): Transaction? =
+    override suspend fun getTransactionById(id: TransactionId): Transaction? =
         transactions.value.find { it.id == id }
 
     override fun getAllTransactions(): Flow<List<Transaction>> =

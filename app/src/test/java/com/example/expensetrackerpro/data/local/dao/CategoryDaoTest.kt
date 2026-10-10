@@ -12,9 +12,11 @@ import com.example.expensetrackerpro.data.repository.TransactionRepositoryImpl
 import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.CategoryIcon
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.CategoryUsage
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.Money
+import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.fakes.millisAt
 import com.example.expensetrackerpro.fakes.rupees
@@ -86,9 +88,9 @@ class CategoryDaoTest {
         )
 
     private suspend fun usage(range: DateRange = october) =
-        repository.getCategoryUsage(range).first().associateBy { it.category.id }
+        repository.getCategoryUsage(range).first().associateBy { it.category.id.value }
 
-    private suspend fun categoryIds() = repository.getAllCategories().first().map { it.id }
+    private suspend fun categoryIds() = repository.getAllCategories().first().map { it.id.value }
 
     // --- Usage
 
@@ -134,7 +136,7 @@ class CategoryDaoTest {
     fun renaming_updatesTheNameOnTheCategorysTransactions_andOnNoOthers() = runTest {
         repository.updateCategory(food.toDomain().copy(name = "Eating out", icon = CategoryIcon.FASTFOOD))
 
-        val stored = repository.getAllCategories().first().single { it.id == food.id }
+        val stored = repository.getAllCategories().first().single { it.id.value == food.id }
         assertEquals("Eating out", stored.name)
         assertEquals(CategoryIcon.FASTFOOD, stored.icon)
         // Still built in, and still an expense
@@ -142,10 +144,10 @@ class CategoryDaoTest {
         assertEquals(TransactionType.EXPENSE, stored.type)
 
         val all = transactions.getAllTransactions().first()
-        val renamed = all.filter { it.categoryId == food.id }
+        val renamed = all.filter { it.categoryId.value == food.id }
         assertEquals(4, renamed.size)
         assertTrue(renamed.all { it.categoryName == "Eating out" })
-        assertEquals(listOf("Groceries", "Salary"), all.filter { it.categoryId != food.id }.map { it.categoryName }.sorted())
+        assertEquals(listOf("Groceries", "Salary"), all.filter { it.categoryId.value != food.id }.map { it.categoryName }.sorted())
         // Usage is untouched by a rename
         assertEquals(4, usage().getValue(food.id).totalCount)
     }
@@ -154,8 +156,8 @@ class CategoryDaoTest {
     fun updatingOnlyTheIcon_leavesTheTransactionsNamesAsTheyWere() = runTest {
         repository.updateCategory(groceries.toDomain().copy(icon = CategoryIcon.STOREFRONT))
 
-        assertEquals("Groceries", transactions.getTransactionById(5)?.categoryName)
-        assertEquals(CategoryIcon.STOREFRONT, transactions.getTransactionById(5)?.categoryIcon)
+        assertEquals("Groceries", transactions.getTransactionById(TransactionId(5))?.categoryName)
+        assertEquals(CategoryIcon.STOREFRONT, transactions.getTransactionById(TransactionId(5))?.categoryIcon)
     }
 
     // --- Reassign, then delete
@@ -175,21 +177,21 @@ class CategoryDaoTest {
         )
 
         // Each moved transaction now reads as the target, by id, name and icon
-        val moved = transactions.getAllTransactions().first().filter { it.id in 1..4 }
+        val moved = transactions.getAllTransactions().first().filter { it.id.value in 1..4 }
         assertEquals(4, moved.size)
-        assertTrue(moved.all { it.categoryId == groceries.id })
+        assertTrue(moved.all { it.categoryId.value == groceries.id })
         assertTrue(moved.all { it.categoryName == "Groceries" })
         assertTrue(moved.all { it.categoryIcon == CategoryIcon.SHOPPING_BASKET })
         // Nothing else about them changed
-        assertEquals(listOf(rupees(100), rupees(250), Money(400_50), rupees(999)), moved.sortedBy { it.id }.map { it.amount })
+        assertEquals(listOf(rupees(100), rupees(250), Money(400_50), rupees(999)), moved.sortedBy { it.id.value }.map { it.amount })
     }
 
     @Test
     fun reassign_leavesOtherCategoriesTransactionsAlone() = runTest {
         repository.deleteCategoryReassigning(food.toDomain(), groceries.toDomain())
 
-        val salaryTransaction = transactions.getTransactionById(6)
-        assertEquals(salary.id, salaryTransaction?.categoryId)
+        val salaryTransaction = transactions.getTransactionById(TransactionId(6))
+        assertEquals(salary.id, salaryTransaction?.categoryId?.value)
         assertEquals("Salary", salaryTransaction?.categoryName)
     }
 
@@ -199,7 +201,7 @@ class CategoryDaoTest {
 
         repository.deleteCategoryReassigning(food.toDomain(), staleTarget)
 
-        assertEquals("Groceries", transactions.getTransactionById(1)?.categoryName)
+        assertEquals("Groceries", transactions.getTransactionById(TransactionId(1))?.categoryName)
     }
 
     @Test
@@ -213,7 +215,7 @@ class CategoryDaoTest {
 
     @Test
     fun reassign_toItselfOrToAMissingCategory_changesNothing() = runTest {
-        val missing = pets.toDomain().copy(id = 99)
+        val missing = pets.toDomain().copy(id = CategoryId(99))
 
         assertEquals(notFound, repository.deleteCategoryReassigning(food.toDomain(), food.toDomain()))
         assertEquals(notFound, repository.deleteCategoryReassigning(food.toDomain(), missing))

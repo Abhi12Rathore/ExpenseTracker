@@ -6,6 +6,7 @@ import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.error.map
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.CategoryDraft
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.CategoryNameValidation
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
@@ -23,7 +24,7 @@ class SaveCategoryUseCase @Inject constructor(
      * edited is gone, with DuplicateName or InvalidInput when the name can't be used, and with
      * StorageFailure when the database could not write it.
      */
-    suspend operator fun invoke(draft: CategoryDraft): Outcome<Int> {
+    suspend operator fun invoke(draft: CategoryDraft): Outcome<CategoryId> {
         val existing = getCategories().first()
         val stored = draft.id?.let { id ->
             existing.find { it.id == id } ?: return Outcome.Failure(DomainError.NotFound)

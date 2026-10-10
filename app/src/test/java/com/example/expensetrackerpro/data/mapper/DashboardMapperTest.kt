@@ -7,6 +7,7 @@ import com.example.expensetrackerpro.data.local.model.MonthlyTrendEntity
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.CashFlowPoint
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.DailyExpense
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.MonthlyTrend
@@ -21,7 +22,7 @@ class DashboardMapperTest {
         val entity = CategoryExpenseEntity(categoryId = 2, categoryName = "Food", icon = CategoryIcon.RESTAURANT, totalPaise = 1250_75)
 
         assertEquals(
-            CategoryBreakdown(categoryId = 2, categoryName = "Food", icon = CategoryIcon.RESTAURANT, amount = Money(1250_75)),
+            CategoryBreakdown(categoryId = CategoryId(2), categoryName = "Food", icon = CategoryIcon.RESTAURANT, amount = Money(1250_75)),
             entity.toDomain()
         )
     }

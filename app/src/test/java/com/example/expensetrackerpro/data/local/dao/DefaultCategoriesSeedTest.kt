@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.example.expensetrackerpro.data.local.expenseDatabase.AppDatabase
 import com.example.expensetrackerpro.data.local.expenseDatabase.ExpenseDatabaseCallback
 import com.example.expensetrackerpro.data.mapper.toDomain
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.DefaultCategories
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -42,7 +43,7 @@ class DefaultCategoriesSeedTest {
         val seeded = database.categoryDao().getAllCategories().first().map { it.toDomain() }
 
         // Ids are assigned in order, starting at 1
-        val expected = DefaultCategories.all.mapIndexed { index, category -> category.copy(id = index + 1) }
+        val expected = DefaultCategories.all.mapIndexed { index, category -> category.copy(id = CategoryId(index + 1)) }
         assertEquals(expected, seeded)
     }
 }

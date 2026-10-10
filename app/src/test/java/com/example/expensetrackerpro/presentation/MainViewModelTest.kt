@@ -6,6 +6,7 @@ import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.AuthResult
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.CategoryUsage
 import com.example.expensetrackerpro.domain.models.LockTimeout
@@ -320,7 +321,7 @@ class MainViewModelTest {
 
         viewModel.onEvent(MainEvent.UndoDelete(lunch))
 
-        assertEquals(listOf(lunch, rent), repository.current.sortedBy { it.id })
+        assertEquals(listOf(lunch, rent), repository.current.sortedBy { it.id.value })
         assertEquals(listOf<MainEffect>(MainEffect.ShowUndoDelete(lunch)), effects)
     }
 
@@ -377,7 +378,7 @@ private class PendingCategoryRepository : CategoryRepository {
     override fun getCategoriesByType(type: TransactionType): Flow<List<Category>> =
         categories.map { list -> list.filter { it.type == type } }
 
-    override suspend fun insertCategory(category: Category): Outcome<Int> = Outcome.Success(category.id)
+    override suspend fun insertCategory(category: Category): Outcome<CategoryId> = Outcome.Success(category.id)
 
     override suspend fun updateCategory(category: Category): Outcome<Unit> = Outcome.Success(Unit)
 

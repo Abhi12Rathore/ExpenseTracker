@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.presentation.manageCategories.uistate
 
 import androidx.annotation.StringRes
 import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.CategorySections
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorState
@@ -27,7 +28,7 @@ data class CategoryDeleteRequest(
     val transactionCount: Int = 0,
     // The other categories of its type
     val targets: List<Category> = emptyList(),
-    val selectedTargetId: Int? = null
+    val selectedTargetId: CategoryId? = null
 ) {
     val needsReassign: Boolean get() = transactionCount > 0
 
