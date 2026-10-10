@@ -1,45 +1,19 @@
 package com.example.expensetrackerpro.presentation.manageCategories
 
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.TrendingDown
-import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -48,28 +22,32 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.expensetrackerpro.R
-import com.example.expensetrackerpro.domain.models.TransactionType
-import com.example.expensetrackerpro.presentation.categories.AddCategoryBottomSheet
-import com.example.expensetrackerpro.presentation.manageCategories.components.CategoryManageTile
-import com.example.expensetrackerpro.presentation.manageCategories.uistate.ManageCategoryEvent
-import com.example.expensetrackerpro.presentation.manageCategories.uistate.ManageCategoryUiState
-import com.example.expensetrackerpro.ui.theme.extendedColors
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import com.example.expensetrackerpro.ExpenseTrackerProTheme
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.domain.models.CategorySections
+import com.example.expensetrackerpro.domain.models.CategoryUsage
+import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorSheet
+import com.example.expensetrackerpro.presentation.common.filter.components.PillSegmentedControl
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
+import com.example.expensetrackerpro.presentation.manageCategories.components.CategoryManageTile
+import com.example.expensetrackerpro.presentation.manageCategories.components.DeleteCategoryDialog
+import com.example.expensetrackerpro.presentation.manageCategories.components.ManageCategoriesTopBar
+import com.example.expensetrackerpro.presentation.manageCategories.uistate.CategoryDeleteRequest
+import com.example.expensetrackerpro.presentation.manageCategories.uistate.ManageCategoryEvent
+import com.example.expensetrackerpro.presentation.manageCategories.uistate.ManageCategoryMessage
+import com.example.expensetrackerpro.presentation.manageCategories.uistate.ManageCategoryUiState
+import com.example.expensetrackerpro.ExpenseTrackerProTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageCategoryScreen(
     viewModel: ManageCategoryViewModel = hiltViewModel(),
@@ -84,214 +62,104 @@ fun ManageCategoryScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageCategoryContent(
     uiState: ManageCategoryUiState,
     onEvent: (ManageCategoryEvent) -> Unit,
     onNavigateBack: () -> Unit
 ) {
-    val categories = uiState.categories
-    val categoryToEdit = uiState.categoryToEdit
-    val isSheetOpen = uiState.isSheetOpen
-    val searchQuery = uiState.searchQuery
-    val selectedType = uiState.selectedType
-
-    // Purely visual: whether the type dropdown is showing
-    var isFilterExpanded by remember { mutableStateOf(false) }
+    val sections = uiState.sections
 
     val snackbarHostState = remember { SnackbarHostState() }
-    val deleteBlockedMessage = uiState.deleteBlockedCategoryName?.let {
-        stringResource(R.string.category_delete_blocked, it)
+    val messageText = when (uiState.message) {
+        ManageCategoryMessage.DELETE_FAILED -> stringResource(R.string.category_delete_failed)
+        null -> null
     }
-    LaunchedEffect(deleteBlockedMessage) {
-        if (deleteBlockedMessage != null) {
-            snackbarHostState.showSnackbar(deleteBlockedMessage)
-            onEvent(ManageCategoryEvent.DeleteBlockedMessageShown)
-        }
+    LaunchedEffect(uiState.message) {
+        if (messageText == null) return@LaunchedEffect
+        snackbarHostState.showSnackbar(messageText)
+        onEvent(ManageCategoryEvent.MessageShown)
     }
 
-    if (isSheetOpen) {
-        AddCategoryBottomSheet(
-            initialCategory = categoryToEdit,
-            // Pass the context: If you have tabs, pass the active tab type.
-            // If you are on the Add Transaction screen, pass the current state.transactionType
-            initialType = selectedType,
-            onDismiss = { onEvent(ManageCategoryEvent.SheetDismissed) },
-            onSaveCategory = { name, icon, type ->
-                // The ViewModel updates when a category is being edited, otherwise adds
-                onEvent(ManageCategoryEvent.CategorySaved(name, icon, type))
-            }
+    uiState.categoryEditor?.let { editor ->
+        CategoryEditorSheet(
+            state = editor,
+            onEvent = { onEvent(ManageCategoryEvent.Editor(it)) }
+        )
+    }
+
+    uiState.pendingDelete?.let { request ->
+        DeleteCategoryDialog(
+            request = request,
+            onTargetSelected = { onEvent(ManageCategoryEvent.DeleteTargetSelected(it)) },
+            onConfirm = { onEvent(ManageCategoryEvent.DeleteConfirmed) },
+            onDismiss = { onEvent(ManageCategoryEvent.DeleteDismissed) }
         )
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            ManageCategoriesTopBar(
+                isSearchOpen = uiState.isSearchOpen,
+                searchQuery = uiState.searchQuery,
+                onNavigateBack = onNavigateBack,
+                onOpenSearch = { onEvent(ManageCategoryEvent.SearchOpened) },
+                onSearchChange = { onEvent(ManageCategoryEvent.SearchQueryChanged(it)) },
+                onCloseSearch = { onEvent(ManageCategoryEvent.SearchClosed) }
+            )
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { onEvent(ManageCategoryEvent.AddClicked) },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = CircleShape
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Category")
-            }
+            ExtendedFloatingActionButton(
+                text = { Text(stringResource(R.string.manage_categories_new)) },
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                onClick = { onEvent(ManageCategoryEvent.AddClicked) }
+            )
         }
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header Section
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = onNavigateBack,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(
-                            MaterialTheme.colorScheme.primaryContainer,
-                            CircleShape
-                        )
+            val expenseLabel = stringResource(
+                R.string.manage_categories_tab,
+                stringResource(R.string.transaction_type_expense),
+                sections.expenseCount
+            )
+            val incomeLabel = stringResource(
+                R.string.manage_categories_tab,
+                stringResource(R.string.transaction_type_income),
+                sections.incomeCount
+            )
+            PillSegmentedControl(
+                options = listOf(TransactionType.EXPENSE, TransactionType.INCOME),
+                selected = uiState.selectedType,
+                label = { if (it == TransactionType.INCOME) incomeLabel else expenseLabel },
+                onSelect = { onEvent(ManageCategoryEvent.TypeChanged(it)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            if (sections.isEmpty) {
+                EmptyMessage(searchQuery = uiState.searchQuery.trim())
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    // Room for the last row to scroll clear of the button
+                    contentPadding = PaddingValues(bottom = 96.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
+                    categorySection(
+                        titleRes = R.string.manage_categories_section_most_used,
+                        usages = sections.mostUsed,
+                        onClick = { onEvent(ManageCategoryEvent.CategoryClicked(it)) }
                     )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-            Text(
-                text = "Manage Categories",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Manage all your categories",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            // Search and Filter Section
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { onEvent(ManageCategoryEvent.SearchQueryChanged(it)) },
-                    modifier = Modifier.weight(1f),
-                    placeholder = { Text("Search categories...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { onEvent(ManageCategoryEvent.SearchQueryChanged("")) }) {
-                                Icon(Icons.Default.Close, contentDescription = null)
-                            }
-                        }
-                    },
-                    shape = RoundedCornerShape(16.dp),
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        focusedLabelColor = MaterialTheme.colorScheme.primary
-                    )
-                )
-
-                // Type Filter Dropdown
-                Box {
-                    FilterChip(
-                        selected = true, // It's "selected" because it's showing the active filter
-                        onClick = { isFilterExpanded = true },
-                        modifier = Modifier.height(45.dp),
-                        label = {
-                            Text(
-                                text = selectedType.name.lowercase().capitalize(),
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                        },
-                        trailingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.FilterList,
-                                contentDescription = "Filter Type", // Added required contentDescription
-                                modifier = Modifier.size(18.dp)
-                            )
-                        },
-                        enabled = true, // Explicitly passed enabled
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                            selectedLabelColor = MaterialTheme.colorScheme.primary,
-                            selectedTrailingIconColor = MaterialTheme.colorScheme.primary
-                        ),
-                        border = FilterChipDefaults.filterChipBorder(
-                            enabled = true,
-                            selected = true,
-                            borderColor = MaterialTheme.colorScheme.primary,
-                            selectedBorderColor = MaterialTheme.colorScheme.primary,
-                            borderWidth = 1.dp
-                        )
-                    )
-
-                    DropdownMenu(
-                        expanded = isFilterExpanded,
-                        onDismissRequest = { isFilterExpanded = false }
-                    ) {
-                        TransactionType.entries.forEach { type ->
-                            DropdownMenuItem(
-                                text = { Text(type.name.lowercase().replaceFirstChar { it.uppercase() }) },
-                                onClick = {
-                                    onEvent(ManageCategoryEvent.TypeChanged(type)) // This triggers the reactive filter
-                                    isFilterExpanded = false
-                                },
-                                leadingIcon = {
-                                    val icon = if (type == TransactionType.INCOME) Icons.Default.TrendingUp else Icons.Default.TrendingDown
-                                    Icon(icon, contentDescription = null, tint = if (type == TransactionType.INCOME) MaterialTheme.extendedColors.income else MaterialTheme.extendedColors.expense)
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Result Info
-            if (searchQuery.length in 1..2) {
-                Text(
-                    text = "Keep typing to search...",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 80.dp)
-            ) {
-                items(categories) { category ->
-                    CategoryManageTile(
-                        category = category,
-                        onEdit = { onEvent(ManageCategoryEvent.EditClicked(category)) },
-                        onDelete = { onEvent(ManageCategoryEvent.DeleteClicked(category)) },
-                        modifier = Modifier.animateItem(
-                            fadeInSpec = tween(durationMillis = 400),
-                            fadeOutSpec = tween(durationMillis = 400),
-                            placementSpec = spring(
-                                dampingRatio = Spring.DampingRatioLowBouncy,
-                                stiffness = Spring.StiffnessLow
-                            )
-                        )
-
+                    categorySection(
+                        titleRes = R.string.manage_categories_section_unused,
+                        usages = sections.unused,
+                        onClick = { onEvent(ManageCategoryEvent.CategoryClicked(it)) }
                     )
                 }
             }
@@ -299,12 +167,101 @@ fun ManageCategoryContent(
     }
 }
 
+/** A heading and its rows; nothing at all when [usages] is empty. */
+private fun LazyListScope.categorySection(
+    titleRes: Int,
+    usages: List<CategoryUsage>,
+    onClick: (Category) -> Unit
+) {
+    if (usages.isEmpty()) return
+
+    item(key = "header-$titleRes") {
+        Text(
+            text = stringResource(titleRes),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .padding(top = 8.dp, start = 4.dp)
+                .semantics { heading() }
+                .animateItem()
+        )
+    }
+    items(usages, key = { "category-${it.category.id}" }) { usage ->
+        CategoryManageTile(
+            usage = usage,
+            onClick = { onClick(usage.category) },
+            modifier = Modifier.animateItem()
+        )
+    }
+}
+
+@Composable
+private fun EmptyMessage(searchQuery: String) {
+    Text(
+        text = if (searchQuery.isEmpty()) {
+            stringResource(R.string.manage_categories_empty)
+        } else {
+            stringResource(R.string.manage_categories_no_results, searchQuery)
+        },
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 48.dp)
+    )
+}
+
+private val previewSections = CategorySections(
+    expenseCount = PreviewData.categoryUsages.size,
+    incomeCount = 9,
+    mostUsed = PreviewData.categoryUsages.filter { it.periodCount > 0 },
+    unused = PreviewData.categoryUsages.filter { it.periodCount == 0 }
+)
+
 @PreviewLightDark
 @Composable
 private fun ManageCategoryContentPreview() {
     ExpenseTrackerProTheme {
         ManageCategoryContent(
-            uiState = ManageCategoryUiState(categories = PreviewData.categories),
+            uiState = ManageCategoryUiState(sections = previewSections),
+            onEvent = {},
+            onNavigateBack = {}
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ManageCategoryContentSearchPreview() {
+    ExpenseTrackerProTheme {
+        ManageCategoryContent(
+            uiState = ManageCategoryUiState(
+                sections = previewSections.copy(mostUsed = emptyList(), unused = emptyList()),
+                isSearchOpen = true,
+                searchQuery = "gym"
+            ),
+            onEvent = {},
+            onNavigateBack = {}
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun ManageCategoryContentReassignPreview() {
+    val categories = PreviewData.categories
+
+    ExpenseTrackerProTheme {
+        ManageCategoryContent(
+            uiState = ManageCategoryUiState(
+                sections = previewSections,
+                pendingDelete = CategoryDeleteRequest(
+                    category = categories.first(),
+                    transactionCount = 12,
+                    targets = categories.drop(1)
+                )
+            ),
             onEvent = {},
             onNavigateBack = {}
         )

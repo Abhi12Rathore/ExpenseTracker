@@ -9,19 +9,12 @@ class FakeSampleDataRepository(
 
     var loadCalls = 0
         private set
-    var clearCalls = 0
-        private set
 
-    /** While true both actions fail, as a failing database would make them. */
+    /** While true loading fails, as a failing database would make it. */
     var fail = false
 
     override suspend fun loadSampleData(): Int? {
         loadCalls++
         return if (fail) null else sampleCount
-    }
-
-    override suspend fun clearAllData(): Boolean {
-        clearCalls++
-        return !fail
     }
 }

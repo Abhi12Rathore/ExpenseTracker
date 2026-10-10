@@ -11,7 +11,6 @@ import com.example.expensetrackerpro.data.repository.TransactionRepositoryImpl
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.DefaultCategories
 import com.example.expensetrackerpro.domain.models.TransactionType
-import com.example.expensetrackerpro.domain.usecase.sample.ClearAllDataUseCase
 import com.example.expensetrackerpro.domain.usecase.sample.LoadSampleDataUseCase
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
 import com.example.expensetrackerpro.fakes.millisAt
@@ -27,7 +26,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.util.Calendar
 
-/** Loads and clears sample data in a real database, created and seeded the way the app's is. */
+/** Loads sample data into a real database, created and seeded the way the app's is. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class SampleDataSeederTest {
@@ -37,7 +36,6 @@ class SampleDataSeederTest {
 
     private lateinit var database: AppDatabase
     private lateinit var loadSampleData: LoadSampleDataUseCase
-    private lateinit var clearAllData: ClearAllDataUseCase
 
     private val dao get() = database.transactionDao()
 
@@ -50,7 +48,6 @@ class SampleDataSeederTest {
 
         val seeder = SampleDataSeeder(database.sampleDataDao(), generator)
         loadSampleData = LoadSampleDataUseCase(seeder)
-        clearAllData = ClearAllDataUseCase(seeder)
     }
 
     @After
@@ -117,23 +114,6 @@ class SampleDataSeederTest {
         assertEquals(generator().size, count)
         assertEquals(1, categories().count { it.name == "Fuel" })
         assertTrue(transactions().any { it.categoryName == "Fuel" })
-        assertEquals(DefaultCategories.all.size, categories().size)
-    }
-
-    @Test
-    fun clear_deletesTransactionsAndCustomCategories_andKeepsTheDefaults() = runTest {
-        addCustomCategoryWithATransaction()
-        loadSampleData()
-
-        assertTrue(clearAllData())
-
-        assertTrue(transactions().isEmpty())
-        assertEquals(DefaultCategories.all.map { it.name }, categories().map { it.name })
-    }
-
-    @Test
-    fun clear_onAnEmptyDatabase_isFine() = runTest {
-        assertTrue(clearAllData())
         assertEquals(DefaultCategories.all.size, categories().size)
     }
 }

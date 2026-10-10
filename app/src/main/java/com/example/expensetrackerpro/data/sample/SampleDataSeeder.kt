@@ -8,7 +8,7 @@ import com.example.expensetrackerpro.domain.models.DefaultCategories
 import com.example.expensetrackerpro.domain.repository.SampleDataRepository
 import javax.inject.Inject
 
-/** Writes generated transactions into the database, and empties it again. */
+/** Writes generated transactions into the database. */
 class SampleDataSeeder @Inject constructor(
     private val sampleDataDao: SampleDataDao,
     private val generateTransactions: SampleTransactionGenerator
@@ -37,13 +37,5 @@ class SampleDataSeeder @Inject constructor(
             transactions.size
         } catch (e: SQLiteException) {
             null
-        }
-
-    override suspend fun clearAllData(): Boolean =
-        try {
-            sampleDataDao.clearAll()
-            true
-        } catch (e: SQLiteException) {
-            false
         }
 }

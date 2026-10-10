@@ -4,6 +4,7 @@ import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.DateChoice
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorState
 
 data class AddEditTransactionUiState(
     val title: String = "",
@@ -29,7 +30,8 @@ data class AddEditTransactionUiState(
     val transactionToDelete: Transaction? = null,
     // Categories matching the current transactionType
     val availableCategories: List<Category> = emptyList(),
-    val isCategorySheetVisible: Boolean = false
+    // Non-null while the new-category sheet is open
+    val categoryEditor: CategoryEditorState? = null
 ) {
     val selectedCategory: Category?
         get() = availableCategories.find { it.id == selectedCategoryId }

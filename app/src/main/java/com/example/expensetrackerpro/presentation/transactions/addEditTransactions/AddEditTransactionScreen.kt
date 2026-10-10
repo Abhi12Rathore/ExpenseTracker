@@ -41,7 +41,7 @@ import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.DateChoice
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.transaction.ValidateTransactionDraftUseCase
-import com.example.expensetrackerpro.presentation.categories.AddCategoryBottomSheet
+import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorSheet
 import com.example.expensetrackerpro.presentation.common.filter.components.PillSegmentedControl
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.AmountHero
@@ -139,13 +139,10 @@ private fun AddEditTransactionLayout(
         if (!state.isEditMode && !isAmountCollapsed) amountFocusRequester.requestFocus()
     }
 
-    if (state.isCategorySheetVisible) {
-        AddCategoryBottomSheet(
-            initialType = state.transactionType,
-            onDismiss = { onEvent(AddEditTransactionEvent.CategorySheetDismissed) },
-            onSaveCategory = { name, icon, type ->
-                onEvent(AddEditTransactionEvent.CategoryAdded(name, icon, type))
-            }
+    state.categoryEditor?.let { editor ->
+        CategoryEditorSheet(
+            state = editor,
+            onEvent = { onEvent(AddEditTransactionEvent.CategoryEditor(it)) }
         )
     }
 

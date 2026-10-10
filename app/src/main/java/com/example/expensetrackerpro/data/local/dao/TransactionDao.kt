@@ -40,9 +40,6 @@ interface TransactionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCategory(category: CategoryEntity): Long
 
-    @Update
-    suspend fun updateCategory(category: CategoryEntity)
-
     @Delete
     suspend fun deleteCategory(category: CategoryEntity)
 

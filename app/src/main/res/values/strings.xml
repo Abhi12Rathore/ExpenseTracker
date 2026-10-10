@@ -5,6 +5,7 @@
     <string name="greeting_morning">Good Morning, %1$s 👋</string>
     <string name="greeting_afternoon">Good Afternoon, %1$s 👋</string>
     <string name="greeting_evening">Good Evening, %1$s 👋</string>
+    <string name="greeting_default_name">there</string>
     <string name="dashboard_subtitle">Here\'s your financial status</string>
 
     <!-- Date filter -->
@@ -245,8 +246,117 @@
     <string name="insight_spending_increased_title">Watch Spending ⚠️</string>
     <string name="insight_spending_increased_description">Your expenses increased compared to last month</string>
 
+    <!-- Add/edit category sheet -->
+    <string name="category_editor_title_new">New category</string>
+    <string name="category_editor_title_edit">Edit category</string>
+    <string name="category_editor_create">Create category</string>
+    <string name="category_editor_save">Save changes</string>
+    <string name="category_editor_delete">Delete category</string>
+    <string name="category_editor_name_label">Name</string>
+    <string name="category_editor_name_placeholder">Category name</string>
+    <string name="category_editor_name_counter">%1$d/%2$d</string>
+    <string name="category_editor_name_error_blank">Enter a name</string>
+    <plurals name="category_editor_name_error_too_long">
+        <item quantity="one">Use %1$d character or fewer</item>
+        <item quantity="other">Use %1$d characters or fewer</item>
+    </plurals>
+    <string name="category_editor_name_error_duplicate">You already have a category with this name</string>
+    <string name="category_editor_type_expense">Expense category</string>
+    <string name="category_editor_type_income">Income category</string>
+    <string name="category_editor_icon_label">Icon</string>
+
     <!-- Manage categories -->
-    <string name="category_delete_blocked">Can\'t delete \"%1$s\" because it still has transactions. Delete or move them first.</string>
+    <string name="manage_categories_title">Categories</string>
+    <string name="manage_categories_back">Back</string>
+    <string name="manage_categories_search">Search categories</string>
+    <string name="manage_categories_search_close">Close search</string>
+    <string name="manage_categories_search_placeholder">Search categories</string>
+    <string name="manage_categories_new">New category</string>
+    <!-- A tab: the type, then how many categories it has -->
+    <string name="manage_categories_tab">%1$s · %2$d</string>
+    <string name="manage_categories_section_most_used">Most used this month</string>
+    <string name="manage_categories_section_unused">Not used this month</string>
+    <string name="manage_categories_default_badge">DEFAULT</string>
+    <plurals name="manage_categories_usage_this_month">
+        <item quantity="one">%1$d transaction · %2$s this month</item>
+        <item quantity="other">%1$d transactions · %2$s this month</item>
+    </plurals>
+    <plurals name="manage_categories_usage_total">
+        <item quantity="one">%1$d transaction in total</item>
+        <item quantity="other">%1$d transactions in total</item>
+    </plurals>
+    <string name="manage_categories_usage_none">No transactions yet</string>
+    <string name="manage_categories_empty">No categories here yet</string>
+    <string name="manage_categories_no_results">No categories match \"%1$s\"</string>
+    <string name="category_delete_dialog_title">Delete \"%1$s\"?</string>
+    <string name="category_delete_dialog_message">No transactions use this category. Deleting it can\'t be undone.</string>
+    <plurals name="category_delete_move_message">
+        <item quantity="one">%1$d transaction uses this category. Choose where to move it:</item>
+        <item quantity="other">%1$d transactions use this category. Choose where to move them:</item>
+    </plurals>
+    <plurals name="category_delete_no_target">
+        <item quantity="one">%1$d transaction uses this category and there is no other category of its type to move it to. Create one first.</item>
+        <item quantity="other">%1$d transactions use this category and there is no other category of its type to move them to. Create one first.</item>
+    </plurals>
+    <string name="category_delete_move_warning">Deleting the category can\'t be undone.</string>
+    <string name="category_delete_confirm">Delete</string>
+    <string name="category_delete_move_confirm">Move and delete</string>
+    <string name="category_delete_cancel">Cancel</string>
+    <string name="category_delete_failed">Couldn\'t delete the category. Try again.</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_dialog_cancel">Cancel</string>
+    <string name="settings_soon">Soon</string>
+    <string name="settings_footer">❤️ Made with Jetpack Compose</string>
+
+    <!-- Settings: profile -->
+    <string name="settings_profile_edit">Edit name</string>
+    <string name="settings_profile_no_name">Add your name</string>
+    <string name="settings_profile_currency">₹ INR</string>
+    <string name="settings_profile_dialog_title">Your name</string>
+    <string name="settings_profile_name_label">Name</string>
+    <string name="settings_profile_name_counter">%1$d/%2$d</string>
+    <string name="settings_profile_save">Save</string>
+
+    <!-- Settings: appearance -->
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_subtitle">Follow your device or pick one</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+
+    <!-- Settings: data -->
+    <string name="settings_section_data">Data</string>
+    <string name="settings_categories">Categories</string>
+    <!-- The category count, then how many of them are custom -->
+    <string name="settings_categories_subtitle">%1$s · %2$s</string>
+    <plurals name="settings_categories_count">
+        <item quantity="one">%1$d category</item>
+        <item quantity="other">%1$d categories</item>
+    </plurals>
+    <plurals name="settings_categories_custom">
+        <item quantity="one">%1$d custom</item>
+        <item quantity="other">%1$d custom</item>
+    </plurals>
+    <string name="settings_export">Export &amp; backup</string>
+    <string name="settings_export_subtitle">Save a copy of your data</string>
+    <string name="settings_data_action_failed">Couldn\'t change the data. Try again.</string>
+
+    <!-- Settings: about -->
+    <string name="settings_section_about">About</string>
+    <string name="settings_version">Version</string>
+
+    <!-- Settings: danger zone -->
+    <string name="settings_section_danger">Danger zone</string>
+    <string name="settings_delete_all">Delete all data</string>
+    <string name="settings_delete_all_subtitle">Every transaction and custom category</string>
+    <string name="settings_delete_all_dialog_title">Delete all data?</string>
+    <string name="settings_delete_all_dialog_message">Every transaction and every category you added will be deleted. The built-in categories and your settings stay. This can\'t be undone.</string>
+    <string name="settings_delete_all_dialog_field">Type %1$s to confirm</string>
+    <string name="settings_delete_all_confirm">Delete everything</string>
+    <string name="settings_all_data_deleted">All data deleted</string>
 
     <!-- Settings: developer section, shown in debug builds only -->
     <string name="settings_section_developer">Developer</string>
@@ -255,26 +365,10 @@
     <string name="settings_load_sample_data_dialog_title">Load sample data?</string>
     <string name="settings_load_sample_data_dialog_message">Every transaction you have will be replaced with sample ones. This can\'t be undone.</string>
     <string name="settings_load_sample_data_confirm">Replace</string>
-    <string name="settings_clear_all_data">Clear all data</string>
-    <string name="settings_clear_all_data_subtitle">Delete every transaction and custom category</string>
-    <string name="settings_clear_all_data_dialog_title">Clear all data?</string>
-    <string name="settings_clear_all_data_dialog_message">Every transaction and every category you added will be deleted. This can\'t be undone.</string>
-    <string name="settings_clear_all_data_confirm">Clear</string>
-    <string name="settings_developer_action_cancel">Cancel</string>
     <plurals name="settings_sample_data_loaded">
         <item quantity="one">Loaded %1$d sample transaction</item>
         <item quantity="other">Loaded %1$d sample transactions</item>
     </plurals>
-    <string name="settings_all_data_cleared">All data cleared</string>
-    <string name="settings_developer_action_failed">Couldn\'t change the data. Try again.</string>
-
-    <!-- Settings: theme -->
-    <string name="settings_theme">Theme</string>
-    <string name="theme_dialog_title">Choose theme</string>
-    <string name="theme_system">System default</string>
-    <string name="theme_light">Light</string>
-    <string name="theme_dark">Dark</string>
-    <string name="theme_dialog_cancel">Cancel</string>
 
     <!-- Settings: app lock -->
     <string name="settings_section_security">Security</string>

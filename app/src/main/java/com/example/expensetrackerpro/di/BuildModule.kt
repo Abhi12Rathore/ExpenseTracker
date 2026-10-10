@@ -12,5 +12,6 @@ import dagger.hilt.components.SingletonComponent
 object BuildModule {
 
     @Provides
-    fun provideBuildInfo(): BuildInfo = BuildInfo(isDebug = BuildConfig.DEBUG)
+    fun provideBuildInfo(): BuildInfo = 
+        BuildInfo(isDebug = BuildConfig.DEBUG, versionName = BuildConfig.VERSION_NAME)
 }
