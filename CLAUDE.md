@@ -12,7 +12,7 @@ Goal: production-quality portfolio project.
 ## Tech stack
 - Kotlin 2.0.21, Jetpack Compose (Material 3), minSdk 24, targetSdk 35
 - Room 2.6.1 (KSP), Navigation Compose, Hilt 2.56.1
-- App lock: androidx.biometric (`BiometricPrompt` behind `presentation/lock/BiometricAuthenticator`), settings in DataStore
+- App lock: androidx.biometric (`BiometricPrompt` behind `presentation/lock/BiometricAuthenticator`), lock state in `presentation/lock/AppLockController`, settings in DataStore
 - Charts: custom Compose Canvas components (no chart library) in `presentation/homeScreen/component/charts/`; shared drawing helpers in `ChartDrawing.kt`
 - Dependencies are declared in `gradle/libs.versions.toml`. Add new ones there, never hardcode versions in `app/build.gradle.kts`.
 
@@ -22,11 +22,11 @@ Goal: production-quality portfolio project.
 - `data/mapper/` → entity ↔ domain mappers; `StorageErrorMapper` (`storageOutcome { }`) turns a `SQLiteException` into a `DomainError`
 - `data/repository/` → repository implementations
 - `data/preferences/` → DataStore-backed repositories (theme, app lock, user profile); `data/security/` → Android biometric availability
-- `domain/` → `models/`, `error/` (`DomainError`, `Outcome`), `repository/` (interfaces), `security/` (device capability interfaces), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
+- `domain/` → `models/` (typed IDs in `Ids.kt`), `error/` (`DomainError`, `Outcome`), `repository/` (interfaces), `security/` (device capability interfaces), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
 - `presentation/<feature>/` → Screen, ViewModel, `components/`, `uistate/`
 - `presentation/common/category/editor/` → the add/edit category sheet shared by Manage Categories and Add/Edit Transaction: its state, events and `CategoryEditorReducer`; the host ViewModel keeps the state and wraps the events
 - `presentation/common/error/` → `DomainError.toMessageRes()`, the one place an error becomes a message
-- `presentation/lock/` → lock screen and the biometric prompt wrapper; lock state itself lives in `MainViewModel`
+- `presentation/lock/` → lock screen, the biometric prompt wrapper, and `AppLockController` (lock state, prompt flow, background timing); `MainViewModel` shows its state and forwards the lock events
 - `ui/theme/` → colors, typography, theme
 - `utils/` → shared helpers
 
@@ -45,7 +45,7 @@ Goal: production-quality portfolio project.
 Apply these to all new and changed code. Existing violations are tracked under Known issues; fix them only when the task is about them.
 - **SOLID:** one responsibility per class. Depend on interfaces from `domain/`, never on implementations.
 - **Use cases:** one operation each. When a ViewModel needs more than ~5 dependencies, add a facade use case that combines them (e.g. `GetDashboardUseCase`).
-- **Value types over primitives:** money is `Money` (whole paise as `Long`, never `Double`), IDs are typed (`@JvmInline value class TransactionId(val value: Long)`), dates go through `DateRange` / `TimeProvider`.
+- **Value types over primitives:** money is `Money` (whole paise as `Long`, never `Double`), IDs are typed (`TransactionId`, `CategoryId`: `@JvmInline value class` over `Int`; wrap in `data/mapper/`, unwrap only for Room, navigation arguments and lazy-list keys), dates go through `DateRange` / `TimeProvider`.
 - **No stringly-typed data:** fixed sets are enums or sealed types (e.g. `CategoryIcon` enum stored via a Room `TypeConverter`), not free strings.
 - **Data access:** one DAO per aggregate (`TransactionDao`, `CategoryDao`, `DashboardDao`), and a repository depends only on the DAOs it reads or writes. Don't store the same data twice; get related data through a JOIN or `@Relation`.
 - **Errors:** expected failures are typed. Writes return `Outcome<T>` (`Success(value)` / `Failure(DomainError)`, both in `domain/error/`), not `kotlin.Result`, `Boolean` or a nullable. Repositories wrap database writes in `storageOutcome { }`, which catches `SQLiteException` only; ViewModels turn the error into a `@StringRes` with `toMessageRes()`. No silent `catch {}`, no catch-all of `Throwable`, and no exceptions used for control flow.
@@ -65,6 +65,15 @@ Apply these to all new and changed code. Existing violations are tracked under K
 - Pre-release: every schema change bumps the version; `fallbackToDestructiveMigration` resets the data. From the first public release, write a tested Migration instead.
 - Default categories (`domain/models/DefaultCategories`) are seeded in `AppDatabase` `onCreate`.
 - Debug builds have Settings → Developer → "Load sample data" (`data/sample/`), gated by `BuildInfo.isDebug`. "Delete all data" (Settings → Danger zone, `AppDataRepository`) is a user feature in every build.
+
+## Architecture decisions
+Settled during the LLD refactor. Change one only with a reason that beats the one given.
+- **Money is whole paise in a `Long`** (`Money`), in the domain and in the database. `Double` loses paise when amounts are summed.
+- **Category name and icon are read through a JOIN**, never copied onto the transaction, so renaming a category can't leave old names behind.
+- **Expected failures are `Outcome<T>` with a `DomainError`**, not `Boolean`, a nullable or `kotlin.Result`: the caller has to handle the failure and can tell why it happened. Only `SQLiteException` is caught (`storageOutcome { }`); anything else is a bug and crashes.
+- **One DAO per aggregate**, and a repository takes only the DAOs it uses, so a change to one table's queries doesn't touch the others.
+- **`AppLockController` owns the app lock.** It is a plain injectable class, one per `MainViewModel`, so the lock rules are tested without a ViewModel and `MainViewModel` stays at five dependencies.
+- **IDs are typed in the domain and `Int` in Room.** `TransactionId` and `CategoryId` can't be mixed up; entities keep `Int`, so typing them needed no schema change.
 
 ## Known issues (remove each line once fixed)
 None at the moment.
