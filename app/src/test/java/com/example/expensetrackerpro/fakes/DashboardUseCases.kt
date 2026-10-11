@@ -19,6 +19,8 @@ import com.example.expensetrackerpro.domain.usecase.dashboard.GetPeriodCompariso
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetRecentTransactionsUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetSpendingBucketsUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.GetSpendingPaceUseCase
+import com.example.expensetrackerpro.domain.usecase.dashboard.ObserveDayPeriodUseCase
+import com.example.expensetrackerpro.domain.usecase.dashboard.ObserveTodayUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.RankCategorySpendingUseCase
 import com.example.expensetrackerpro.domain.usecase.filter.GetComparableRangeUseCase
 import com.example.expensetrackerpro.domain.usecase.filter.GetDateRangeUseCase
@@ -53,9 +55,9 @@ fun getDashboardUseCase(
         getNetSavingsByMonth = GetNetSavingsByMonthUseCase(getMonthlyTrend, getDateRange, timeProvider),
         getMonthlyTrend = getMonthlyTrend,
         generateSmartInsights = GenerateSmartInsightsUseCase(),
-        getDayPeriod = GetDayPeriodUseCase(),
+        observeDayPeriod = ObserveDayPeriodUseCase(timeProvider, GetDayPeriodUseCase()),
+        observeToday = ObserveTodayUseCase(timeProvider),
         getUserProfile = GetUserProfileUseCase(profile),
-        getDateRange = getDateRange,
-        timeProvider = timeProvider
+        getDateRange = getDateRange
     )
 }

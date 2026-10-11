@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import AppNavHost
 import android.app.UiModeManager
 import android.os.Build
@@ -22,7 +23,6 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
@@ -74,7 +74,7 @@ class MainActivity : FragmentActivity() {
         ProcessLifecycleOwner.get().lifecycle.addObserver(appVisibilityObserver)
 
         setContent {
-            val uiState by viewModel.uiState.collectAsState()
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             val darkTheme = when (uiState.themeMode) {
                 ThemeMode.SYSTEM -> isSystemInDarkTheme()
                 ThemeMode.LIGHT -> false

@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.presentation.homeScreen
 
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -56,7 +57,7 @@ fun HomeScreen(
     onOpenTransactions: (TransactionsFilter) -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     HomeContent(
         uiState = uiState,
@@ -92,8 +93,9 @@ fun HomeContent(
             // 1. Greeting Layer
             item {
                 DashboardHeader(
-                    userName = dashboard.userName,
-                    dayPeriod = dashboard.dayPeriod
+                    profile = dashboard.profile,
+                    dayPeriod = dashboard.dayPeriod,
+                    todayMillis = dashboard.todayMillis
                 )
             }
 
