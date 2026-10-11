@@ -10,7 +10,8 @@ Goal: production-quality portfolio project.
 - Run all three before saying a task is done.
 
 ## Tech stack
-- Kotlin 2.0.21, Jetpack Compose (Material 3), minSdk 24, targetSdk 35
+- Kotlin 2.0.21, Jetpack Compose (Material 3), minSdk 24, targetSdk 36
+- applicationId is `dev.pebblework.expensetracker`. It is permanent once the app is published, so never change it. It is separate from `namespace` and the Kotlin packages, which are still `com.example.expensetrackerpro`.
 - Room 2.6.1 (KSP), Navigation Compose, Hilt 2.56.1
 - App lock: androidx.biometric (`BiometricPrompt` behind `presentation/lock/BiometricAuthenticator`), lock state in `presentation/lock/AppLockController`, settings in DataStore
 - Charts: custom Compose Canvas components (no chart library) in `presentation/homeScreen/component/charts/`; shared drawing helpers in `ChartDrawing.kt`
