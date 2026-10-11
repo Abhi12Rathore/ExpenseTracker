@@ -24,6 +24,7 @@ import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionDayGroup
 import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.domain.models.UserProfile
 import com.example.expensetrackerpro.domain.models.sum
 import com.example.expensetrackerpro.domain.usecase.dashboard.RankCategorySpendingUseCase
 
@@ -197,6 +198,8 @@ internal object PreviewData {
 
     val dashboard = Dashboard(
         dayPeriod = DayPeriod.EVENING,
+        profile = UserProfile(name = "Abhishek"),
+        todayMillis = DATE_MILLIS,
         summary = financialSummary,
         comparison = periodComparison,
         balanceTrend = balanceTrend,

@@ -1,20 +1,16 @@
 package com.example.expensetrackerpro.presentation.settings.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.UserProfile
 import com.example.expensetrackerpro.domain.usecase.profile.SetUserNameUseCase
+import com.example.expensetrackerpro.presentation.common.profile.ProfileAvatar
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
 
 /** Who the app belongs to and the currency it counts in. Tapping it edits the name. */
@@ -56,7 +53,7 @@ fun ProfileCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Avatar(initial = profile.initial)
+            ProfileAvatar(initial = profile.initial)
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = profile.name.ifBlank { stringResource(R.string.settings_profile_no_name) },
@@ -77,31 +74,6 @@ fun ProfileCard(
                 contentDescription = stringResource(R.string.settings_profile_edit),
                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier.size(20.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun Avatar(initial: Char?) {
-    Box(
-        modifier = Modifier
-            .size(56.dp)
-            .background(MaterialTheme.colorScheme.primary, CircleShape),
-        contentAlignment = Alignment.Center
-    ) {
-        if (initial != null) {
-            Text(
-                text = initial.toString(),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
-        } else {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimary
             )
         }
     }

@@ -5,8 +5,11 @@ data class Dashboard(
     // Time of day for the greeting; null until it has been read
     val dayPeriod: DayPeriod? = null,
 
-    // Who the greeting is for; blank until a name has been set
-    val userName: String = "",
+    // Who the greeting is for; the name is blank until one has been set
+    val profile: UserProfile = UserProfile(),
+
+    // Start of the current day, for the date under the greeting; null until it has been read
+    val todayMillis: Long? = null,
 
     val summary: FinancialSummary = FinancialSummary(),
 

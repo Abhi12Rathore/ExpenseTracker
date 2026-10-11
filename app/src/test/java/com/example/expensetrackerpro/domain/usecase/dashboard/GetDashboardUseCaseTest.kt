@@ -21,13 +21,17 @@ import com.example.expensetrackerpro.fakes.FakeDashboardRepository
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
 import com.example.expensetrackerpro.fakes.FakeTransactionRepository
 import com.example.expensetrackerpro.fakes.FakeUserProfileRepository
+import com.example.expensetrackerpro.fakes.VirtualTimeProvider
 import com.example.expensetrackerpro.fakes.getDashboardUseCase
 import com.example.expensetrackerpro.fakes.millisAt
 import com.example.expensetrackerpro.fakes.rupees
 import com.example.expensetrackerpro.fakes.transaction
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -35,7 +39,9 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.Calendar
+import kotlin.time.Duration.Companion.minutes
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class GetDashboardUseCaseTest {
 
     private val transactions = FakeTransactionRepository()
@@ -109,12 +115,12 @@ class GetDashboardUseCaseTest {
     fun greeting_usesTheSavedName_andFollowsAChange() = runTest {
         val names = mutableListOf<String>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
-            getDashboard()(thisMonth).collect { names += it.userName }
+            getDashboard()(thisMonth).collect { names += it.profile.name }
         }
 
         profile.setName("Riya")
 
-        // Blank until a name is set; the screen then greets "there"
+        // Blank until a name is set; the screen then shows "Welcome"
         assertEquals(listOf("", "Riya"), names)
     }
 
@@ -127,6 +133,26 @@ class GetDashboardUseCaseTest {
         assertEquals(DayPeriod.AFTERNOON, dayPeriodAt(12))
         assertEquals(DayPeriod.EVENING, dayPeriodAt(20))
         assertEquals(DayPeriod.EVENING, dayPeriodAt(2))
+    }
+
+    @Test
+    fun greeting_changesAtNoon_whileTheDashboardIsOpen() = runTest {
+        val clock = VirtualTimeProvider(millisAt(2026, Calendar.OCTOBER, 8, hour = 11, minute = 59), testScheduler)
+        val periods = mutableListOf<DayPeriod?>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            getDashboardUseCase(transactions, dashboard, clock, profile)(thisMonth).collect { periods += it.dayPeriod }
+        }
+        assertEquals(listOf(DayPeriod.MORNING), periods.distinct())
+
+        advanceTimeBy(1.minutes)
+        runCurrent()
+
+        assertEquals(listOf(DayPeriod.MORNING, DayPeriod.AFTERNOON), periods.distinct())
+    }
+
+    @Test
+    fun today_isTheStartOfTheProvidersDay() = runTest {
+        assertEquals(millisAt(2026, Calendar.OCTOBER, 8), dashboardFor(thisMonth).todayMillis)
     }
 
     // --- Sections ---
