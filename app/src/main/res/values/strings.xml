@@ -153,7 +153,7 @@
     <string name="nav_settings">Settings</string>
 
     <!-- Transactions -->
-    <string name="transactions_title">Transactions</string>
+    <string name="transactions_title">History</string>
     <string name="transactions_search">Search</string>
     <string name="transactions_search_close">Close search</string>
     <string name="transactions_search_placeholder">Search title, note or category</string>

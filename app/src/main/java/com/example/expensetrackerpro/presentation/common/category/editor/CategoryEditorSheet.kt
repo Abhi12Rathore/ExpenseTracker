@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation.common.category.editor
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -30,12 +31,14 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -61,6 +64,7 @@ import com.example.expensetrackerpro.presentation.common.category.ui
 import com.example.expensetrackerpro.presentation.common.filter.components.PillSegmentedControl
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
+import kotlinx.coroutines.launch
 
 private const val ICON_COLUMNS = 5
 private val PreviewTileSize = 64.dp
@@ -74,12 +78,24 @@ fun CategoryEditorSheet(
     state: CategoryEditorState,
     onEvent: (CategoryEditorEvent) -> Unit
 ) {
+    // Opens at full height, so the save button is not left below the fold
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+
     ModalBottomSheet(
         onDismissRequest = { onEvent(CategoryEditorEvent.Dismissed) },
-        // Opens at full height, so the save button is not left below the fold
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = MaterialTheme.colorScheme.surface
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface,
+        // The sheet's own back callback outranks the keyboard's once predictive back is on
+        // (targetSdk 36), so one Back would close both and lose what was typed. Back is handled
+        // below instead, where the keyboard gets it first
+        properties = ModalBottomSheetProperties(shouldDismissOnBackPress = false)
     ) {
+        BackHandler {
+            scope.launch { sheetState.hide() }.invokeOnCompletion {
+                if (!sheetState.isVisible) onEvent(CategoryEditorEvent.Dismissed)
+            }
+        }
         CategoryEditorContent(
             state = state,
             onEvent = onEvent,
