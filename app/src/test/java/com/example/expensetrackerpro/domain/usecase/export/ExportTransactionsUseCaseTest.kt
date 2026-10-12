@@ -3,7 +3,7 @@ package com.example.expensetrackerpro.domain.usecase.export
 import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.DateRange
-import com.example.expensetrackerpro.domain.models.ExportDestination
+import com.example.expensetrackerpro.domain.models.DocumentUri
 import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionsUseCase
 import com.example.expensetrackerpro.fakes.FakeFileExportRepository
 import com.example.expensetrackerpro.fakes.FakeTransactionRepository
@@ -21,7 +21,7 @@ class ExportTransactionsUseCaseTest {
 
     private val files = FakeFileExportRepository()
     private val buildCsv = BuildTransactionsCsvUseCase()
-    private val destination = ExportDestination("content://documents/expenses.csv")
+    private val destination = DocumentUri("content://documents/expenses.csv")
 
     private fun useCase(transactions: FakeTransactionRepository = FakeTransactionRepository(listOf(old, new, mid))) =
         ExportTransactionsUseCase(GetTransactionsUseCase(transactions), buildCsv, files)

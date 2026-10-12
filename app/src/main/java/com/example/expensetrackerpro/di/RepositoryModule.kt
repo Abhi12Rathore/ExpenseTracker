@@ -14,7 +14,11 @@ import com.example.expensetrackerpro.data.sample.SampleDataSeeder
 import com.example.expensetrackerpro.domain.repository.SampleDataRepository
 import com.example.expensetrackerpro.data.preferences.UserProfileRepositoryImpl
 import com.example.expensetrackerpro.data.repository.AppDataRepositoryImpl
+import com.example.expensetrackerpro.data.backup.BackupRepositoryImpl
 import com.example.expensetrackerpro.data.export.FileExportRepositoryImpl
+import com.example.expensetrackerpro.data.preferences.BackupInfoRepositoryImpl
+import com.example.expensetrackerpro.domain.repository.BackupInfoRepository
+import com.example.expensetrackerpro.domain.repository.BackupRepository
 import com.example.expensetrackerpro.domain.repository.FileExportRepository
 import com.example.expensetrackerpro.domain.repository.AppDataRepository
 import com.example.expensetrackerpro.domain.repository.UserProfileRepository
@@ -65,4 +69,12 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindFileExportRepository(impl: FileExportRepositoryImpl): FileExportRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBackupRepository(impl: BackupRepositoryImpl): BackupRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBackupInfoRepository(impl: BackupInfoRepositoryImpl): BackupInfoRepository
 }

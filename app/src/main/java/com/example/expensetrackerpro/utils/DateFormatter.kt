@@ -41,6 +41,29 @@ object DateFormatter {
     /** e.g. `Fri 9 Oct`, for the header of a day's transactions */
     fun formatDayHeader(millis: Long): String = format("EEE d MMM", millis)
 
+    /** The time of day on a 12-hour clock, e.g. `4:20 pm` */
+    fun formatTime(millis: Long): String = format("h:mm a", millis)
+
+    /** e.g. `11 Oct 2026, 4:20 pm` */
+    fun formatDateTime(millis: Long): String = format("d MMM yyyy, h:mm a", millis)
+
+    /**
+     * The months two dates span, both inclusive, repeating only what differs: `Jan – Oct 2026`,
+     * `Oct 2026` for a single month, `Nov 2025 – Oct 2026` across a year.
+     */
+    fun formatMonthRange(startMillis: Long, endMillis: Long): String {
+        val start = Calendar.getInstance().apply { timeInMillis = startMillis }
+        val end = Calendar.getInstance().apply { timeInMillis = endMillis }
+        val sameYear = start.get(Calendar.YEAR) == end.get(Calendar.YEAR)
+        val sameMonth = sameYear && start.get(Calendar.MONTH) == end.get(Calendar.MONTH)
+
+        return when {
+            sameMonth -> formatShortMonthYear(endMillis)
+            sameYear -> "${formatShortMonth(startMillis)} – ${formatShortMonthYear(endMillis)}"
+            else -> "${formatShortMonthYear(startMillis)} – ${formatShortMonthYear(endMillis)}"
+        }
+    }
+
     /**
      * ISO 8601, e.g. `2026-10-08`, for files and file names. Always in Western digits,
      * whatever the device's language.

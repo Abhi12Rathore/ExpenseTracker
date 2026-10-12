@@ -2,8 +2,28 @@ package com.example.expensetrackerpro.presentation
 
 import androidx.lifecycle.SavedStateHandle
 import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.error.Outcome
+import com.example.expensetrackerpro.domain.error.getOrNull
+import com.example.expensetrackerpro.domain.models.BackupPreview
+import com.example.expensetrackerpro.domain.models.BuildInfo
+import com.example.expensetrackerpro.domain.models.DayLabel
+import com.example.expensetrackerpro.domain.models.LastBackup
+import com.example.expensetrackerpro.domain.usecase.backup.CreateBackupUseCase
+import com.example.expensetrackerpro.domain.usecase.backup.ObserveLastBackupUseCase
+import com.example.expensetrackerpro.domain.usecase.backup.PreviewBackupUseCase
+import com.example.expensetrackerpro.domain.usecase.backup.ReadBackupUseCase
+import com.example.expensetrackerpro.domain.usecase.backup.RestoreBackupUseCase
+import com.example.expensetrackerpro.domain.usecase.backup.ValidateBackupUseCase
+import com.example.expensetrackerpro.domain.usecase.category.ValidateCategoryNameUseCase
+import com.example.expensetrackerpro.domain.usecase.dashboard.ObserveTodayUseCase
+import com.example.expensetrackerpro.fakes.FakeBackupInfoRepository
+import com.example.expensetrackerpro.fakes.FakeBackupRepository
+import com.example.expensetrackerpro.fakes.backupDocument
+import com.example.expensetrackerpro.fakes.transactionRecord
+import com.example.expensetrackerpro.presentation.exportBackup.BackupController
 import com.example.expensetrackerpro.domain.models.DateRange
-import com.example.expensetrackerpro.domain.models.ExportDestination
+import com.example.expensetrackerpro.domain.models.DocumentUri
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.usecase.export.BuildTransactionsCsvUseCase
 import com.example.expensetrackerpro.domain.usecase.export.ExportTransactionsUseCase
@@ -61,6 +81,10 @@ class ExportBackupViewModelTest {
 
     private val uri = "content://documents/expenses.csv"
 
+    private val backups = FakeBackupRepository()
+    private val backupInfo = FakeBackupInfoRepository()
+    private val backupUri = "content://documents/expensetracker-backup.json"
+
     @Before
     fun setUp() {
         // The file name's date is formatted in the default zone
@@ -82,7 +106,19 @@ class ExportBackupViewModelTest {
             GetCustomDateRangeUseCase(time),
             ExportTransactionsUseCase(getTransactions, buildCsv, files),
             GetExportFileNameUseCase(time),
+            backupController(getTransactions),
             savedStateHandle
+        )
+    }
+
+    private fun backupController(getTransactions: GetTransactionsUseCase): BackupController {
+        val readBackup = ReadBackupUseCase(backups, ValidateBackupUseCase(ValidateCategoryNameUseCase()))
+
+        return BackupController(
+            CreateBackupUseCase(backups, backupInfo, time, BuildInfo(isDebug = false, versionName = "1.0")),
+            PreviewBackupUseCase(readBackup, getTransactions),
+            RestoreBackupUseCase(readBackup, backups),
+            ObserveLastBackupUseCase(backupInfo, ObserveTodayUseCase(time), time)
         )
     }
 
@@ -236,7 +272,7 @@ class ExportBackupViewModelTest {
         viewModel.onEvent(ExportBackupEvent.DestinationPicked(uri))
 
         assertEquals(csvOf(), writtenCsv())
-        assertEquals(ExportBackupMessage.Exported(0), viewModel.uiState.value.message)
+        assertEquals(ExportBackupMessage.Exported(0, uri), viewModel.uiState.value.message)
     }
 
     /** A new ViewModel on the state [select] left behind, as after the process was killed. */
@@ -310,10 +346,10 @@ class ExportBackupViewModelTest {
 
         viewModel.onEvent(ExportBackupEvent.DestinationPicked(uri))
 
-        assertEquals(ExportDestination(uri), files.written.single().first)
+        assertEquals(DocumentUri(uri), files.written.single().first)
         assertEquals(csvOf(october10, october1, march), writtenCsv())
         subscribe(viewModel.uiState)
-        assertEquals(ExportBackupMessage.Exported(3), viewModel.uiState.value.message)
+        assertEquals(ExportBackupMessage.Exported(3, uri), viewModel.uiState.value.message)
     }
 
     @Test
@@ -334,9 +370,9 @@ class ExportBackupViewModelTest {
 
         viewModel.onEvent(ExportBackupEvent.DestinationPicked(uri))
 
-        assertEquals(ExportDestination(uri), files.written.single().first)
+        assertEquals(DocumentUri(uri), files.written.single().first)
         assertEquals(csvOf(october10, october1), writtenCsv())
-        assertEquals(ExportBackupMessage.Exported(2), viewModel.uiState.value.message)
+        assertEquals(ExportBackupMessage.Exported(2, uri), viewModel.uiState.value.message)
         assertFalse(viewModel.uiState.value.isExporting)
     }
 
@@ -349,7 +385,7 @@ class ExportBackupViewModelTest {
         viewModel.onEvent(ExportBackupEvent.DestinationPicked(uri))
 
         assertEquals(csvOf(october10, october1, march, lastYear), writtenCsv())
-        assertEquals(ExportBackupMessage.Exported(4), viewModel.uiState.value.message)
+        assertEquals(ExportBackupMessage.Exported(4, uri), viewModel.uiState.value.message)
     }
 
     @Test
@@ -396,9 +432,9 @@ class ExportBackupViewModelTest {
         gate.complete(Unit)
 
         assertEquals(1, files.writeCalls)
-        assertEquals(ExportDestination(uri), files.written.single().first)
+        assertEquals(DocumentUri(uri), files.written.single().first)
         assertFalse(viewModel.uiState.value.isExporting)
-        assertEquals(ExportBackupMessage.Exported(2), viewModel.uiState.value.message)
+        assertEquals(ExportBackupMessage.Exported(2, uri), viewModel.uiState.value.message)
     }
 
     @Test
@@ -411,6 +447,371 @@ class ExportBackupViewModelTest {
         viewModel.onEvent(ExportBackupEvent.DestinationPicked(uri))
 
         assertEquals(2, files.written.size)
-        assertEquals(ExportBackupMessage.Exported(2), viewModel.uiState.value.message)
+        assertEquals(ExportBackupMessage.Exported(2, uri), viewModel.uiState.value.message)
+    }
+
+    // --- Backup ---
+
+    @Test
+    fun suggestsABackupFileNamedAfterToday() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        assertEquals("expensetracker-backup-2026-10-11.json", viewModel.uiState.value.suggestedBackupFileName)
+    }
+
+    @Test
+    fun beforeAnyBackup_thereIsNoLastBackup() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        assertNull(viewModel.uiState.value.backup.lastBackup)
+        assertFalse(viewModel.uiState.value.isBusy)
+    }
+
+    @Test
+    fun backupDestinationPicked_savesTheBackup_andShowsItAsTheLastOne() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        viewModel.onEvent(ExportBackupEvent.BackupDestinationPicked(backupUri))
+
+        val written = backups.written.single()
+        assertEquals(DocumentUri(backupUri), written.destination)
+        assertEquals(time.nowMillis, written.createdAtMillis)
+        assertEquals("1.0", written.appVersion)
+        val state = viewModel.uiState.value
+        assertEquals(ExportBackupMessage.BackupSaved(backupUri), state.pendingMessage)
+        assertEquals(LastBackup(time.nowMillis, DayLabel.TODAY), state.backup.lastBackup)
+        assertFalse(state.isBusy)
+    }
+
+    @Test
+    fun aBackupMadeEarlier_isShownWithItsDay() = runTest {
+        backupInfo.setLastBackupMillis(millisAt(2026, Calendar.OCTOBER, 10, hour = 9))
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        assertEquals(DayLabel.YESTERDAY, viewModel.uiState.value.backup.lastBackup?.day)
+    }
+
+    @Test
+    fun aBackupThatCantBeWritten_showsWhy_andIsNotTheLastBackup() = runTest {
+        backups.failWrites = true
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        viewModel.onEvent(ExportBackupEvent.BackupDestinationPicked(backupUri))
+
+        val state = viewModel.uiState.value
+        assertEquals(ExportBackupMessage.Failed(R.string.error_file_write_failed), state.pendingMessage)
+        assertNull(state.backup.lastBackup)
+        assertFalse(state.isBusy)
+    }
+
+    @Test
+    fun whileABackupIsBeingWritten_nothingElseStarts() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        backups.gate = gate
+        backups.putFile(backupUri, backupDocument())
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        viewModel.onEvent(ExportBackupEvent.BackupDestinationPicked(backupUri))
+
+        assertTrue(viewModel.uiState.value.backup.isCreating)
+        assertTrue(viewModel.uiState.value.isBusy)
+        assertFalse(viewModel.uiState.value.canExport)
+
+        viewModel.onEvent(ExportBackupEvent.BackupDestinationPicked("content://documents/second.json"))
+        viewModel.onEvent(ExportBackupEvent.RestoreFilePicked(backupUri))
+        viewModel.onEvent(ExportBackupEvent.DestinationPicked(uri))
+        gate.complete(Unit)
+
+        assertEquals(DocumentUri(backupUri), backups.written.single().destination)
+        assertEquals(0, backups.readCalls)
+        assertEquals(0, files.writeCalls)
+        assertNull(viewModel.uiState.value.backup.restorePreview)
+        assertFalse(viewModel.uiState.value.isBusy)
+    }
+
+    @Test
+    fun whileAnExportIsBeingWritten_noBackupOrRestoreStarts() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        files.writeGate = gate
+        backups.putFile(backupUri, backupDocument())
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        viewModel.onEvent(ExportBackupEvent.DestinationPicked(uri))
+
+        viewModel.onEvent(ExportBackupEvent.BackupDestinationPicked(backupUri))
+        viewModel.onEvent(ExportBackupEvent.RestoreFilePicked(backupUri))
+        gate.complete(Unit)
+
+        assertTrue(backups.written.isEmpty())
+        assertEquals(0, backups.readCalls)
+        assertEquals(ExportBackupMessage.Exported(2, uri), viewModel.uiState.value.pendingMessage)
+    }
+
+    @Test
+    fun messageShown_clearsOneMessageAtATime_theExportsFirst() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        viewModel.onEvent(ExportBackupEvent.BackupDestinationPicked(backupUri))
+        viewModel.onEvent(ExportBackupEvent.DestinationPicked(uri))
+        assertEquals(ExportBackupMessage.Exported(2, uri), viewModel.uiState.value.pendingMessage)
+
+        viewModel.onEvent(ExportBackupEvent.MessageShown)
+        assertEquals(ExportBackupMessage.BackupSaved(backupUri), viewModel.uiState.value.pendingMessage)
+
+        viewModel.onEvent(ExportBackupEvent.MessageShown)
+        assertNull(viewModel.uiState.value.pendingMessage)
+    }
+
+    // --- Restore ---
+
+    private val expectedPreview = BackupPreview(
+        fileName = "backup.json",
+        createdAtMillis = 1_000L,
+        transactionCount = 3,
+        customCategoryCount = 1,
+        oldestMillis = 100L,
+        newestMillis = 300L,
+        // Everything in the app, whatever period the export card is on
+        currentTransactionCount = 4
+    )
+
+    private val expectedBackup = ValidateBackupUseCase(ValidateCategoryNameUseCase())(backupDocument()).getOrNull()
+
+    @Test
+    fun restoreFilePicked_showsWhatTheFileHolds_andChangesNothing() = runTest {
+        backups.putFile(backupUri, backupDocument())
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        viewModel.onEvent(ExportBackupEvent.RestoreFilePicked(backupUri))
+
+        val state = viewModel.uiState.value
+        assertEquals(expectedPreview, state.backup.restorePreview)
+        assertNull(state.pendingMessage)
+        assertFalse(state.isBusy)
+        assertTrue(backups.restored.isEmpty())
+    }
+
+    @Test
+    fun whileThePickedFileIsBeingRead_theScreenIsBusy() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        backups.gate = gate
+        backups.putFile(backupUri, backupDocument())
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        viewModel.onEvent(ExportBackupEvent.RestoreFilePicked(backupUri))
+
+        assertTrue(viewModel.uiState.value.backup.isReading)
+        assertNull(viewModel.uiState.value.backup.restorePreview)
+
+        gate.complete(Unit)
+
+        assertFalse(viewModel.uiState.value.backup.isReading)
+        assertEquals(expectedPreview, viewModel.uiState.value.backup.restorePreview)
+    }
+
+    @Test
+    fun aPickedFileThatCantBeRestored_showsWhy_andNoSheet() = runTest {
+        val unreadable = "content://documents/gone.json"
+        val tooNew = "content://documents/newer.json"
+        val notABackup = "content://documents/expenses.csv"
+        val inconsistent = "content://documents/edited.json"
+        backups.files[tooNew] = Outcome.Failure(DomainError.BackupTooNew)
+        backups.files[notABackup] = Outcome.Failure(DomainError.BackupInvalid)
+        backups.putFile(inconsistent, backupDocument(transactions = listOf(transactionRecord(categoryId = 99))))
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        mapOf(
+            unreadable to R.string.error_file_read_failed,
+            tooNew to R.string.error_backup_too_new,
+            notABackup to R.string.error_backup_invalid,
+            inconsistent to R.string.error_backup_invalid
+        ).forEach { (picked, messageRes) ->
+            viewModel.onEvent(ExportBackupEvent.RestoreFilePicked(picked))
+
+            val state = viewModel.uiState.value
+            assertEquals(picked, ExportBackupMessage.Failed(messageRes), state.pendingMessage)
+            assertNull(picked, state.backup.restorePreview)
+            assertFalse(picked, state.isBusy)
+
+            // The file is forgotten: confirming now restores nothing
+            viewModel.onEvent(ExportBackupEvent.MessageShown)
+            viewModel.onEvent(ExportBackupEvent.RestoreConfirmed)
+        }
+        assertTrue(backups.restored.isEmpty())
+    }
+
+    @Test
+    fun restoreConfirmed_readsTheFileAgain_restoresIt_andSaysHowMuch() = runTest {
+        backups.putFile(backupUri, backupDocument())
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        viewModel.onEvent(ExportBackupEvent.RestoreFilePicked(backupUri))
+
+        viewModel.onEvent(ExportBackupEvent.RestoreConfirmed)
+
+        assertEquals(2, backups.readCalls)
+        assertEquals(expectedBackup, backups.restored.single())
+        val state = viewModel.uiState.value
+        assertEquals(ExportBackupMessage.Restored(3), state.pendingMessage)
+        assertNull(state.backup.restorePreview)
+        assertFalse(state.isBusy)
+    }
+
+    @Test
+    fun restoreConfirmed_whenTheFileHasChangedSinceThePreview_restoresNothing() = runTest {
+        backups.putFile(backupUri, backupDocument())
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        viewModel.onEvent(ExportBackupEvent.RestoreFilePicked(backupUri))
+        backups.putFile(backupUri, backupDocument(transactions = listOf(transactionRecord(amountPaise = 0))))
+
+        viewModel.onEvent(ExportBackupEvent.RestoreConfirmed)
+
+        assertTrue(backups.restored.isEmpty())
+        val state = viewModel.uiState.value
+        assertEquals(ExportBackupMessage.Failed(R.string.error_backup_invalid), state.pendingMessage)
+        assertNull(state.backup.restorePreview)
+    }
+
+    @Test
+    fun restoreConfirmed_whenTheFileIsGone_restoresNothing() = runTest {
+        backups.putFile(backupUri, backupDocument())
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        viewModel.onEvent(ExportBackupEvent.RestoreFilePicked(backupUri))
+        backups.files.remove(backupUri)
+
+        viewModel.onEvent(ExportBackupEvent.RestoreConfirmed)
+
+        assertTrue(backups.restored.isEmpty())
+        assertEquals(
+            ExportBackupMessage.Failed(R.string.error_file_read_failed),
+            viewModel.uiState.value.pendingMessage
+        )
+    }
+
+    @Test
+    fun aRestoreTheDatabaseTurnsDown_showsWhy() = runTest {
+        backups.putFile(backupUri, backupDocument())
+        backups.failRestores = true
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        viewModel.onEvent(ExportBackupEvent.RestoreFilePicked(backupUri))
+
+        viewModel.onEvent(ExportBackupEvent.RestoreConfirmed)
+
+        val state = viewModel.uiState.value
+        assertEquals(ExportBackupMessage.Failed(R.string.error_storage_failure), state.pendingMessage)
+        assertNull(state.backup.restorePreview)
+        assertFalse(state.isBusy)
+    }
+
+    @Test
+    fun restoreDismissed_closesTheSheet_andForgetsTheFile() = runTest {
+        backups.putFile(backupUri, backupDocument())
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        viewModel.onEvent(ExportBackupEvent.RestoreFilePicked(backupUri))
+
+        viewModel.onEvent(ExportBackupEvent.RestoreDismissed)
+        viewModel.onEvent(ExportBackupEvent.RestoreConfirmed)
+
+        assertNull(viewModel.uiState.value.backup.restorePreview)
+        assertNull(viewModel.uiState.value.pendingMessage)
+        assertTrue(backups.restored.isEmpty())
+        assertEquals(1, backups.readCalls)
+    }
+
+    @Test
+    fun restoreConfirmed_withoutAFile_doesNothing() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        viewModel.onEvent(ExportBackupEvent.RestoreConfirmed)
+
+        assertEquals(0, backups.readCalls)
+        assertNull(viewModel.uiState.value.pendingMessage)
+    }
+
+    @Test
+    fun whileARestoreIsRunning_itCantBeDismissedOrConfirmedAgain() = runTest {
+        backups.putFile(backupUri, backupDocument())
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        viewModel.onEvent(ExportBackupEvent.RestoreFilePicked(backupUri))
+        val gate = CompletableDeferred<Unit>()
+        backups.gate = gate
+
+        viewModel.onEvent(ExportBackupEvent.RestoreConfirmed)
+
+        assertTrue(viewModel.uiState.value.backup.isRestoring)
+        assertEquals(expectedPreview, viewModel.uiState.value.backup.restorePreview)
+
+        viewModel.onEvent(ExportBackupEvent.RestoreDismissed)
+        viewModel.onEvent(ExportBackupEvent.RestoreConfirmed)
+        assertEquals(expectedPreview, viewModel.uiState.value.backup.restorePreview)
+
+        gate.complete(Unit)
+
+        assertEquals(expectedBackup, backups.restored.single())
+        assertEquals(ExportBackupMessage.Restored(3), viewModel.uiState.value.pendingMessage)
+    }
+
+    @Test
+    fun afterProcessDeath_theSheetComesBackFromTheFile_andConfirmingRestoresIt() = runTest {
+        backups.putFile(backupUri, backupDocument())
+        val viewModel = restoredAfter { it.onEvent(ExportBackupEvent.RestoreFilePicked(backupUri)) }
+        subscribe(viewModel.uiState)
+
+        assertEquals(expectedPreview, viewModel.uiState.value.backup.restorePreview)
+
+        viewModel.onEvent(ExportBackupEvent.RestoreConfirmed)
+
+        assertEquals(expectedBackup, backups.restored.single())
+        assertEquals(ExportBackupMessage.Restored(3), viewModel.uiState.value.pendingMessage)
+    }
+
+    @Test
+    fun afterProcessDeath_aFileThatHasGone_isReportedAndForgotten() = runTest {
+        backups.putFile(backupUri, backupDocument())
+        val viewModel = restoredAfter {
+            it.onEvent(ExportBackupEvent.RestoreFilePicked(backupUri))
+            backups.files.remove(backupUri)
+        }
+        subscribe(viewModel.uiState)
+
+        assertNull(viewModel.uiState.value.backup.restorePreview)
+        assertEquals(
+            ExportBackupMessage.Failed(R.string.error_file_read_failed),
+            viewModel.uiState.value.pendingMessage
+        )
+    }
+
+    @Test
+    fun afterProcessDeath_aRestoreThatWasDismissedOrDone_isNotOfferedAgain() = runTest {
+        backups.putFile(backupUri, backupDocument())
+        val dismissed = restoredAfter {
+            it.onEvent(ExportBackupEvent.RestoreFilePicked(backupUri))
+            it.onEvent(ExportBackupEvent.RestoreDismissed)
+        }
+        val done = restoredAfter {
+            it.onEvent(ExportBackupEvent.RestoreFilePicked(backupUri))
+            it.onEvent(ExportBackupEvent.RestoreConfirmed)
+        }
+        subscribe(dismissed.uiState)
+        subscribe(done.uiState)
+
+        assertNull(dismissed.uiState.value.backup.restorePreview)
+        assertNull(done.uiState.value.backup.restorePreview)
+        assertEquals(1, backups.restored.size)
     }
 }

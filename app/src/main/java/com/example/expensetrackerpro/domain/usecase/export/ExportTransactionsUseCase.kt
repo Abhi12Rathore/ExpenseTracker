@@ -3,7 +3,7 @@ package com.example.expensetrackerpro.domain.usecase.export
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.error.map
 import com.example.expensetrackerpro.domain.models.DateRange
-import com.example.expensetrackerpro.domain.models.ExportDestination
+import com.example.expensetrackerpro.domain.models.DocumentUri
 import com.example.expensetrackerpro.domain.repository.FileExportRepository
 import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionsUseCase
 import kotlinx.coroutines.flow.first
@@ -17,7 +17,7 @@ class ExportTransactionsUseCase @Inject constructor(
 ) {
 
     /** How many transactions were written. */
-    suspend operator fun invoke(range: DateRange, destination: ExportDestination): Outcome<Int> {
+    suspend operator fun invoke(range: DateRange, destination: DocumentUri): Outcome<Int> {
         val transactions = getTransactions(range).first()
 
         return fileExportRepository

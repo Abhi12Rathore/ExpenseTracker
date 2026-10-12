@@ -400,6 +400,9 @@
     <string name="error_name_too_long">That name is too long</string>
     <string name="error_incompatible_reassign_target">Transactions can\'t be moved to that category</string>
     <string name="error_storage_failure">Couldn\'t save your changes. Storage may be full.</string>
+    <string name="error_file_read_failed">Couldn\'t read the file. Check that it is still available.</string>
+    <string name="error_backup_invalid">This file isn\'t an Expense Tracker backup</string>
+    <string name="error_backup_too_new">This backup is from a newer version of the app</string>
     <string name="error_file_write_failed">Couldn\'t save the file. Check that the location is still available and has space.</string>
 
     <!-- Export & backup -->
@@ -412,6 +415,35 @@
     <!-- Transaction count · the dates they cover -->
     <string name="export_summary">%1$s · %2$s</string>
     <string name="export_button">Export CSV</string>
+    <!-- On the snackbar after a file was saved: sends the file to another app -->
+    <string name="export_share">Share</string>
+    <string name="backup_section_title">Backup</string>
+    <string name="backup_title">Backup &amp; restore</string>
+    <string name="backup_subtitle">Everything, including your custom categories, in one file</string>
+    <!-- %1$s is a time of day, e.g. 4:20 pm -->
+    <string name="backup_last_today">Last backup: today, %1$s</string>
+    <string name="backup_last_yesterday">Last backup: yesterday, %1$s</string>
+    <!-- %1$s is a date and time, e.g. 11 Oct 2026, 4:20 pm -->
+    <string name="backup_last_on">Last backup: %1$s</string>
+    <string name="backup_create_button">Create backup</string>
+    <string name="backup_restore_button">Restore from file</string>
+    <string name="backup_saved">Backup saved</string>
+    <string name="backup_privacy_note">Files are saved where you choose. Nothing is uploaded by the app.</string>
+    <plurals name="restore_success">
+        <item quantity="one">Restored %1$d transaction</item>
+        <item quantity="other">Restored %1$d transactions</item>
+    </plurals>
+    <string name="restore_sheet_title">Restore this backup?</string>
+    <string name="restore_sheet_created">Created</string>
+    <string name="restore_sheet_transactions">Transactions</string>
+    <string name="restore_sheet_custom_categories">Custom categories</string>
+    <string name="restore_sheet_period">Period</string>
+    <plurals name="restore_sheet_warning">
+        <item quantity="one">This replaces everything currently in the app (%1$d transaction). It can\'t be undone. Create a backup first if you need the current data.</item>
+        <item quantity="other">This replaces everything currently in the app (%1$d transactions). It can\'t be undone. Create a backup first if you need the current data.</item>
+    </plurals>
+    <string name="restore_sheet_confirm">Replace and restore</string>
+    <string name="restore_sheet_cancel">Cancel</string>
     <plurals name="export_success">
         <item quantity="one">Exported %1$d transaction</item>
         <item quantity="other">Exported %1$d transactions</item>

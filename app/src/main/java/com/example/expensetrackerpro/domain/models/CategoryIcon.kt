@@ -82,7 +82,10 @@ enum class CategoryIcon(val key: String, val group: CategoryIconGroup) {
         private val byKey = entries.associateBy { it.key }
 
         /** The icon stored as [key], or [DEFAULT] for a key this version does not know. */
-        fun fromKey(key: String): CategoryIcon = byKey[key] ?: DEFAULT
+        fun fromKey(key: String): CategoryIcon = findByKey(key) ?: DEFAULT
+
+        /** The icon stored as [key], or null for a key this version does not know. */
+        fun findByKey(key: String): CategoryIcon? = byKey[key]
 
         fun inGroup(group: CategoryIconGroup): List<CategoryIcon> = entries.filter { it.group == group }
     }

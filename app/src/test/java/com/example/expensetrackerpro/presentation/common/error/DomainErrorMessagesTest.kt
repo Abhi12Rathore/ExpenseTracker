@@ -19,7 +19,10 @@ class DomainErrorMessagesTest {
             DomainError.InvalidInput(InvalidInputReason.INCOMPATIBLE_REASSIGN_TARGET) to
                 R.string.error_incompatible_reassign_target,
             DomainError.StorageFailure("database or disk is full") to R.string.error_storage_failure,
-            DomainError.FileWriteFailed to R.string.error_file_write_failed
+            DomainError.FileWriteFailed to R.string.error_file_write_failed,
+            DomainError.FileReadFailed to R.string.error_file_read_failed,
+            DomainError.BackupInvalid to R.string.error_backup_invalid,
+            DomainError.BackupTooNew to R.string.error_backup_too_new
         )
 
         expected.forEach { (error, messageRes) -> assertEquals(messageRes, error.toMessageRes()) }
