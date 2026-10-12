@@ -34,7 +34,7 @@ class MlKitBillTextReader @Inject constructor(
     private val recognizer by lazy { TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS) }
 
     override suspend fun read(image: DocumentUri): Outcome<RecognizedText> =
-        withContext(Dispatchers.Default) {
+        withContext(Dispatchers.IO) {
             val uri = image.uri.toUri()
 
             try {

@@ -91,7 +91,8 @@ Settled during the LLD refactor. Change one only with a reason that beats the on
 - **IDs are typed in the domain and `Int` in Room.** `TransactionId` and `CategoryId` can't be mixed up; entities keep `Int`, so typing them needed no schema change.
 
 ## Known issues (remove each line once fixed)
-None at the moment.
+- `AddEditTransactionViewModel` has 14 dependencies. Fold them into facades.
+- The Add/Edit transaction form isn't kept in saved state, so typed values are lost on process death.
 
 ## Workflow
 - Never commit to `main`. Use branches like `refactor/hilt` or `feature/theme-toggle`.
