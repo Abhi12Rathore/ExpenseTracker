@@ -127,4 +127,21 @@ class DateFormatterTest {
     fun formatDayOfMonth_hasNoLeadingZero() {
         assertEquals("8", DateFormatter.formatDayOfMonth(millis(2026, Calendar.OCTOBER, 8)))
     }
+
+    @Test
+    fun formatIsoDate_isYearMonthDay_zeroPadded() {
+        assertEquals("2026-10-08", DateFormatter.formatIsoDate(millis(2026, Calendar.OCTOBER, 8)))
+        assertEquals("2027-01-03", DateFormatter.formatIsoDate(millis(2027, Calendar.JANUARY, 3)))
+    }
+
+    @Test
+    fun formatIsoDate_usesWesternDigits_whateverTheLanguage() {
+        val day = millis(2026, Calendar.OCTOBER, 8)
+
+        listOf("ar-EG", "hi-IN-u-nu-deva", "fa-IR").forEach { tag ->
+            Locale.setDefault(Locale.forLanguageTag(tag))
+
+            assertEquals("2026-10-08", DateFormatter.formatIsoDate(day))
+        }
+    }
 }

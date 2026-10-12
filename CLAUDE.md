@@ -22,11 +22,13 @@ Goal: production-quality portfolio project.
 - `data/local/dao/` → one DAO per aggregate: `TransactionDao` (transaction CRUD, range and search reads), `CategoryDao` (category CRUD, usage, rename, reassign-then-delete), `DashboardDao` (report queries, reads only); plus `AppDataDao` ("Delete all data") and `SampleDataDao` (debug sample data)
 - `data/mapper/` → entity ↔ domain mappers; `StorageErrorMapper` (`storageOutcome { }`) turns a `SQLiteException` into a `DomainError`
 - `data/repository/` → repository implementations
+- `data/export/` → `FileExportRepositoryImpl`: writes an exported file to the Uri the user picked, through `ContentResolver`
 - `data/preferences/` → DataStore-backed repositories (theme, app lock, user profile); `data/security/` → Android biometric availability
 - `domain/` → `models/` (typed IDs in `Ids.kt`), `error/` (`DomainError`, `Outcome`), `repository/` (interfaces), `security/` (device capability interfaces), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
 - `presentation/<feature>/` → Screen, ViewModel, `components/`, `uistate/`
 - `presentation/common/category/editor/` → the add/edit category sheet shared by Manage Categories and Add/Edit Transaction: its state, events and `CategoryEditorReducer`; the host ViewModel keeps the state and wraps the events
 - `presentation/common/error/` → `DomainError.toMessageRes()`, the one place an error becomes a message
+- `presentation/exportBackup/` → Settings → Export & backup: the period to export and the "Save as" picker; the CSV itself is built in `domain/usecase/export/`
 - `presentation/lock/` → lock screen, the biometric prompt wrapper, and `AppLockController` (lock state, prompt flow, background timing); `MainViewModel` shows its state and forwards the lock events
 - `ui/theme/` → colors, typography, theme
 - `utils/` → shared helpers

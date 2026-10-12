@@ -401,4 +401,20 @@
     <string name="error_name_too_long">That name is too long</string>
     <string name="error_incompatible_reassign_target">Transactions can\'t be moved to that category</string>
     <string name="error_storage_failure">Couldn\'t save your changes. Storage may be full.</string>
+    <string name="error_file_write_failed">Couldn\'t save the file. Check that the location is still available and has space.</string>
+
+    <!-- Export & backup -->
+    <string name="export_backup_title">Export &amp; backup</string>
+    <string name="export_backup_back">Back</string>
+    <string name="export_section_title">Export</string>
+    <string name="export_csv_title">Export to CSV</string>
+    <string name="export_csv_subtitle">Open your transactions in Excel or Google Sheets</string>
+    <string name="export_period_label">Period</string>
+    <!-- Transaction count · the dates they cover -->
+    <string name="export_summary">%1$s · %2$s</string>
+    <string name="export_button">Export CSV</string>
+    <plurals name="export_success">
+        <item quantity="one">Exported %1$d transaction</item>
+        <item quantity="other">Exported %1$d transactions</item>
+    </plurals>
 </resources>

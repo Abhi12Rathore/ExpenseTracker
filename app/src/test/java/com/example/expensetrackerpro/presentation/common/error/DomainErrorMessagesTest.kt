@@ -18,7 +18,8 @@ class DomainErrorMessagesTest {
             DomainError.InvalidInput(InvalidInputReason.NAME_TOO_LONG) to R.string.error_name_too_long,
             DomainError.InvalidInput(InvalidInputReason.INCOMPATIBLE_REASSIGN_TARGET) to
                 R.string.error_incompatible_reassign_target,
-            DomainError.StorageFailure("database or disk is full") to R.string.error_storage_failure
+            DomainError.StorageFailure("database or disk is full") to R.string.error_storage_failure,
+            DomainError.FileWriteFailed to R.string.error_file_write_failed
         )
 
         expected.forEach { (error, messageRes) -> assertEquals(messageRes, error.toMessageRes()) }

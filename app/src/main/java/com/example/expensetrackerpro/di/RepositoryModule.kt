@@ -14,6 +14,8 @@ import com.example.expensetrackerpro.data.sample.SampleDataSeeder
 import com.example.expensetrackerpro.domain.repository.SampleDataRepository
 import com.example.expensetrackerpro.data.preferences.UserProfileRepositoryImpl
 import com.example.expensetrackerpro.data.repository.AppDataRepositoryImpl
+import com.example.expensetrackerpro.data.export.FileExportRepositoryImpl
+import com.example.expensetrackerpro.domain.repository.FileExportRepository
 import com.example.expensetrackerpro.domain.repository.AppDataRepository
 import com.example.expensetrackerpro.domain.repository.UserProfileRepository
 import dagger.Binds
@@ -59,4 +61,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindAppDataRepository(impl: AppDataRepositoryImpl): AppDataRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFileExportRepository(impl: FileExportRepositoryImpl): FileExportRepository
 }

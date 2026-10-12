@@ -165,9 +165,10 @@ fun CompactPeriodFilter(
     }
 }
 
+/** The date range picker behind every "Custom" period choice. Both dates come back as midnight UTC. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CustomRangePickerDialog(
+internal fun CustomRangePickerDialog(
     onConfirm: (startUtcMillis: Long, endUtcMillis: Long) -> Unit,
     onDismiss: () -> Unit
 ) {

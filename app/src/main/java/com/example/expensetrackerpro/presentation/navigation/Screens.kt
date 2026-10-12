@@ -17,6 +17,8 @@ sealed class Screens(val route: String) {
 
     data object ManageCategories : Screens("manage_categories")
 
+    data object ExportBackup : Screens("export_backup")
+
     /** The Transactions tab. Every argument is optional: without them it opens on the current month. */
     data object Transactions : Screens(
         "transactions?start={start}&end={end}&granularity={granularity}" +

@@ -16,6 +16,9 @@ sealed interface DomainError {
 
     /** The database could not carry out the write. [cause] is its own description, for logs only. */
     data class StorageFailure(val cause: String? = null) : DomainError
+
+    /** A file could not be written where the user chose, e.g. the drive is full or was removed. */
+    data object FileWriteFailed : DomainError
 }
 
 enum class InvalidInputReason {
