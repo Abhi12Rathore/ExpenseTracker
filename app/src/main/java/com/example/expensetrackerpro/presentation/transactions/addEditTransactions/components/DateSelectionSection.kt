@@ -47,7 +47,8 @@ fun DateSelectionSection(
     maxPickerUtcMillis: Long,
     onDateChoiceSelected: (DateChoice) -> Unit,
     onDatePicked: (Long) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isFromBill: Boolean = false
 ) {
     // Purely visual: whether the date picker is showing
     var showDatePicker by remember { mutableStateOf(false) }
@@ -56,7 +57,10 @@ fun DateSelectionSection(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        SectionLabel(text = stringResource(R.string.transaction_date))
+        TaggedSectionLabel(
+            text = stringResource(R.string.transaction_date),
+            tag = if (isFromBill) stringResource(R.string.bill_fill_tag) else null
+        )
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(

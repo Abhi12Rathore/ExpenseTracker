@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.presentation.transactions.addEditTransacti
 
 import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.DateChoice
+import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorEvent
 
@@ -27,4 +28,16 @@ sealed interface AddEditTransactionEvent {
     data object DeleteClicked : AddEditTransactionEvent
     data object DeleteConfirmed : AddEditTransactionEvent
     data object DeleteDismissed : AddEditTransactionEvent
+
+    /** The scanner returned a photo of a bill, at [uri]. */
+    data class BillScanned(val uri: String) : AddEditTransactionEvent
+
+    /** The scanner could not be shown, e.g. Google Play services could not install it. */
+    data object BillScannerFailed : AddEditTransactionEvent
+
+    /** One of the amounts found on the bill was picked. */
+    data class BillAmountSelected(val amount: Money) : AddEditTransactionEvent
+
+    /** "Clear" on the banner: what the bill filled in is removed. */
+    data object BillFillCleared : AddEditTransactionEvent
 }

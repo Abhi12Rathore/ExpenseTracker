@@ -88,6 +88,13 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.appcompat)
 
+    // Bill scanning: Google's scanner screen and on-device text recognition, both delivered by
+    // Google Play services rather than bundled, which keeps the APK small
+    implementation(libs.mlkit.document.scanner)
+    implementation(libs.mlkit.text.recognition)
+    implementation(libs.play.services.base)
+    implementation(libs.kotlinx.coroutines.play.services)
+
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

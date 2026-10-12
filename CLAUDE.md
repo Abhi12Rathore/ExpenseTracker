@@ -15,6 +15,7 @@ Goal: production-quality portfolio project.
 - Room 2.6.1 (KSP), Navigation Compose, Hilt 2.56.1
 - App lock: androidx.biometric (`BiometricPrompt` behind `presentation/lock/BiometricAuthenticator`), lock state in `presentation/lock/AppLockController`, settings in DataStore
 - Charts: custom Compose Canvas components (no chart library) in `presentation/homeScreen/component/charts/`; shared drawing helpers in `ChartDrawing.kt`
+- Bill scanning: ML Kit Document Scanner and Text Recognition v2 (Latin), both the Google Play services (unbundled) variants; Tasks are awaited with `kotlinx-coroutines-play-services`. No camera permission.
 - Dependencies are declared in `gradle/libs.versions.toml`. Add new ones there, never hardcode versions in `app/build.gradle.kts`.
 
 ## Package structure (`com.example.expensetrackerpro`)
@@ -25,10 +26,13 @@ Goal: production-quality portfolio project.
 - `data/files/` → `DocumentFiles`: reads and writes the documents the user picks in the system file screens, through `ContentResolver`; the one place a picked Uri is opened
 - `data/export/` → `FileExportRepositoryImpl`: writes the exported CSV (UTF-8 with a BOM) through `DocumentFiles`
 - `data/backup/` → the backup file: `BackupDto` (the JSON format, kotlinx.serialization), its mappers, and `BackupRepositoryImpl` (write, read, restore)
+- `data/scan/` → `MlKitBillTextReader` (text recognition, then deletes the photo), `BillLineAssembler` (joins recognized pieces into the bill's lines), `GmsBillScannerAvailability`
 - `data/preferences/` → DataStore-backed repositories (theme, app lock, user profile); `data/security/` → Android biometric availability
-- `domain/` → `models/` (typed IDs in `Ids.kt`), `error/` (`DomainError`, `Outcome`), `repository/` (interfaces), `security/` (device capability interfaces), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
+- `domain/` → `models/` (typed IDs in `Ids.kt`), `error/` (`DomainError`, `Outcome`), `repository/` (interfaces), `security/` (device capability interfaces), `scan/` (`BillTextReader`, `BillScannerAvailability`), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
+- `domain/usecase/scan/` → `ScanBillUseCase` (read, then `ParseBillUseCase`), the parsers it delegates to (one per rule: amount, title, date, note), and `BillKeywords`: every word list and limit the parsers use, en-IN for now
 - `presentation/<feature>/` → Screen, ViewModel, `components/`, `uistate/`
 - `presentation/common/category/editor/` → the add/edit category sheet shared by Manage Categories and Add/Edit Transaction: its state, events and `CategoryEditorReducer`; the host ViewModel keeps the state and wraps the events
+- `presentation/transactions/addEditTransactions/draft/` → `TransactionDraftReducer`: puts a `TransactionDraft` into the form and tracks which fields still hold its values (`DraftFill` in `uistate/`); `scan/` → `rememberBillScanner`, the one place Google's scanner screen is launched
 - `presentation/common/error/` → `DomainError.toMessageRes()`, the one place an error becomes a message
 - `presentation/exportBackup/` → Settings → Export & backup: the period to export and the "Save as" picker; the CSV itself is built in `domain/usecase/export/`. `BackupController` owns creating a backup and restoring from one (the Backup card and the confirmation sheet); the ViewModel shows its state and forwards its events
 - `presentation/lock/` → lock screen, the biometric prompt wrapper, and `AppLockController` (lock state, prompt flow, background timing); `MainViewModel` shows its state and forwards the lock events
@@ -81,10 +85,14 @@ Settled during the LLD refactor. Change one only with a reason that beats the on
 - **`AppLockController` owns the app lock.** It is a plain injectable class, one per `MainViewModel`, so the lock rules are tested without a ViewModel and `MainViewModel` stays at five dependencies.
 - **A backup holds transactions and categories only**, never theme, profile or app lock: a file must not be able to turn the lock off. The file is versioned JSON (`Backup.VERSION`); its DTOs stay in `data/backup/`, and `ValidateBackupUseCase` checks the whole file before anything is written.
 - **A restore keeps only the picked file's Uri** (in `SavedStateHandle`), re-reads and re-validates it on confirm, and replaces both tables in one Room transaction (`AppDataDao.replaceAll`), so a failure at any point leaves the current data as it was.
+- **A scanned bill becomes a `TransactionDraft`, and only a draft reaches the form.** Reading (`BillTextReader`), parsing (`ParseBillUseCase`, pure Kotlin) and filling the form (`TransactionDraftReducer`) are separate steps, so another source of drafts reuses the last one unchanged. A draft never replaces what the user entered, and nothing is saved without the user tapping Save.
+- **The photo of a bill is never kept.** The reader deletes it once it has been read; only its Uri is held, in `SavedStateHandle`, until then, so a scan survives the process being killed. This is why the banner shows an icon and not the photo.
+- **A doubtful value is left out rather than guessed**: a total next to "Sub Total", a date in the future or over a year old, an amount of ₹10,00,000 or more. Bill words and limits live only in `BillKeywords`; the parsers hold rules, not words.
 - **IDs are typed in the domain and `Int` in Room.** `TransactionId` and `CategoryId` can't be mixed up; entities keep `Int`, so typing them needed no schema change.
 
 ## Known issues (remove each line once fixed)
-None at the moment.
+- `AddEditTransactionViewModel` has 14 dependencies. Fold them into facades.
+- The Add/Edit transaction form isn't kept in saved state, so typed values are lost on process death.
 
 ## Workflow
 - Never commit to `main`. Use branches like `refactor/hilt` or `feature/theme-toggle`.

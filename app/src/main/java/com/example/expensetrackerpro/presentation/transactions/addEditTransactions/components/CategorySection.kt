@@ -42,13 +42,17 @@ fun CategorySection(
     selectedCategoryId: CategoryId?,
     onCategorySelected: (CategoryId) -> Unit,
     onAddCategoryClicked: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isSuggested: Boolean = false
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        SectionLabel(text = stringResource(R.string.transaction_category))
+        TaggedSectionLabel(
+            text = stringResource(R.string.transaction_category),
+            tag = if (isSuggested) stringResource(R.string.bill_fill_tag_suggested) else null
+        )
 
         // null stands for the "New" tile, which always comes last
         (categories + null).chunked(COLUMNS).forEach { rowTiles ->

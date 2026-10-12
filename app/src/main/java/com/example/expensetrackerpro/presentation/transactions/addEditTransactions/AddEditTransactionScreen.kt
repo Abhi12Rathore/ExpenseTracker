@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,16 +48,23 @@ import com.example.expensetrackerpro.presentation.common.filter.components.PillS
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.AmountHero
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.AmountSummary
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.BillAmountChips
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.BillFilledBanner
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.BillTotalMissingNotice
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.CategorySection
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.DateSelectionSection
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.NoteSection
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.SaveExpenseButton
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.ScanBillCard
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.TitleField
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.TransactionTopBar
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.transactionDateLabel
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEffect
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEvent
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.scan.rememberBillScanner
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionUiState
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.DraftField
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.DraftFill
 import com.example.expensetrackerpro.utils.CurrencyFormatter
 import kotlinx.coroutines.launch
 
@@ -69,6 +77,10 @@ fun AddEditTransactionScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
+    val launchBillScanner = rememberBillScanner(
+        onScanned = { viewModel.onEvent(AddEditTransactionEvent.BillScanned(it)) },
+        onUnavailable = { viewModel.onEvent(AddEditTransactionEvent.BillScannerFailed) }
+    )
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
@@ -78,6 +90,13 @@ fun AddEditTransactionScreen(
                 is AddEditTransactionEffect.ShowError -> launch {
                     snackbarHostState.showSnackbar(context.getString(effect.messageRes))
                 }
+                is AddEditTransactionEffect.BillUnreadable -> launch {
+                    val result = snackbarHostState.showSnackbar(
+                        message = context.getString(effect.messageRes),
+                        actionLabel = context.getString(R.string.bill_scan_try_again)
+                    )
+                    if (result == SnackbarResult.ActionPerformed) launchBillScanner()
+                }
             }
         }
     }
@@ -86,6 +105,7 @@ fun AddEditTransactionScreen(
         state = state,
         onEvent = viewModel::onEvent,
         onNavigateBack = onNavigateBack,
+        onScanBillClick = launchBillScanner,
         snackbarHostState = snackbarHostState
     )
 }
@@ -96,6 +116,7 @@ fun AddEditTransactionContent(
     state: AddEditTransactionUiState,
     onEvent: (AddEditTransactionEvent) -> Unit,
     onNavigateBack: () -> Unit,
+    onScanBillClick: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     // Purely visual: which of the text fields below the amount has focus
@@ -106,6 +127,7 @@ fun AddEditTransactionContent(
         state = state,
         onEvent = onEvent,
         onNavigateBack = onNavigateBack,
+        onScanBillClick = onScanBillClick,
         snackbarHostState = snackbarHostState,
         // Typing a title or note leaves little room, so the amount shrinks to a summary line
         isAmountCollapsed = WindowInsets.isImeVisible && (isTitleFocused || isNoteFocused),
@@ -119,6 +141,7 @@ private fun AddEditTransactionLayout(
     state: AddEditTransactionUiState,
     onEvent: (AddEditTransactionEvent) -> Unit,
     onNavigateBack: () -> Unit,
+    onScanBillClick: () -> Unit,
     snackbarHostState: SnackbarHostState,
     isAmountCollapsed: Boolean,
     onTitleFocusChange: (Boolean) -> Unit,
@@ -201,19 +224,30 @@ private fun AddEditTransactionLayout(
                     onSelect = { onEvent(AddEditTransactionEvent.TypeChanged(it)) },
                     modifier = Modifier.fillMaxWidth()
                 )
+                BillScanSection(state = state, onEvent = onEvent, onScanBillClick = onScanBillClick)
                 AmountHero(
                     amount = state.amount,
                     transactionType = state.transactionType,
                     onAmountChange = { onEvent(AddEditTransactionEvent.AmountChanged(it)) },
-                    focusRequester = amountFocusRequester
+                    focusRequester = amountFocusRequester,
+                    isFromBill = state.isFromDraft(DraftField.AMOUNT)
                 )
+                // A single amount is already in the field, so there is nothing to pick from
+                state.draftFill?.amountOptions?.takeIf { it.size > 1 || state.draftFill.isAmountMissing }?.let {
+                    BillAmountChips(
+                        amounts = it,
+                        selected = state.validAmount,
+                        onAmountSelected = { amount -> onEvent(AddEditTransactionEvent.BillAmountSelected(amount)) }
+                    )
+                }
             }
 
             CategorySection(
                 categories = state.availableCategories,
                 selectedCategoryId = state.selectedCategoryId,
                 onCategorySelected = { onEvent(AddEditTransactionEvent.CategorySelected(it)) },
-                onAddCategoryClicked = { onEvent(AddEditTransactionEvent.CategorySheetOpened) }
+                onAddCategoryClicked = { onEvent(AddEditTransactionEvent.CategorySheetOpened) },
+                isSuggested = state.isFromDraft(DraftField.CATEGORY)
             )
 
             TitleField(
@@ -221,7 +255,8 @@ private fun AddEditTransactionLayout(
                 transactionType = state.transactionType,
                 isError = state.isTitleErrorVisible,
                 onTitleChange = { onEvent(AddEditTransactionEvent.TitleChanged(it)) },
-                onFocusChange = onTitleFocusChange
+                onFocusChange = onTitleFocusChange,
+                isFromBill = state.isFromDraft(DraftField.TITLE)
             )
 
             DateSelectionSection(
@@ -230,7 +265,8 @@ private fun AddEditTransactionLayout(
                 pickerUtcMillis = state.pickerUtcMillis,
                 maxPickerUtcMillis = state.maxPickerUtcMillis,
                 onDateChoiceSelected = { onEvent(AddEditTransactionEvent.DateChoiceSelected(it)) },
-                onDatePicked = { onEvent(AddEditTransactionEvent.DatePicked(it)) }
+                onDatePicked = { onEvent(AddEditTransactionEvent.DatePicked(it)) },
+                isFromBill = state.isFromDraft(DraftField.DATE)
             )
 
             NoteSection(
@@ -240,11 +276,33 @@ private fun AddEditTransactionLayout(
                 onExpand = { onEvent(AddEditTransactionEvent.NoteExpanded) },
                 onNoteChange = { onEvent(AddEditTransactionEvent.NoteChanged(it)) },
                 onRemove = { onEvent(AddEditTransactionEvent.NoteRemoved) },
-                onFocusChange = onNoteFocusChange
+                onFocusChange = onNoteFocusChange,
+                isFromBill = state.isFromDraft(DraftField.NOTE)
             )
 
             Spacer(modifier = Modifier.height(4.dp))
         }
+    }
+}
+
+/**
+ * Under the type switch: the way into the scanner, or once a bill has filled the form, the
+ * banner saying so. Nothing at all where scanning is not offered.
+ */
+@Composable
+private fun BillScanSection(
+    state: AddEditTransactionUiState,
+    onEvent: (AddEditTransactionEvent) -> Unit,
+    onScanBillClick: () -> Unit
+) {
+    val fill = state.draftFill
+
+    when {
+        fill != null -> {
+            BillFilledBanner(onClear = { onEvent(AddEditTransactionEvent.BillFillCleared) })
+            if (fill.isAmountMissing) BillTotalMissingNotice()
+        }
+        state.isScanAvailable -> ScanBillCard(isReading = state.isReadingBill, onClick = onScanBillClick)
     }
 }
 
@@ -264,6 +322,23 @@ private fun saveLabel(state: AddEditTransactionUiState): String {
 private val previewAddState = AddEditTransactionUiState(
     dateMillis = PreviewData.DATE_MILLIS,
     availableCategories = PreviewData.categories
+)
+
+// As the form looks once a bill has been read: every field found, and two other amounts to pick
+private val previewScannedState = previewAddState.copy(
+    title = "Cafe Coffee Day",
+    amount = "1428",
+    validAmount = Money.ofRupees(1428),
+    note = "Bill no. 4521",
+    isNoteExpanded = true,
+    selectedCategoryId = PreviewData.categories.first().id,
+    dateChoice = DateChoice.OTHER,
+    isSaveEnabled = true,
+    isScanAvailable = true,
+    draftFill = DraftFill(
+        filledFields = DraftField.entries.toSet(),
+        amountOptions = listOf(Money.ofRupees(1428), Money.ofRupees(1360), Money.ofRupees(690))
+    )
 )
 
 private val previewEditState = AddEditTransactionUiState(
@@ -290,6 +365,7 @@ private fun AddEditTransactionPreview(
             state = state,
             onEvent = {},
             onNavigateBack = {},
+            onScanBillClick = {},
             snackbarHostState = remember { SnackbarHostState() },
             isAmountCollapsed = isAmountCollapsed,
             onTitleFocusChange = {},
@@ -302,6 +378,35 @@ private fun AddEditTransactionPreview(
 @Composable
 private fun AddTransactionPreview() {
     AddEditTransactionPreview(state = previewAddState)
+}
+
+@PreviewLightDark
+@Composable
+private fun ScanAvailablePreview() {
+    AddEditTransactionPreview(state = previewAddState.copy(isScanAvailable = true))
+}
+
+@PreviewLightDark
+@Composable
+private fun FilledFromBillPreview() {
+    AddEditTransactionPreview(state = previewScannedState)
+}
+
+@PreviewLightDark
+@Composable
+private fun BillTotalMissingPreview() {
+    AddEditTransactionPreview(
+        state = previewScannedState.copy(
+            amount = "",
+            validAmount = null,
+            isSaveEnabled = false,
+            draftFill = DraftFill(
+                filledFields = DraftField.entries.toSet() - DraftField.AMOUNT,
+                amountOptions = listOf(Money.ofRupees(1360), Money.ofRupees(690), Money.ofRupees(380)),
+                isAmountMissing = true
+            )
+        )
+    )
 }
 
 @PreviewLightDark

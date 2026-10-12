@@ -91,7 +91,8 @@ class CategoryEditorReducer @Inject constructor(
         DomainError.FileWriteFailed,
         DomainError.FileReadFailed,
         DomainError.BackupInvalid,
-        DomainError.BackupTooNew -> null
+        DomainError.BackupTooNew,
+        DomainError.BillUnreadable -> null
     }
 
     private companion object {

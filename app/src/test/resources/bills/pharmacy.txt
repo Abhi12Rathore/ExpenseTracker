@@ -1,0 +1,11 @@
+[h=38] APOLLO PHARMACY
+Apollo Pharmacies Limited
+Indiranagar, Bengaluru
+GSTIN: 29AAACA1234B1ZK
+Bill No. AP-55231
+Date: 28.09.2026
+Dolo 650 Tab 15s 2 61.20
+Cetirizine 10mg 1 18.50
+Vitamin C 500mg 1 145.00
+Discount 11.24
+Net Amount 213.46

@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.presentation.transactions.addEditTransacti
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +26,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -49,7 +51,8 @@ fun AmountHero(
     transactionType: TransactionType,
     onAmountChange: (String) -> Unit,
     focusRequester: FocusRequester,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isFromBill: Boolean = false
 ) {
     val color = transactionType.amountColor()
     val textStyle = MaterialTheme.typography.displaySmall.copy(
@@ -58,8 +61,26 @@ fun AmountHero(
     )
     val description = stringResource(R.string.transaction_amount)
 
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        AmountField(amount, onAmountChange, focusRequester, textStyle, color, description)
+        if (isFromBill) FromBillTag()
+    }
+}
+
+@Composable
+private fun AmountField(
+    amount: String,
+    onAmountChange: (String) -> Unit,
+    focusRequester: FocusRequester,
+    textStyle: TextStyle,
+    color: Color,
+    description: String
+) {
     Row(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.Center,

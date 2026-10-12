@@ -15,6 +15,10 @@ import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesUseCas
 import com.example.expensetrackerpro.domain.usecase.category.SaveCategoryUseCase
 import com.example.expensetrackerpro.domain.usecase.category.UpdateCategoryUseCase
 import com.example.expensetrackerpro.domain.usecase.category.ValidateCategoryNameUseCase
+import com.example.expensetrackerpro.domain.usecase.scan.IsBillScannerAvailableUseCase
+import com.example.expensetrackerpro.domain.usecase.scan.ParseBillUseCase
+import com.example.expensetrackerpro.domain.usecase.scan.ResolveCategoryHintUseCase
+import com.example.expensetrackerpro.domain.usecase.scan.ScanBillUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.AddTransactionUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.DeleteTransactionUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.FormatAmountInputUseCase
@@ -25,6 +29,8 @@ import com.example.expensetrackerpro.domain.usecase.transaction.SaveTransactionU
 import com.example.expensetrackerpro.domain.usecase.transaction.UpdateTransactionUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.ValidateAmountUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.ValidateTransactionDraftUseCase
+import com.example.expensetrackerpro.fakes.FakeBillScannerAvailability
+import com.example.expensetrackerpro.fakes.FakeBillTextReader
 import com.example.expensetrackerpro.fakes.FakeCategoryRepository
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
 import com.example.expensetrackerpro.fakes.FakeTransactionRepository
@@ -35,6 +41,7 @@ import com.example.expensetrackerpro.fakes.transaction
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorEvent
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorReducer
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.AddEditTransactionViewModel
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.draft.TransactionDraftReducer
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEffect
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEvent
 import com.example.expensetrackerpro.util.MainDispatcherRule
@@ -70,7 +77,13 @@ class AddEditTransactionViewModelTest {
     private val categories = FakeCategoryRepository(listOf(food, bills, salary))
     private val transactions = FakeTransactionRepository()
 
-    private fun viewModel(transactionId: Int? = null) = AddEditTransactionViewModel(
+    private val billReader = FakeBillTextReader()
+    private val scannerAvailability = FakeBillScannerAvailability()
+
+    private fun viewModel(
+        transactionId: Int? = null,
+        savedState: Map<String, Any?> = emptyMap()
+    ) = AddEditTransactionViewModel(
         getTransactionById = GetTransactionByIdUseCase(transactions),
         getCategoriesByType = GetCategoriesByTypeUseCase(categories),
         saveTransaction = SaveTransactionUseCase(
@@ -90,8 +103,15 @@ class AddEditTransactionViewModelTest {
             UpdateCategoryUseCase(categories)
         ),
         categoryEditorReducer = CategoryEditorReducer(ValidateCategoryNameUseCase()),
+        scanBill = ScanBillUseCase(billReader, ParseBillUseCase(), timeProvider),
+        isBillScannerAvailable = IsBillScannerAvailableUseCase(scannerAvailability),
+        draftReducer = TransactionDraftReducer(
+            FormatAmountInputUseCase(),
+            ResolveTransactionDateUseCase(timeProvider),
+            ResolveCategoryHintUseCase()
+        ),
         savedStateHandle = SavedStateHandle(
-            if (transactionId != null) mapOf("transactionId" to transactionId) else emptyMap()
+            savedState + if (transactionId != null) mapOf("transactionId" to transactionId) else emptyMap()
         )
     )
 

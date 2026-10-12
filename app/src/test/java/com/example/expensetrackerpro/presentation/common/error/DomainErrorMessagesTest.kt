@@ -22,7 +22,8 @@ class DomainErrorMessagesTest {
             DomainError.FileWriteFailed to R.string.error_file_write_failed,
             DomainError.FileReadFailed to R.string.error_file_read_failed,
             DomainError.BackupInvalid to R.string.error_backup_invalid,
-            DomainError.BackupTooNew to R.string.error_backup_too_new
+            DomainError.BackupTooNew to R.string.error_backup_too_new,
+            DomainError.BillUnreadable to R.string.error_bill_unreadable
         )
 
         expected.forEach { (error, messageRes) -> assertEquals(messageRes, error.toMessageRes()) }

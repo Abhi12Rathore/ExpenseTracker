@@ -28,6 +28,9 @@ sealed interface DomainError {
 
     /** The backup was written by a newer version of the app, in a format this one can't read. */
     data object BackupTooNew : DomainError
+
+    /** The photo could not be read, or nothing on it looks like a bill. */
+    data object BillUnreadable : DomainError
 }
 
 enum class InvalidInputReason {

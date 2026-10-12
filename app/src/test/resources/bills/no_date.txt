@@ -1,0 +1,5 @@
+[h=30] CHAI POINT
+Token 45
+Masala Chai 2 60.00
+Bun Maska 1 45.00
+Total 105.00
