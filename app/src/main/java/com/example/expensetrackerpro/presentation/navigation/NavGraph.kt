@@ -5,6 +5,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.expensetrackerpro.presentation.exportBackup.ExportBackupScreen
 import com.example.expensetrackerpro.presentation.manageCategories.ManageCategoryScreen
 import com.example.expensetrackerpro.presentation.navigation.Screens
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.AddEditTransactionScreen
@@ -29,6 +30,9 @@ fun AppNavHost(
                 },
                 onNavigateToManageCategories = {
                     navController.navigate(Screens.ManageCategories.route)
+                },
+                onNavigateToExportBackup = {
+                    navController.navigate(Screens.ExportBackup.route)
                 }
             )
         }
@@ -46,6 +50,13 @@ fun AppNavHost(
         // Destination 3: Full Screen Manage Categories
         composable(Screens.ManageCategories.route) {
             ManageCategoryScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // Destination 4: Full Screen Export & backup
+        composable(Screens.ExportBackup.route) {
+            ExportBackupScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

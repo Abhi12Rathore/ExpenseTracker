@@ -42,6 +42,12 @@ object DateFormatter {
     fun formatDayHeader(millis: Long): String = format("EEE d MMM", millis)
 
     /**
+     * ISO 8601, e.g. `2026-10-08`, for files and file names. Always in Western digits,
+     * whatever the device's language.
+     */
+    fun formatIsoDate(millis: Long): String = format("yyyy-MM-dd", millis, Locale.US)
+
+    /**
      * Both days inclusive, repeating only what differs: `1 – 31 Oct`, `28 Sep – 4 Oct`, or
      * `8 Oct` for a single day. [withYear] appends the year (`1 – 31 Oct 2026`); a range that
      * crosses a year always shows both (`29 Dec 2025 – 4 Jan 2026`).
@@ -66,6 +72,6 @@ object DateFormatter {
     }
 
     // SimpleDateFormat is not thread-safe, so a new one is created per call
-    private fun format(pattern: String, millis: Long): String =
-        SimpleDateFormat(pattern, Locale.getDefault()).format(Date(millis))
+    private fun format(pattern: String, millis: Long, locale: Locale = Locale.getDefault()): String =
+        SimpleDateFormat(pattern, locale).format(Date(millis))
 }

@@ -58,7 +58,6 @@ import com.example.expensetrackerpro.presentation.settings.components.SettingsDi
 import com.example.expensetrackerpro.presentation.settings.components.SettingsItem
 import com.example.expensetrackerpro.presentation.settings.components.SettingsSectionCard
 import com.example.expensetrackerpro.presentation.settings.components.SettingsSwitchItem
-import com.example.expensetrackerpro.presentation.settings.components.SoonPill
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsEvent
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsMessage
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsUiState
@@ -68,6 +67,7 @@ import com.example.expensetrackerpro.ui.theme.extendedColors
 @Composable
 fun SettingsScreen(
     onNavigateToCategories: () -> Unit,
+    onNavigateToExportBackup: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -92,7 +92,8 @@ fun SettingsScreen(
     SettingsContent(
         state = uiState,
         onEvent = viewModel::onEvent,
-        onNavigateToCategories = onNavigateToCategories
+        onNavigateToCategories = onNavigateToCategories,
+        onNavigateToExportBackup = onNavigateToExportBackup
     )
 }
 
@@ -100,7 +101,8 @@ fun SettingsScreen(
 fun SettingsContent(
     state: SettingsUiState,
     onEvent: (SettingsEvent) -> Unit,
-    onNavigateToCategories: () -> Unit
+    onNavigateToCategories: () -> Unit,
+    onNavigateToExportBackup: () -> Unit
 ) {
     SettingsDialogs(state = state, onEvent = onEvent)
 
@@ -210,8 +212,7 @@ fun SettingsContent(
                     iconTint = palette.blue,
                     title = stringResource(R.string.settings_export),
                     subtitle = stringResource(R.string.settings_export_subtitle),
-                    enabled = false,
-                    trailing = { SoonPill() }
+                    onClick = onNavigateToExportBackup
                 )
             }
 
@@ -362,7 +363,8 @@ private fun SettingsContentPreview() {
         SettingsContent(
             state = previewState.copy(appLock = AppLockSettings(enabled = true)),
             onEvent = {},
-            onNavigateToCategories = {}
+            onNavigateToCategories = {},
+            onNavigateToExportBackup = {}
         )
     }
 }
@@ -374,7 +376,8 @@ private fun SettingsContentDeveloperPreview() {
         SettingsContent(
             state = previewState.copy(profile = UserProfile(), isDeveloperSectionVisible = true),
             onEvent = {},
-            onNavigateToCategories = {}
+            onNavigateToCategories = {},
+            onNavigateToExportBackup = {}
         )
     }
 }
@@ -386,7 +389,8 @@ private fun SettingsContentDeleteAllPreview() {
         SettingsContent(
             state = previewState.copy(deleteAllConfirmation = "DELETE"),
             onEvent = {},
-            onNavigateToCategories = {}
+            onNavigateToCategories = {},
+            onNavigateToExportBackup = {}
         )
     }
 }

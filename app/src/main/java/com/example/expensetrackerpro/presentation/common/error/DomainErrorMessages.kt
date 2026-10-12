@@ -18,4 +18,5 @@ fun DomainError.toMessageRes(): Int = when (this) {
         InvalidInputReason.INCOMPATIBLE_REASSIGN_TARGET -> R.string.error_incompatible_reassign_target
     }
     is DomainError.StorageFailure -> R.string.error_storage_failure
+    DomainError.FileWriteFailed -> R.string.error_file_write_failed
 }

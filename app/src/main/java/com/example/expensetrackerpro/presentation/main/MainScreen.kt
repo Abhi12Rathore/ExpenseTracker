@@ -45,7 +45,8 @@ private val bottomNavItems = listOf(
 fun MainScreen(
     snackbarHostState: SnackbarHostState,
     onNavigateToTransactionForm: (TransactionId?) -> Unit,
-    onNavigateToManageCategories: () -> Unit
+    onNavigateToManageCategories: () -> Unit,
+    onNavigateToExportBackup: () -> Unit
 ) {
     val bottomNavController = rememberNavController()
 
@@ -142,7 +143,10 @@ fun MainScreen(
                     )
                 }
                 composable(BottomNavItem.Settings.route) {
-                    SettingsScreen(onNavigateToCategories = onNavigateToManageCategories)
+                    SettingsScreen(
+                        onNavigateToCategories = onNavigateToManageCategories,
+                        onNavigateToExportBackup = onNavigateToExportBackup
+                    )
                 }
             }
         }
