@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation
 
+import androidx.lifecycle.SavedStateHandle
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.ExportDestination
@@ -71,8 +72,8 @@ class ExportBackupViewModelTest {
         TimeZone.setDefault(originalTimeZone)
     }
 
-    private fun viewModel(repository: FakeTransactionRepository = transactions): ExportBackupViewModel {
-        val getTransactions = GetTransactionsUseCase(repository)
+    private fun viewModel(savedStateHandle: SavedStateHandle = SavedStateHandle()): ExportBackupViewModel {
+        val getTransactions = GetTransactionsUseCase(transactions)
 
         return ExportBackupViewModel(
             getTransactions,
@@ -80,7 +81,8 @@ class ExportBackupViewModelTest {
             GetDateRangeUseCase(time),
             GetCustomDateRangeUseCase(time),
             ExportTransactionsUseCase(getTransactions, buildCsv, files),
-            GetExportFileNameUseCase(time)
+            GetExportFileNameUseCase(time),
+            savedStateHandle
         )
     }
 
@@ -218,11 +220,100 @@ class ExportBackupViewModelTest {
         assertNull(state.oldestMillis)
         assertNull(state.newestMillis)
         assertFalse(state.canExport)
+    }
+
+    @Test
+    fun aPickForAPeriodWithNothingInIt_writesTheHeaderAlone() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        viewModel.onEvent(
+            ExportBackupEvent.CustomRangeSelected(
+                pickerDay(2026, Calendar.JULY, 1),
+                pickerDay(2026, Calendar.JULY, 31)
+            )
+        )
 
         viewModel.onEvent(ExportBackupEvent.DestinationPicked(uri))
 
-        assertEquals(0, files.writeCalls)
-        assertNull(viewModel.uiState.value.message)
+        assertEquals(csvOf(), writtenCsv())
+        assertEquals(ExportBackupMessage.Exported(0), viewModel.uiState.value.message)
+    }
+
+    /** A new ViewModel on the state [select] left behind, as after the process was killed. */
+    private fun restoredAfter(select: (ExportBackupViewModel) -> Unit): ExportBackupViewModel {
+        val savedState = SavedStateHandle()
+        select(viewModel(savedState))
+
+        return viewModel(savedState)
+    }
+
+    @Test
+    fun afterProcessDeath_comesBackOnTheSelectedPeriod() = runTest {
+        val allTime = restoredAfter { it.onEvent(ExportBackupEvent.PeriodSelected(ExportPeriod.ALL_TIME)) }
+        val year = restoredAfter { it.onEvent(ExportBackupEvent.PeriodSelected(ExportPeriod.YEAR)) }
+        val month = restoredAfter {
+            it.onEvent(ExportBackupEvent.PeriodSelected(ExportPeriod.YEAR))
+            it.onEvent(ExportBackupEvent.PeriodSelected(ExportPeriod.MONTH))
+        }
+
+        // Read before anything is loaded, as the screen first draws it
+        assertEquals(ExportPeriod.ALL_TIME, allTime.uiState.value.period)
+        assertEquals(DateRange.ALL, allTime.uiState.value.dateRange)
+        assertEquals(ExportPeriod.YEAR, year.uiState.value.period)
+        assertEquals(year2026, year.uiState.value.dateRange)
+        assertEquals(ExportPeriod.MONTH, month.uiState.value.period)
+        assertEquals(october, month.uiState.value.dateRange)
+    }
+
+    @Test
+    fun afterProcessDeath_comesBackOnTheCustomRange() = runTest {
+        val viewModel = restoredAfter {
+            it.onEvent(
+                ExportBackupEvent.CustomRangeSelected(
+                    pickerDay(2025, Calendar.DECEMBER, 30),
+                    pickerDay(2026, Calendar.MARCH, 14)
+                )
+            )
+        }
+        subscribe(viewModel.uiState)
+
+        val state = viewModel.uiState.value
+        assertEquals(ExportPeriod.CUSTOM, state.period)
+        assertEquals(
+            DateRange(millisAt(2025, Calendar.DECEMBER, 30), millisAt(2026, Calendar.MARCH, 15)),
+            state.dateRange
+        )
+        assertEquals(2, state.transactionCount)
+    }
+
+    @Test
+    fun afterProcessDeath_aCustomRangeIsForgotten_onceAnotherPeriodIsChosen() = runTest {
+        val viewModel = restoredAfter {
+            it.onEvent(
+                ExportBackupEvent.CustomRangeSelected(
+                    pickerDay(2026, Calendar.MARCH, 1),
+                    pickerDay(2026, Calendar.MARCH, 31)
+                )
+            )
+            it.onEvent(ExportBackupEvent.PeriodSelected(ExportPeriod.ALL_TIME))
+        }
+
+        assertEquals(ExportPeriod.ALL_TIME, viewModel.uiState.value.period)
+        assertEquals(DateRange.ALL, viewModel.uiState.value.dateRange)
+    }
+
+    @Test
+    fun afterProcessDeath_aPickThatArrivesBeforeAnythingIsLoaded_exportsTheSelectedPeriod() = runTest {
+        val viewModel = restoredAfter { it.onEvent(ExportBackupEvent.PeriodSelected(ExportPeriod.YEAR)) }
+        // Nothing collects the state yet, so the count is still 0
+        assertEquals(0, viewModel.uiState.value.transactionCount)
+
+        viewModel.onEvent(ExportBackupEvent.DestinationPicked(uri))
+
+        assertEquals(ExportDestination(uri), files.written.single().first)
+        assertEquals(csvOf(october10, october1, march), writtenCsv())
+        subscribe(viewModel.uiState)
+        assertEquals(ExportBackupMessage.Exported(3), viewModel.uiState.value.message)
     }
 
     @Test

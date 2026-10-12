@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation.exportBackup
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.expensetrackerpro.domain.error.Outcome
@@ -39,14 +40,17 @@ class ExportBackupViewModel @Inject constructor(
     private val getDateRange: GetDateRangeUseCase,
     private val getCustomDateRange: GetCustomDateRangeUseCase,
     private val exportTransactions: ExportTransactionsUseCase,
-    getExportFileName: GetExportFileNameUseCase
+    getExportFileName: GetExportFileNameUseCase,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val filter = MutableStateFlow<DateFilter>(getCurrentPeriod(PeriodGranularity.MONTH))
+    // Restored after process death, which can happen while the "Save as" picker is in front
+    private val filter = MutableStateFlow(restoredFilter())
 
     // The export in progress and its outcome; what the period holds is merged in below
     private val screenState = MutableStateFlow(
         ExportBackupUiState(
+            period = filter.value.toExportPeriod(),
             dateRange = getDateRange(filter.value),
             suggestedFileName = getExportFileName()
         )
@@ -72,8 +76,8 @@ class ExportBackupViewModel @Inject constructor(
     fun onEvent(event: ExportBackupEvent) {
         when (event) {
             is ExportBackupEvent.PeriodSelected -> selectPeriod(event.period)
-            is ExportBackupEvent.CustomRangeSelected -> filter.value = DateFilter.Custom(
-                getCustomDateRange(event.startUtcMillis, event.endUtcMillis)
+            is ExportBackupEvent.CustomRangeSelected -> select(
+                DateFilter.Custom(getCustomDateRange(event.startUtcMillis, event.endUtcMillis))
             )
             is ExportBackupEvent.DestinationPicked -> export(ExportDestination(event.uri))
             ExportBackupEvent.MessageShown -> screenState.update { it.copy(message = null) }
@@ -81,13 +85,36 @@ class ExportBackupViewModel @Inject constructor(
     }
 
     private fun selectPeriod(period: ExportPeriod) {
-        filter.value = when (period) {
-            ExportPeriod.MONTH -> getCurrentPeriod(PeriodGranularity.MONTH)
-            ExportPeriod.YEAR -> getCurrentPeriod(PeriodGranularity.YEAR)
-            ExportPeriod.ALL_TIME -> DateFilter.Custom(DateRange.ALL)
-            // Has no dates of its own: it is selected by choosing a range
-            ExportPeriod.CUSTOM -> return
-        }
+        // Custom has no dates of its own: it is selected by choosing a range
+        period.toFilter(customRange = null)?.let(::select)
+    }
+
+    private fun select(selected: DateFilter) {
+        filter.value = selected
+
+        savedStateHandle[KEY_PERIOD] = selected.toExportPeriod().name
+        val customRange = (selected as? DateFilter.Custom)?.range
+        savedStateHandle[KEY_CUSTOM_START] = customRange?.startMillis
+        savedStateHandle[KEY_CUSTOM_END] = customRange?.endMillis
+    }
+
+    /** The period that was selected when the state was saved, or the current month. */
+    private fun restoredFilter(): DateFilter {
+        val period = savedStateHandle.get<String>(KEY_PERIOD)
+            ?.let { name -> ExportPeriod.entries.find { it.name == name } }
+        val start = savedStateHandle.get<Long>(KEY_CUSTOM_START)
+        val end = savedStateHandle.get<Long>(KEY_CUSTOM_END)
+        val customRange = if (start != null && end != null) DateRange(start, end) else null
+
+        return period?.toFilter(customRange) ?: getCurrentPeriod(PeriodGranularity.MONTH)
+    }
+
+    /** Month and Year are the ones we are in now. Null for Custom without a [customRange]. */
+    private fun ExportPeriod.toFilter(customRange: DateRange?): DateFilter? = when (this) {
+        ExportPeriod.MONTH -> getCurrentPeriod(PeriodGranularity.MONTH)
+        ExportPeriod.YEAR -> getCurrentPeriod(PeriodGranularity.YEAR)
+        ExportPeriod.ALL_TIME -> DateFilter.Custom(DateRange.ALL)
+        ExportPeriod.CUSTOM -> customRange?.let { DateFilter.Custom(it) }
     }
 
     private fun DateFilter.toExportPeriod(): ExportPeriod = when (this) {
@@ -98,8 +125,9 @@ class ExportBackupViewModel @Inject constructor(
     }
 
     private fun export(destination: ExportDestination) {
-        // The button is disabled in both cases; this keeps a late or repeated pick out too
-        if (screenState.value.isExporting || uiState.value.transactionCount == 0) return
+        // The count is not checked: after process death the pick arrives before it has loaded,
+        // and the file already exists by then. An empty period is written as a header alone.
+        if (screenState.value.isExporting) return
         val range = getDateRange(filter.value)
 
         screenState.update { it.copy(isExporting = true) }
@@ -110,5 +138,11 @@ class ExportBackupViewModel @Inject constructor(
             }
             screenState.update { it.copy(isExporting = false, message = message) }
         }
+    }
+
+    private companion object {
+        const val KEY_PERIOD = "export_period"
+        const val KEY_CUSTOM_START = "export_custom_start"
+        const val KEY_CUSTOM_END = "export_custom_end"
     }
 }
