@@ -4,6 +4,7 @@ import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.error.getOrNull
 import com.example.expensetrackerpro.domain.models.Backup
+import com.example.expensetrackerpro.domain.models.BackupCategoryRecord
 import com.example.expensetrackerpro.domain.models.BackupDocument
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.CategoryIcon
@@ -12,6 +13,7 @@ import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.domain.usecase.category.ValidateCategoryNameUseCase
 import com.example.expensetrackerpro.fakes.backupDocument
 import com.example.expensetrackerpro.fakes.categoryRecord
 import com.example.expensetrackerpro.fakes.transactionRecord
@@ -21,19 +23,25 @@ import org.junit.Test
 
 class ValidateBackupUseCaseTest {
 
-    private val validate = ValidateBackupUseCase()
+    private val validate = ValidateBackupUseCase(ValidateCategoryNameUseCase())
 
     private val invalid = Outcome.Failure(DomainError.BackupInvalid)
 
+    private val salary = categoryRecord(id = 99, name = "Salary", type = "INCOME", icon = "payments")
+
+    /** The category under test, next to an income one so that the file has both types. */
     private fun withCategory(
         id: Int = 1,
         name: String = "Food",
         type: String = "EXPENSE",
         icon: String = "restaurant"
     ): BackupDocument = backupDocument(
-        categories = listOf(categoryRecord(id = id, name = name, type = type, icon = icon)),
+        categories = listOf(categoryRecord(id = id, name = name, type = type, icon = icon), salary),
         transactions = emptyList()
     )
+
+    private fun withCategories(vararg categories: BackupCategoryRecord): BackupDocument =
+        backupDocument(categories = categories.toList() + salary, transactions = emptyList())
 
     private fun withTransaction(
         amountPaise: Long = 250_00,
@@ -87,11 +95,33 @@ class ValidateBackupUseCaseTest {
     }
 
     @Test
-    fun aFileWithNothingInIt_isStillABackup() {
-        val result = validate(backupDocument(categories = emptyList(), transactions = emptyList()))
+    fun aFileWithNoTransactions_isStillABackup() {
+        val result = validate(backupDocument(transactions = emptyList()))
 
-        assertEquals(emptyList<Category>(), result.getOrNull()?.categories)
+        assertEquals(3, result.getOrNull()?.categories?.size)
         assertEquals(emptyList<Transaction>(), result.getOrNull()?.transactions)
+    }
+
+    @Test
+    fun backupWithoutIncomeCategories_isInvalid() {
+        val document = backupDocument(
+            categories = listOf(categoryRecord(id = 1, name = "Food"), categoryRecord(id = 2, name = "Fuel")),
+            transactions = emptyList()
+        )
+
+        assertEquals(invalid, validate(document))
+    }
+
+    @Test
+    fun backupWithoutExpenseCategories_isInvalid() {
+        val document = backupDocument(categories = listOf(salary), transactions = emptyList())
+
+        assertEquals(invalid, validate(document))
+    }
+
+    @Test
+    fun backupWithoutAnyCategories_isInvalid() {
+        assertEquals(invalid, validate(backupDocument(categories = emptyList(), transactions = emptyList())))
     }
 
     @Test
@@ -136,7 +166,7 @@ class ValidateBackupUseCaseTest {
     @Test
     fun everyIconTheAppHas_isKnown() {
         CategoryIcon.entries.forEach { icon ->
-            assertEquals(icon, validate(withCategory(icon = icon.key)).getOrNull()?.categories?.single()?.icon)
+            assertEquals(icon, validate(withCategory(icon = icon.key)).getOrNull()?.categories?.first()?.icon)
         }
     }
 
@@ -154,20 +184,46 @@ class ValidateBackupUseCaseTest {
 
     @Test
     fun twoCategoriesWithTheSameId_areInvalid() {
-        val document = backupDocument(
-            categories = listOf(categoryRecord(id = 4, name = "Food"), categoryRecord(id = 4, name = "Fuel")),
-            transactions = emptyList()
-        )
+        val document = withCategories(categoryRecord(id = 4, name = "Food"), categoryRecord(id = 4, name = "Fuel"))
 
         assertEquals(invalid, validate(document))
     }
 
     @Test
-    fun twoCategoriesWithTheSameName_areFine() {
-        val document = backupDocument(
-            categories = listOf(categoryRecord(id = 4, name = "Other"), categoryRecord(id = 5, name = "Other")),
-            transactions = emptyList()
+    fun aCategoryNameAtTheLimit_isValid() {
+        val name = "a".repeat(ValidateCategoryNameUseCase.NAME_MAX_LENGTH)
+
+        assertEquals(name, validate(withCategory(name = name)).getOrNull()?.categories?.first()?.name)
+    }
+
+    @Test
+    fun aCategoryNamePastTheLimit_isInvalid() {
+        assertEquals(invalid, validate(withCategory(name = "a".repeat(ValidateCategoryNameUseCase.NAME_MAX_LENGTH + 1))))
+    }
+
+    @Test
+    fun twoCategoriesOfOneTypeWithTheSameName_areInvalid() {
+        assertEquals(
+            invalid,
+            validate(withCategories(categoryRecord(id = 4, name = "Other"), categoryRecord(id = 5, name = "Other")))
         )
+    }
+
+    @Test
+    fun namesThatDifferOnlyInCaseOrSurroundingSpace_areTheSameName() {
+        assertEquals(
+            invalid,
+            validate(withCategories(categoryRecord(id = 4, name = "Other"), categoryRecord(id = 5, name = "OTHER")))
+        )
+        assertEquals(
+            invalid,
+            validate(withCategories(categoryRecord(id = 4, name = "Other"), categoryRecord(id = 5, name = " other ")))
+        )
+    }
+
+    @Test
+    fun theSameNameInBothTypes_isFine() {
+        val document = withCategories(categoryRecord(id = 4, name = "Salary"))
 
         assertEquals(2, validate(document).getOrNull()?.categories?.size)
     }

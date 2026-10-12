@@ -9,6 +9,7 @@ import com.example.expensetrackerpro.domain.models.Backup
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.backup.ValidateBackupUseCase
+import com.example.expensetrackerpro.domain.usecase.category.ValidateCategoryNameUseCase
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonObject
@@ -46,7 +47,7 @@ class BackupSerializationTest {
 
     @Test
     fun aBackup_writtenAndReadBack_restoresWhatWasStored() {
-        val backup = ValidateBackupUseCase()(decode(encode(dto)).toDocument()).getOrNull()
+        val backup = ValidateBackupUseCase(ValidateCategoryNameUseCase())(decode(encode(dto)).toDocument()).getOrNull()
 
         assertEquals(1_760_100_000_000L, backup?.createdAtMillis)
         assertEquals("1.0", backup?.appVersion)

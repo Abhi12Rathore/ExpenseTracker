@@ -9,16 +9,20 @@ import com.example.expensetrackerpro.domain.models.BackupTransactionRecord
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.CategoryId
+import com.example.expensetrackerpro.domain.models.CategoryNameValidation
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.domain.usecase.category.ValidateCategoryNameUseCase
 import javax.inject.Inject
 
 /**
  * Checks a backup file from top to bottom, so that restoring it can't leave the app with data
  * that doesn't add up. Nothing is corrected: one wrong value turns the whole file down.
  */
-class ValidateBackupUseCase @Inject constructor() {
+class ValidateBackupUseCase @Inject constructor(
+    private val validateCategoryName: ValidateCategoryNameUseCase
+) {
 
     /** Fails with BackupTooNew for a newer file version, and with BackupInvalid for anything else. */
     operator fun invoke(document: BackupDocument): Outcome<Backup> {
@@ -26,9 +30,18 @@ class ValidateBackupUseCase @Inject constructor() {
         if (document.version > Backup.VERSION) return Outcome.Failure(DomainError.BackupTooNew)
         if (document.version < FIRST_VERSION) return invalid
 
-        val categories = document.categories.map { it.toCategory() ?: return invalid }
+        val categories = mutableListOf<Category>()
+        document.categories.forEach { record ->
+            val category = record.toCategory() ?: return invalid
+            // The same rules as for a name typed in the app, checked against the categories before it
+            val name = validateCategoryName(category.name, category.type, editingId = null, existing = categories)
+            if (name != CategoryNameValidation.VALID) return invalid
+            categories += category
+        }
         val categoriesById = categories.associateBy { it.id }
         if (categoriesById.size != categories.size) return invalid
+        // With no category of a type, no transaction of that type could be added after the restore
+        if (TransactionType.entries.any { type -> categories.none { it.type == type } }) return invalid
 
         val transactions = document.transactions.map { record ->
             val category = categoriesById[CategoryId(record.categoryId)] ?: return invalid
@@ -47,7 +60,7 @@ class ValidateBackupUseCase @Inject constructor() {
 
     private fun BackupCategoryRecord.toCategory(): Category? {
         // The database gives out ids from 1; it would replace any other with one of its own
-        if (id <= 0 || name.isBlank()) return null
+        if (id <= 0) return null
 
         return Category(
             id = CategoryId(id),

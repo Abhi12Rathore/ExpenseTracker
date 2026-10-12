@@ -6,6 +6,7 @@ import com.example.expensetrackerpro.domain.error.getOrNull
 import com.example.expensetrackerpro.domain.models.BackupPreview
 import com.example.expensetrackerpro.domain.models.BuildInfo
 import com.example.expensetrackerpro.domain.models.DocumentUri
+import com.example.expensetrackerpro.domain.usecase.category.ValidateCategoryNameUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionsUseCase
 import com.example.expensetrackerpro.fakes.FakeBackupInfoRepository
 import com.example.expensetrackerpro.fakes.FakeBackupRepository
@@ -36,7 +37,7 @@ class BackupUseCasesTest {
     private val file = DocumentUri("content://documents/backup.json")
 
     private val createBackup = CreateBackupUseCase(backups, backupInfo, time, BuildInfo(isDebug = false, versionName = "1.4"))
-    private val readBackup = ReadBackupUseCase(backups, ValidateBackupUseCase())
+    private val readBackup = ReadBackupUseCase(backups, ValidateBackupUseCase(ValidateCategoryNameUseCase()))
     private val previewBackup = PreviewBackupUseCase(readBackup, GetTransactionsUseCase(transactions))
     private val restoreBackup = RestoreBackupUseCase(readBackup, backups)
 
@@ -106,7 +107,7 @@ class BackupUseCasesTest {
         assertEquals(Outcome.Success(3), restoreBackup(file))
 
         assertEquals(1, backups.readCalls)
-        assertEquals(ValidateBackupUseCase()(backupDocument()).getOrNull(), backups.restored.single())
+        assertEquals(ValidateBackupUseCase(ValidateCategoryNameUseCase())(backupDocument()).getOrNull(), backups.restored.single())
     }
 
     @Test

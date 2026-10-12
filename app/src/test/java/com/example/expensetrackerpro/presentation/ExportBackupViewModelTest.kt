@@ -15,6 +15,7 @@ import com.example.expensetrackerpro.domain.usecase.backup.PreviewBackupUseCase
 import com.example.expensetrackerpro.domain.usecase.backup.ReadBackupUseCase
 import com.example.expensetrackerpro.domain.usecase.backup.RestoreBackupUseCase
 import com.example.expensetrackerpro.domain.usecase.backup.ValidateBackupUseCase
+import com.example.expensetrackerpro.domain.usecase.category.ValidateCategoryNameUseCase
 import com.example.expensetrackerpro.domain.usecase.dashboard.ObserveTodayUseCase
 import com.example.expensetrackerpro.fakes.FakeBackupInfoRepository
 import com.example.expensetrackerpro.fakes.FakeBackupRepository
@@ -111,7 +112,7 @@ class ExportBackupViewModelTest {
     }
 
     private fun backupController(getTransactions: GetTransactionsUseCase): BackupController {
-        val readBackup = ReadBackupUseCase(backups, ValidateBackupUseCase())
+        val readBackup = ReadBackupUseCase(backups, ValidateBackupUseCase(ValidateCategoryNameUseCase()))
 
         return BackupController(
             CreateBackupUseCase(backups, backupInfo, time, BuildInfo(isDebug = false, versionName = "1.0")),
@@ -580,7 +581,7 @@ class ExportBackupViewModelTest {
         currentTransactionCount = 4
     )
 
-    private val expectedBackup = ValidateBackupUseCase()(backupDocument()).getOrNull()
+    private val expectedBackup = ValidateBackupUseCase(ValidateCategoryNameUseCase())(backupDocument()).getOrNull()
 
     @Test
     fun restoreFilePicked_showsWhatTheFileHolds_andChangesNothing() = runTest {
