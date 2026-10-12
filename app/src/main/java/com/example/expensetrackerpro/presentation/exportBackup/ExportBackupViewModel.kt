@@ -6,7 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.DateFilter
 import com.example.expensetrackerpro.domain.models.DateRange
-import com.example.expensetrackerpro.domain.models.ExportDestination
+import com.example.expensetrackerpro.domain.models.DocumentUri
+import com.example.expensetrackerpro.domain.models.ExportFile
 import com.example.expensetrackerpro.domain.models.PeriodGranularity
 import com.example.expensetrackerpro.domain.usecase.export.ExportTransactionsUseCase
 import com.example.expensetrackerpro.domain.usecase.export.GetExportFileNameUseCase
@@ -41,6 +42,7 @@ class ExportBackupViewModel @Inject constructor(
     private val getCustomDateRange: GetCustomDateRangeUseCase,
     private val exportTransactions: ExportTransactionsUseCase,
     getExportFileName: GetExportFileNameUseCase,
+    private val backupController: BackupController,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -52,9 +54,14 @@ class ExportBackupViewModel @Inject constructor(
         ExportBackupUiState(
             period = filter.value.toExportPeriod(),
             dateRange = getDateRange(filter.value),
-            suggestedFileName = getExportFileName()
+            suggestedFileName = getExportFileName(ExportFile.TRANSACTIONS_CSV),
+            suggestedBackupFileName = getExportFileName(ExportFile.BACKUP)
         )
     )
+
+    init {
+        backupController.start(viewModelScope, savedStateHandle)
+    }
 
     // The chosen period with the transactions an export of it would write, newest first
     private val selection = filter.flatMapLatest { selected ->
@@ -63,15 +70,20 @@ class ExportBackupViewModel @Inject constructor(
     }
 
     val uiState: StateFlow<ExportBackupUiState> =
-        combine(selection, screenState) { (selected, range, transactions), state ->
+        combine(selection, screenState, backupController.state) { (selected, range, transactions), state, backup ->
             state.copy(
+                backup = backup,
                 period = selected.toExportPeriod(),
                 dateRange = range,
                 transactionCount = transactions.size,
                 oldestMillis = transactions.lastOrNull()?.dateMillis,
                 newestMillis = transactions.firstOrNull()?.dateMillis
             )
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), screenState.value)
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = screenState.value.copy(backup = backupController.initialState)
+        )
 
     fun onEvent(event: ExportBackupEvent) {
         when (event) {
@@ -79,8 +91,27 @@ class ExportBackupViewModel @Inject constructor(
             is ExportBackupEvent.CustomRangeSelected -> select(
                 DateFilter.Custom(getCustomDateRange(event.startUtcMillis, event.endUtcMillis))
             )
-            is ExportBackupEvent.DestinationPicked -> export(ExportDestination(event.uri))
-            ExportBackupEvent.MessageShown -> screenState.update { it.copy(message = null) }
+            is ExportBackupEvent.DestinationPicked -> export(DocumentUri(event.uri))
+            is ExportBackupEvent.BackupDestinationPicked ->
+                if (!screenState.value.isExporting) {
+                    backupController.onBackupDestinationPicked(DocumentUri(event.uri))
+                }
+            is ExportBackupEvent.RestoreFilePicked ->
+                if (!screenState.value.isExporting) {
+                    backupController.onRestoreFilePicked(DocumentUri(event.uri))
+                }
+            ExportBackupEvent.RestoreConfirmed -> backupController.onRestoreConfirmed()
+            ExportBackupEvent.RestoreDismissed -> backupController.onRestoreDismissed()
+            ExportBackupEvent.MessageShown -> clearShownMessage()
+        }
+    }
+
+    // The export's message is shown first, so it is the first to go
+    private fun clearShownMessage() {
+        if (screenState.value.message != null) {
+            screenState.update { it.copy(message = null) }
+        } else {
+            backupController.onMessageShown()
         }
     }
 
@@ -124,16 +155,16 @@ class ExportBackupViewModel @Inject constructor(
             if (range == DateRange.ALL) ExportPeriod.ALL_TIME else ExportPeriod.CUSTOM
     }
 
-    private fun export(destination: ExportDestination) {
+    private fun export(destination: DocumentUri) {
         // The count is not checked: after process death the pick arrives before it has loaded,
         // and the file already exists by then. An empty period is written as a header alone.
-        if (screenState.value.isExporting) return
+        if (screenState.value.isExporting || backupController.isBusy) return
         val range = getDateRange(filter.value)
 
         screenState.update { it.copy(isExporting = true) }
         viewModelScope.launch {
             val message = when (val result = exportTransactions(range, destination)) {
-                is Outcome.Success -> ExportBackupMessage.Exported(result.value)
+                is Outcome.Success -> ExportBackupMessage.Exported(result.value, destination.uri)
                 is Outcome.Failure -> ExportBackupMessage.Failed(result.error.toMessageRes())
             }
             screenState.update { it.copy(isExporting = false, message = message) }

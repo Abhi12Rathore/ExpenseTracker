@@ -1,33 +1,24 @@
 package com.example.expensetrackerpro.data.export
 
-import android.content.Context
-import androidx.core.net.toUri
+import com.example.expensetrackerpro.data.files.DocumentFiles
 import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.Outcome
-import com.example.expensetrackerpro.domain.models.ExportDestination
+import com.example.expensetrackerpro.domain.models.DocumentUri
 import com.example.expensetrackerpro.domain.repository.FileExportRepository
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import javax.inject.Inject
 
 class FileExportRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context
+    private val documentFiles: DocumentFiles
 ) : FileExportRepository {
 
-    override suspend fun writeText(destination: ExportDestination, text: String): Outcome<Unit> =
+    override suspend fun writeText(destination: DocumentUri, text: String): Outcome<Unit> =
         withContext(Dispatchers.IO) {
             // A full or removed drive is expected. Anything else that is thrown is a bug and carries on up.
             try {
-                // "wt" empties a file that is being replaced, so nothing of the old one is left behind
-                val stream = context.contentResolver.openOutputStream(destination.uri.toUri(), "wt")
-                    ?: return@withContext Outcome.Failure(DomainError.FileWriteFailed)
-
-                stream.use {
-                    it.write(UTF8_BOM)
-                    it.write(text.toByteArray(Charsets.UTF_8))
-                }
+                documentFiles.write(destination, UTF8_BOM + text.toByteArray(Charsets.UTF_8))
                 Outcome.Success(Unit)
             } catch (e: IOException) {
                 Outcome.Failure(DomainError.FileWriteFailed)

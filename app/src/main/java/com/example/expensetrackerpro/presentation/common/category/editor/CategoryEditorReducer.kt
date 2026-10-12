@@ -88,7 +88,10 @@ class CategoryEditorReducer @Inject constructor(
         DomainError.NotFound,
         DomainError.CategoryInUse,
         is DomainError.StorageFailure,
-        DomainError.FileWriteFailed -> null
+        DomainError.FileWriteFailed,
+        DomainError.FileReadFailed,
+        DomainError.BackupInvalid,
+        DomainError.BackupTooNew -> null
     }
 
     private companion object {

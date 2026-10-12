@@ -19,6 +19,15 @@ sealed interface DomainError {
 
     /** A file could not be written where the user chose, e.g. the drive is full or was removed. */
     data object FileWriteFailed : DomainError
+
+    /** A file the user chose could not be read, e.g. it was moved or its drive removed. */
+    data object FileReadFailed : DomainError
+
+    /** The file is not a backup of this app, or what it holds does not add up. */
+    data object BackupInvalid : DomainError
+
+    /** The backup was written by a newer version of the app, in a format this one can't read. */
+    data object BackupTooNew : DomainError
 }
 
 enum class InvalidInputReason {

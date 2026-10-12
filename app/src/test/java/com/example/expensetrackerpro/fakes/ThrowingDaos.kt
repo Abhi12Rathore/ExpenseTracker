@@ -63,9 +63,19 @@ class ThrowingCategoryDao(private val error: Exception) : CategoryDao() {
 
 class ThrowingAppDataDao(private val error: Exception) : AppDataDao() {
 
+    override suspend fun getAllCategories(): List<CategoryEntity> = emptyList()
+
+    override suspend fun getAllTransactions(): List<TransactionEntity> = emptyList()
+
+    override suspend fun insertCategories(categories: List<CategoryEntity>) = throw error
+
+    override suspend fun insertTransactions(transactions: List<TransactionEntity>) = throw error
+
     override suspend fun deleteAllTransactions() = throw error
 
     override suspend fun deleteCustomCategories() = throw error
+
+    override suspend fun deleteAllCategories() = throw error
 }
 
 class ThrowingSampleDataDao(private val error: Exception) : SampleDataDao() {

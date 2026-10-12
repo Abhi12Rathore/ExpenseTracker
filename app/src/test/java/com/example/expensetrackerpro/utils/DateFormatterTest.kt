@@ -129,6 +129,37 @@ class DateFormatterTest {
     }
 
     @Test
+    fun formatTime_isTwelveHourClockWithoutALeadingZero() {
+        Locale.setDefault(Locale.forLanguageTag("en-IN"))
+
+        assertEquals("4:20 pm", DateFormatter.formatTime(millis(2026, Calendar.OCTOBER, 11, hour = 16) + 20 * 60_000))
+        assertEquals("9:00 am", DateFormatter.formatTime(millis(2026, Calendar.OCTOBER, 11, hour = 9)))
+        assertEquals("12:00 am", DateFormatter.formatTime(millis(2026, Calendar.OCTOBER, 11, hour = 0)))
+    }
+
+    @Test
+    fun formatDateTime_isDayMonthYearThenTheTime() {
+        Locale.setDefault(Locale.forLanguageTag("en-IN"))
+
+        assertEquals(
+            "11 Oct 2026, 4:20 pm",
+            DateFormatter.formatDateTime(millis(2026, Calendar.OCTOBER, 11, hour = 16) + 20 * 60_000)
+        )
+    }
+
+    @Test
+    fun formatMonthRange_repeatsOnlyWhatDiffers() {
+        val jan = millis(2026, Calendar.JANUARY, 1)
+        val oct = millis(2026, Calendar.OCTOBER, 11)
+
+        assertEquals("Jan – Oct 2026", DateFormatter.formatMonthRange(jan, oct))
+        assertEquals("Oct 2026", DateFormatter.formatMonthRange(millis(2026, Calendar.OCTOBER, 1), oct))
+        assertEquals("Oct 2026", DateFormatter.formatMonthRange(oct, oct))
+        assertEquals("Nov 2025 – Oct 2026", DateFormatter.formatMonthRange(millis(2025, Calendar.NOVEMBER, 30), oct))
+        assertEquals("Oct 2025 – Oct 2026", DateFormatter.formatMonthRange(millis(2025, Calendar.OCTOBER, 11), oct))
+    }
+
+    @Test
     fun formatIsoDate_isYearMonthDay_zeroPadded() {
         assertEquals("2026-10-08", DateFormatter.formatIsoDate(millis(2026, Calendar.OCTOBER, 8)))
         assertEquals("2027-01-03", DateFormatter.formatIsoDate(millis(2027, Calendar.JANUARY, 3)))

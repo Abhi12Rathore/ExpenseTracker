@@ -3,9 +3,10 @@ package com.example.expensetrackerpro.data.export
 import android.app.Application
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
+import com.example.expensetrackerpro.data.files.DocumentFiles
 import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.Outcome
-import com.example.expensetrackerpro.domain.models.ExportDestination
+import com.example.expensetrackerpro.domain.models.DocumentUri
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -25,9 +26,9 @@ import java.io.OutputStream
 class FileExportRepositoryImplTest {
 
     private val context = ApplicationProvider.getApplicationContext<Application>()
-    private val repository = FileExportRepositoryImpl(context)
+    private val repository = FileExportRepositoryImpl(DocumentFiles(context))
 
-    private val destination = ExportDestination("content://com.example.documents/document/expenses.csv")
+    private val destination = DocumentUri("content://com.example.documents/document/expenses.csv")
 
     /** Makes the document at [destination] write to [stream]. */
     private fun documentWritesTo(stream: OutputStream) {
