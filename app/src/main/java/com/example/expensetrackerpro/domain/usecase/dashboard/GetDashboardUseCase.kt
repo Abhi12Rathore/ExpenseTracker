@@ -12,12 +12,10 @@ import com.example.expensetrackerpro.domain.models.SpendingChart
 import com.example.expensetrackerpro.domain.models.SpendingPace
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.UserProfile
-import com.example.expensetrackerpro.domain.time.TimeProvider
 import com.example.expensetrackerpro.domain.usecase.filter.GetDateRangeUseCase
 import com.example.expensetrackerpro.domain.usecase.profile.GetUserProfileUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import java.util.Calendar
 import javax.inject.Inject
 
 /** Gathers every section of the Home dashboard for one filter, so the screen has one source. */
@@ -33,15 +31,14 @@ class GetDashboardUseCase @Inject constructor(
     private val getNetSavingsByMonth: GetNetSavingsByMonthUseCase,
     private val getMonthlyTrend: GetMonthlyTrendUseCase,
     private val generateSmartInsights: GenerateSmartInsightsUseCase,
-    private val getDayPeriod: GetDayPeriodUseCase,
+    private val observeDayPeriod: ObserveDayPeriodUseCase,
+    private val observeToday: ObserveTodayUseCase,
     private val getUserProfile: GetUserProfileUseCase,
-    private val getDateRange: GetDateRangeUseCase,
-    private val timeProvider: TimeProvider
+    private val getDateRange: GetDateRangeUseCase
 ) {
 
     operator fun invoke(filter: DateFilter): Flow<Dashboard> {
         val range = getDateRange(filter)
-        val dayPeriod = getDayPeriod(timeProvider.now().get(Calendar.HOUR_OF_DAY))
 
         val totals = combine(
             getFinancialSummary(range),
@@ -60,10 +57,11 @@ class GetDashboardUseCase @Inject constructor(
             ::Charts
         )
 
-        return combine(totals, charts) { totals, charts ->
+        return combine(totals, charts, observeDayPeriod(), observeToday()) { totals, charts, dayPeriod, today ->
             Dashboard(
                 dayPeriod = dayPeriod,
-                userName = totals.profile.name,
+                profile = totals.profile,
+                todayMillis = today,
                 summary = totals.summary,
                 comparison = totals.comparison,
                 balanceTrend = totals.balanceTrend,

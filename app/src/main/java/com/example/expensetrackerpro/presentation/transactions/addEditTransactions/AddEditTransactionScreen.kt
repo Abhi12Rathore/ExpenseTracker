@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation.transactions.addEditTransactions
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import DeleteConfirmationDialog
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,7 +23,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,7 +65,7 @@ fun AddEditTransactionScreen(
     viewModel: AddEditTransactionViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)

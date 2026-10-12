@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.fakes
 
 import com.example.expensetrackerpro.domain.time.TimeProvider
+import kotlinx.coroutines.test.TestCoroutineScheduler
 import java.util.Calendar
 import java.util.GregorianCalendar
 import java.util.Locale
@@ -31,5 +32,17 @@ class FakeTimeProvider(
     override fun now(): Calendar = GregorianCalendar(timeZone, Locale.US).also {
         it.firstDayOfWeek = firstDayOfWeek
         it.timeInMillis = nowMillis
+    }
+}
+
+/** A clock that starts at [startMillis] and runs with [scheduler]'s virtual time, so a delay moves it on. */
+class VirtualTimeProvider(
+    private val startMillis: Long,
+    private val scheduler: TestCoroutineScheduler,
+    private val timeZone: TimeZone = KOLKATA
+) : TimeProvider {
+
+    override fun now(): Calendar = GregorianCalendar(timeZone, Locale.US).also {
+        it.timeInMillis = startMillis + scheduler.currentTime
     }
 }
