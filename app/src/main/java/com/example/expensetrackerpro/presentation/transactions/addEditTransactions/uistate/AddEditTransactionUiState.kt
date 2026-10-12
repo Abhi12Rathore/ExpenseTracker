@@ -5,6 +5,7 @@ import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.DateChoice
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.Transaction
+import com.example.expensetrackerpro.domain.models.TransactionDate
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorState
 
@@ -33,8 +34,26 @@ data class AddEditTransactionUiState(
     // Categories matching the current transactionType
     val availableCategories: List<Category> = emptyList(),
     // Non-null while the new-category sheet is open
-    val categoryEditor: CategoryEditorState? = null
+    val categoryEditor: CategoryEditorState? = null,
+    // The user chose the date, rather than leaving it at today or having it filled in
+    val isDateEdited: Boolean = false,
+    // "Scan a bill" is offered: a new transaction, on a device that has the scanner
+    val isScanAvailable: Boolean = false,
+    // The photo of a bill is being read
+    val isReadingBill: Boolean = false,
+    // Non-null once a scanned bill has filled in the form, until that is cleared
+    val draftFill: DraftFill? = null
 ) {
     val selectedCategory: Category?
         get() = availableCategories.find { it.id == selectedCategoryId }
+
+    /** Whether [field] still holds the value a scanned bill gave it. */
+    fun isFromDraft(field: DraftField): Boolean = draftFill?.filledFields?.contains(field) == true
 }
+
+fun AddEditTransactionUiState.withDate(date: TransactionDate): AddEditTransactionUiState = copy(
+    dateMillis = date.millis,
+    dateChoice = date.choice,
+    pickerUtcMillis = date.pickerUtcMillis,
+    maxPickerUtcMillis = date.maxPickerUtcMillis
+)

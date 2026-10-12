@@ -10,12 +10,15 @@ import com.example.expensetrackerpro.domain.error.onSuccess
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.DateChoice
 import com.example.expensetrackerpro.domain.models.DateSelection
+import com.example.expensetrackerpro.domain.models.DocumentUri
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesByTypeUseCase
 import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesUseCase
 import com.example.expensetrackerpro.domain.usecase.category.SaveCategoryUseCase
+import com.example.expensetrackerpro.domain.usecase.scan.IsBillScannerAvailableUseCase
+import com.example.expensetrackerpro.domain.usecase.scan.ScanBillUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.DeleteTransactionUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.FormatAmountInputUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionByIdUseCase
@@ -29,7 +32,10 @@ import com.example.expensetrackerpro.presentation.common.category.editor.Categor
 import com.example.expensetrackerpro.presentation.common.error.toMessageRes
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEffect
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEvent
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.draft.TransactionDraftReducer
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionUiState
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.DraftField
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.withDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -58,7 +64,10 @@ class AddEditTransactionViewModel @Inject constructor(
     private val getCategories: GetCategoriesUseCase,
     private val saveCategory: SaveCategoryUseCase,
     private val categoryEditorReducer: CategoryEditorReducer,
-    savedStateHandle: SavedStateHandle
+    private val scanBill: ScanBillUseCase,
+    isBillScannerAvailable: IsBillScannerAvailableUseCase,
+    private val draftReducer: TransactionDraftReducer,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     // Nav argument; -1 (the default) means "add" mode
@@ -72,8 +81,11 @@ class AddEditTransactionViewModel @Inject constructor(
     private var allCategories: List<Category> = emptyList()
 
     private val _uiState = MutableStateFlow(
-        AddEditTransactionUiState(isEditMode = transactionId != null)
-            .withDate(DateSelection.Today)
+        AddEditTransactionUiState(
+            isEditMode = transactionId != null,
+            // A bill fills in a new transaction, never one that is already stored
+            isScanAvailable = transactionId == null && isBillScannerAvailable()
+        ).withDate(resolveTransactionDate(DateSelection.Today))
     )
     val uiState: StateFlow<AddEditTransactionUiState> = _uiState.asStateFlow()
 
@@ -87,26 +99,32 @@ class AddEditTransactionViewModel @Inject constructor(
         if (transactionId != null) {
             loadExistingTransaction(transactionId)
         }
+        // The process was killed while the scanner was open or the bill was being read
+        savedStateHandle.get<String>(KEY_BILL_IMAGE)?.let { readBill(DocumentUri(it)) }
     }
 
     fun onEvent(event: AddEditTransactionEvent) {
         when (event) {
             is AddEditTransactionEvent.TypeChanged -> onTypeChange(event.type)
-            is AddEditTransactionEvent.AmountChanged ->
-                updateForm { it.copy(amount = sanitizeAmountInput(it.amount, event.amount)) }
-            is AddEditTransactionEvent.TitleChanged ->
-                updateForm { it.copy(title = event.title, isTitleErrorVisible = event.title.isBlank()) }
+            is AddEditTransactionEvent.AmountChanged -> updateForm {
+                val amount = sanitizeAmountInput(it.amount, event.amount)
+                // An edit that was turned down, such as a second decimal point, changed nothing
+                if (amount == it.amount) it else it.copy(amount = amount).edited(DraftField.AMOUNT)
+            }
+            is AddEditTransactionEvent.TitleChanged -> updateForm {
+                it.copy(title = event.title, isTitleErrorVisible = event.title.isBlank())
+                    .edited(DraftField.TITLE)
+            }
             is AddEditTransactionEvent.NoteChanged ->
                 // Longer text, such as a paste, is cut at the limit
-                updateForm { it.copy(note = event.note.take(NOTE_MAX_LENGTH)) }
+                updateForm { it.copy(note = event.note.take(NOTE_MAX_LENGTH)).edited(DraftField.NOTE) }
             AddEditTransactionEvent.NoteExpanded -> updateForm { it.copy(isNoteExpanded = true) }
             AddEditTransactionEvent.NoteRemoved ->
-                updateForm { it.copy(note = "", isNoteExpanded = false) }
+                updateForm { it.copy(note = "", isNoteExpanded = false).edited(DraftField.NOTE) }
             is AddEditTransactionEvent.CategorySelected ->
-                updateForm { it.copy(selectedCategoryId = event.categoryId) }
+                updateForm { it.copy(selectedCategoryId = event.categoryId).edited(DraftField.CATEGORY) }
             is AddEditTransactionEvent.DateChoiceSelected -> onDateChoice(event.choice)
-            is AddEditTransactionEvent.DatePicked ->
-                updateForm { it.withDate(DateSelection.Picked(event.utcDayMillis)) }
+            is AddEditTransactionEvent.DatePicked -> setDate(DateSelection.Picked(event.utcDayMillis))
             AddEditTransactionEvent.CategorySheetOpened -> updateForm {
                 it.copy(
                     categoryEditor = categoryEditorReducer.open(it.transactionType, existing = allCategories)
@@ -119,6 +137,11 @@ class AddEditTransactionViewModel @Inject constructor(
             AddEditTransactionEvent.DeleteDismissed ->
                 updateForm { it.copy(transactionToDelete = null) }
             AddEditTransactionEvent.DeleteConfirmed -> delete()
+            is AddEditTransactionEvent.BillScanned -> readBill(DocumentUri(event.uri))
+            AddEditTransactionEvent.BillScannerFailed -> updateForm { it.copy(isScanAvailable = false) }
+            is AddEditTransactionEvent.BillAmountSelected ->
+                updateForm { draftReducer.selectAmount(it, event.amount) }
+            AddEditTransactionEvent.BillFillCleared -> updateForm(draftReducer::clear)
         }
     }
 
@@ -156,19 +179,19 @@ class AddEditTransactionViewModel @Inject constructor(
                     isNoteExpanded = transaction.note.isNotEmpty(),
                     transactionType = transaction.transactionType,
                     selectedCategoryId = transaction.categoryId
-                ).withDate(DateSelection.Stored(transaction.dateMillis))
+                ).withDate(resolveTransactionDate(DateSelection.Stored(transaction.dateMillis)))
             }
         }
     }
 
     private fun onTypeChange(newType: TransactionType) {
         updateForm {
-            it.copy(
-                transactionType = newType,
-                // An expense category can't stay on an income, and the other way round
-                selectedCategoryId = it.selectedCategoryId
-                    .takeIf { _ -> it.selectedCategory?.type == newType }
-            )
+            // An expense category can't stay on an income, and the other way round
+            val categoryId = it.selectedCategoryId.takeIf { _ -> it.selectedCategory?.type == newType }
+            val changed = it.copy(transactionType = newType, selectedCategoryId = categoryId)
+
+            // A category that had to go is no longer what the bill suggested
+            if (categoryId == it.selectedCategoryId) changed else changed.edited(DraftField.CATEGORY)
         }
     }
 
@@ -179,8 +202,44 @@ class AddEditTransactionViewModel @Inject constructor(
             // Any other date comes from the picker, as DatePicked
             DateChoice.OTHER -> return
         }
-        updateForm { it.withDate(selection) }
+        setDate(selection)
     }
+
+    private fun setDate(selection: DateSelection) {
+        updateForm {
+            it.withDate(resolveTransactionDate(selection))
+                .copy(isDateEdited = true)
+                .edited(DraftField.DATE)
+        }
+    }
+
+    /**
+     * Reads the photo and fills the form from it. The photo's address is kept in the saved state
+     * until it has been read, so a scan the process did not survive is picked up again.
+     */
+    private fun readBill(image: DocumentUri) {
+        if (transactionId != null || _uiState.value.isReadingBill) return
+
+        savedStateHandle[KEY_BILL_IMAGE] = image.uri
+        updateForm { it.copy(isReadingBill = true) }
+        viewModelScope.launch {
+            val result = scanBill(image)
+            savedStateHandle.remove<String>(KEY_BILL_IMAGE)
+
+            when (result) {
+                is Outcome.Success ->
+                    updateForm { draftReducer.apply(it.copy(isReadingBill = false), result.value) }
+                is Outcome.Failure -> {
+                    // The form stays exactly as it was
+                    updateForm { it.copy(isReadingBill = false) }
+                    _effects.send(AddEditTransactionEffect.BillUnreadable(result.error.toMessageRes()))
+                }
+            }
+        }
+    }
+
+    private fun AddEditTransactionUiState.edited(field: DraftField): AddEditTransactionUiState =
+        draftReducer.fieldEdited(this, field)
 
     private fun onCategoryEditorEvent(event: CategoryEditorEvent) {
         when (event) {
@@ -208,7 +267,9 @@ class AddEditTransactionViewModel @Inject constructor(
                         } else {
                             it.selectedCategoryId
                         }
-                    )
+                    ).let { form ->
+                        if (form.selectedCategoryId == it.selectedCategoryId) form else form.edited(DraftField.CATEGORY)
+                    }
                 }
                 is Outcome.Failure -> when (result.error) {
                     DomainError.NotFound -> updateForm { it.copy(categoryEditor = null) }
@@ -290,18 +351,8 @@ class AddEditTransactionViewModel @Inject constructor(
         )
     }
 
-    private fun AddEditTransactionUiState.withDate(selection: DateSelection): AddEditTransactionUiState {
-        val date = resolveTransactionDate(selection)
-
-        return copy(
-            dateMillis = date.millis,
-            dateChoice = date.choice,
-            pickerUtcMillis = date.pickerUtcMillis,
-            maxPickerUtcMillis = date.maxPickerUtcMillis
-        )
-    }
-
     private companion object {
         const val NOTE_MAX_LENGTH = ValidateTransactionDraftUseCase.NOTE_MAX_LENGTH
+        const val KEY_BILL_IMAGE = "bill_image_uri"
     }
 }

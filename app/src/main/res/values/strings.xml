@@ -227,6 +227,17 @@
     <string name="transaction_save_amount">Save %1$s</string>
     <string name="transaction_update">Update</string>
     <string name="transaction_update_amount">Update %1$s</string>
+    <string name="bill_scan_title">Scan a bill</string>
+    <string name="bill_scan_subtitle">Fill amount, title and date from a photo</string>
+    <string name="bill_scan_reading">Reading bill…</string>
+    <string name="bill_scan_try_again">Try again</string>
+    <string name="bill_fill_banner_title">Filled from your bill</string>
+    <string name="bill_fill_banner_message">Check the details before saving</string>
+    <string name="bill_fill_clear">Clear</string>
+    <string name="bill_fill_tag">✨ From bill</string>
+    <string name="bill_fill_tag_suggested">✨ Suggested</string>
+    <string name="bill_fill_other_amounts">Other amounts on the bill</string>
+    <string name="bill_fill_total_missing">Couldn\'t find the total. Pick an amount below or type it in.</string>
     <string name="transaction_delete_dialog_title">Delete transaction?</string>
     <string name="transaction_delete_dialog_message">It will be removed from your transactions and totals.</string>
     <string name="transaction_delete_dialog_cancel">Cancel</string>
@@ -403,6 +414,7 @@
     <string name="error_file_read_failed">Couldn\'t read the file. Check that it is still available.</string>
     <string name="error_backup_invalid">This file isn\'t an Expense Tracker backup</string>
     <string name="error_backup_too_new">This backup is from a newer version of the app</string>
+    <string name="error_bill_unreadable">Couldn\'t read this bill</string>
     <string name="error_file_write_failed">Couldn\'t save the file. Check that the location is still available and has space.</string>
 
     <!-- Export & backup -->

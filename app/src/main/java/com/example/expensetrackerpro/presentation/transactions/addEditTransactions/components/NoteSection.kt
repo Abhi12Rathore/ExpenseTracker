@@ -47,7 +47,8 @@ fun NoteSection(
     onNoteChange: (String) -> Unit,
     onRemove: () -> Unit,
     onFocusChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isFromBill: Boolean = false
 ) {
     // Purely visual: tapping the row opens the field with the keyboard up, while a note that
     // was already there is only shown
@@ -93,6 +94,8 @@ fun NoteSection(
             .fillMaxWidth()
             .bringIntoViewRequester(bringIntoViewRequester)
     ) {
+        if (isFromBill) FromBillTag()
+
         OutlinedTextField(
             value = note,
             onValueChange = onNoteChange,
@@ -107,7 +110,8 @@ fun NoteSection(
             minLines = 3,
             maxLines = 6,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-            shape = NoteShape
+            shape = NoteShape,
+            colors = billFieldColors(isFromBill)
         )
         Row(
             modifier = Modifier.fillMaxWidth(),

@@ -22,4 +22,5 @@ fun DomainError.toMessageRes(): Int = when (this) {
     DomainError.FileReadFailed -> R.string.error_file_read_failed
     DomainError.BackupInvalid -> R.string.error_backup_invalid
     DomainError.BackupTooNew -> R.string.error_backup_too_new
+    DomainError.BillUnreadable -> R.string.error_bill_unreadable
 }

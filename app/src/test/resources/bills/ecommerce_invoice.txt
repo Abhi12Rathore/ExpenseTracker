@@ -1,0 +1,11 @@
+Tax Invoice/Bill of Supply/Cash Memo
+[h=30] Amazon Seller Services
+Sold By: Appario Retail Private Ltd
+Order Number: 403-1234567-7654321
+Invoice Number: BLR5-184467
+Invoice Date: 2026-10-01
+boAt Rockerz 450 Headphones
+Unit Price ₹1,270.34 Qty 1
+Tax Rate 18% IGST ₹228.66
+Total Amount ₹1,499.00
+Amount in Words: One Thousand Four Hundred Ninety-nine only

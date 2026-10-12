@@ -1,0 +1,13 @@
+[h=44] CAFE COFFEE DAY
+MG Road, Bengaluru
+GSTIN 29AAACC1234F1Z5
+Bill No: 4521 Dt: 11/10/2026
+Cappuccino 2 380.00
+Sandwich 1 290.00
+Brownie 2 690.00
+Sub Total 1360.00
+CGST 2.5% 34.00
+SGST 2.5% 34.00
+Round off 0.00
+Grand Total ₹1,428.00
+Thank you! Visit again
