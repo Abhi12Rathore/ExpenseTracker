@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.utils
 
 import com.example.expensetrackerpro.fakes.FakeAppLocaleProvider
+import com.example.expensetrackerpro.fakes.FakeHourFormatProvider
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
 import com.example.expensetrackerpro.fakes.HINDI
 import com.example.expensetrackerpro.fakes.dateFormatter
@@ -250,7 +251,7 @@ class DateFormatterTest {
     @Test
     fun followsTheAppsLanguage_whenItChanges() {
         val localeProvider = FakeAppLocaleProvider(Locale.US)
-        val following = DateFormatter(localeProvider, FakeTimeProvider(nowMillis = 0L))
+        val following = DateFormatter(localeProvider, FakeTimeProvider(nowMillis = 0L), FakeHourFormatProvider())
         val day = millis(2026, Calendar.OCTOBER, 8)
 
         assertEquals("October 2026", following.formatMonthYear(day))
@@ -264,21 +265,38 @@ class DateFormatterTest {
     // --- Other languages
 
     @Test
-    fun theClock_isTheOneTheLanguageUses() {
+    fun theClock_isTheOneThePhoneIsSetTo_whateverTheLanguage() {
         val afternoon = millis(2026, Calendar.OCTOBER, 11, hour = 16) + 20 * 60_000
         val morning = millis(2026, Calendar.OCTOBER, 11, hour = 9)
 
-        // 24 hours where the language itself writes times that way
-        listOf("de", "fr", "es", "pt-BR").forEach { tag ->
-            val formatter = dateFormatter(Locale.forLanguageTag(tag))
+        listOf("en-IN", "hi", "de", "fr", "es", "pt-BR").forEach { tag ->
+            val locale = Locale.forLanguageTag(tag)
+            val twentyFour = dateFormatter(locale, hourFormatProvider = FakeHourFormatProvider(is24Hours = true))
+            val twelve = dateFormatter(locale, hourFormatProvider = FakeHourFormatProvider(is24Hours = false))
 
-            assertEquals(tag, "16:20", formatter.formatTime(afternoon))
-            assertEquals(tag, "09:00", formatter.formatTime(morning))
-            assertTrue(tag, formatter.formatDateTime(afternoon).endsWith(", 16:20"))
+            assertEquals(tag, "16:20", twentyFour.formatTime(afternoon))
+            assertEquals(tag, "09:00", twentyFour.formatTime(morning))
+            assertTrue(tag, twentyFour.formatDateTime(afternoon).endsWith(", 16:20"))
+
+            // The am/pm marker is the language's own, so only the digits are the same everywhere
+            assertTrue(tag, twelve.formatTime(afternoon).startsWith("4:20 "))
+            assertTrue(tag, twelve.formatTime(morning).startsWith("9:00 "))
+            assertTrue(tag, twelve.formatDateTime(afternoon).contains(", 4:20 "))
         }
-        // 12 hours, as before, in English and Hindi
-        assertTrue(dateFormatter(Locale.US).formatTime(afternoon).startsWith("4:20"))
-        assertTrue(hindiFormatter.formatTime(afternoon).startsWith("4:20"))
+    }
+
+    @Test
+    fun theClock_followsTheSetting_whenItChangesWhileTheAppIsOpen() {
+        val setting = FakeHourFormatProvider(is24Hours = false)
+        val formatter = dateFormatter(Locale.forLanguageTag("en-IN"), hourFormatProvider = setting)
+        val afternoon = millis(2026, Calendar.OCTOBER, 11, hour = 16) + 20 * 60_000
+
+        assertEquals("4:20 pm", formatter.formatTime(afternoon))
+
+        setting.is24Hours = true
+
+        assertEquals("16:20", formatter.formatTime(afternoon))
+        assertEquals("11 Oct 2026, 16:20", formatter.formatDateTime(afternoon))
     }
 
     @Test

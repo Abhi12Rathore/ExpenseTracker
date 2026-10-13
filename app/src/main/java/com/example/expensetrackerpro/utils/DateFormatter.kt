@@ -1,9 +1,9 @@
 package com.example.expensetrackerpro.utils
 
 import com.example.expensetrackerpro.domain.locale.AppLocaleProvider
+import com.example.expensetrackerpro.domain.time.HourFormatProvider
 import com.example.expensetrackerpro.domain.time.TimeProvider
 import java.text.BreakIterator
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -17,7 +17,8 @@ import javax.inject.Inject
  */
 class DateFormatter @Inject constructor(
     private val localeProvider: AppLocaleProvider,
-    private val timeProvider: TimeProvider
+    private val timeProvider: TimeProvider,
+    private val hourFormatProvider: HourFormatProvider
 ) {
 
     /** e.g. `08 Oct, 2026` */
@@ -72,7 +73,7 @@ class DateFormatter @Inject constructor(
     /** e.g. `Fri 9 Oct`, for the header of a day's transactions */
     fun formatDayHeader(millis: Long): String = format("EEE d MMM", millis)
 
-    /** The time of day on the clock the language uses: `4:20 pm` in English, `16:20` in German. */
+    /** The time of day on the clock the phone is set to: `4:20 pm`, or `16:20` on the 24-hour clock. */
     fun formatTime(millis: Long): String = format(timePattern(), millis)
 
     /** e.g. `11 Oct 2026, 4:20 pm` */
@@ -124,13 +125,8 @@ class DateFormatter @Inject constructor(
         return if (withYear) "$days ${formatYear(endMillis)}" else days
     }
 
-    // A language whose own short time has an am/pm marker reads a 12-hour clock; the others a 24-hour one
-    private fun timePattern(): String {
-        val localized = DateFormat.getTimeInstance(DateFormat.SHORT, localeProvider.current()) as? SimpleDateFormat
-        val usesTwelveHours = localized == null || 'a' in localized.toPattern()
-
-        return if (usesTwelveHours) "h:mm a" else "HH:mm"
-    }
+    // The user's own choice in the phone's settings, whatever language the app is shown in
+    private fun timePattern(): String = if (hourFormatProvider.uses24Hours()) "HH:mm" else "h:mm a"
 
     // In the phone's time zone, like every date in the app
     private fun calendarAt(millis: Long): Calendar = timeProvider.now().apply { timeInMillis = millis }
