@@ -1,0 +1,518 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    German. Everyday words, as banking and budgeting apps use them, rather than literal ones.
+    The reader is addressed as "du". German runs longest of all the languages: keep labels short.
+
+    Glossary (keep these the same everywhere):
+        transaction        Buchung              expense    Ausgabe        income    Einnahme
+        savings / saved    Ersparnis / gespart  balance    Saldo          amount    Betrag
+        savings (the % on Home)  Sparquote      category   Kategorie      note      Notiz
+        settings           Einstellungen        export     Export, exportieren
+        backup / restore   Sicherung / wiederherstellen
+        delete             löschen              save       speichern      cancel    abbrechen
+        undo               rückgängig           search     suchen         title     Titel
+        bill (scanned)     Beleg                app lock   App-Sperre     screen lock  Displaysperre
+        built-in / custom  Standard / eigene
+
+    Kept as they are: CSV, Excel, Google Sheets, Cashback, Shopping and the app's name.
+
+    Numbers use Western digits. Not here on purpose: strings marked translatable="false"
+    in values/strings.xml, which read the same in every language.
+-->
+<resources>
+
+    <!-- Dashboard header -->
+    <string name="greeting_morning">Guten Morgen 👋</string>
+    <string name="greeting_afternoon">Guten Tag 👋</string>
+    <string name="greeting_evening">Guten Abend 👋</string>
+    <string name="greeting_no_name">Willkommen</string>
+
+    <!-- Date filter -->
+    <string name="filter_week">Woche</string>
+    <string name="filter_month">Monat</string>
+    <string name="filter_year">Jahr</string>
+    <string name="filter_previous_period">Vorheriger Zeitraum</string>
+    <string name="filter_next_period">Nächster Zeitraum</string>
+    <string name="filter_custom_range">Eigenen Zeitraum wählen</string>
+    <string name="filter_custom_confirm">OK</string>
+    <string name="filter_custom_cancel">Abbrechen</string>
+    <string name="filter_custom">Eigener</string>
+    <string name="filter_all_time">Gesamt</string>
+    <string name="filter_choose_granularity">Länge des Zeitraums ändern</string>
+
+    <!-- Dashboard balance card -->
+    <string name="balance_label">Saldo · %1$s</string>
+    <string name="summary_income">Einnahmen</string>
+    <string name="summary_expense">Ausgaben</string>
+    <string name="summary_savings">Sparquote</string>
+
+    <string name="comparison_more_saved">▲ %1$s mehr gespart als %2$s</string>
+    <string name="comparison_less_saved">▼ %1$s weniger gespart als %2$s</string>
+    <string name="comparison_same_saved">Genauso viel gespart wie %1$s</string>
+    <!-- What a period is compared with; each completes "… than" -->
+    <string name="compared_with_this_time_last_week">zur gleichen Zeit letzte Woche</string>
+    <string name="compared_with_this_time_last_month">zur gleichen Zeit letzten Monat</string>
+    <string name="compared_with_this_time_last_year">zur gleichen Zeit letztes Jahr</string>
+    <string name="compared_with_week_before">in der Vorwoche</string>
+
+    <!-- Dashboard spending bars -->
+    <string name="spending_daily_title">Ausgaben pro Tag</string>
+    <string name="spending_monthly_title">Ausgaben pro Monat</string>
+    <string name="spending_average_per_day">Ø %1$s/Tag</string>
+    <string name="spending_average_per_month">Ø %1$s/Monat</string>
+    <string name="spending_tooltip_open_transactions">Im Verlauf anzeigen</string>
+    <string name="spending_empty">In diesem Zeitraum hast du noch nichts ausgegeben. Neue Ausgaben erscheinen hier.</string>
+    <plurals name="transaction_count">
+        <item quantity="one">%1$d Buchung</item>
+        <item quantity="other">%1$d Buchungen</item>
+    </plurals>
+
+    <!-- Dashboard spending pace -->
+    <string name="pace_title">Ausgabentempo</string>
+    <string name="pace_less">%1$s weniger als %2$s</string>
+    <string name="pace_more">%1$s mehr als %2$s</string>
+    <string name="pace_same">Genauso viel ausgegeben wie %1$s</string>
+    <string name="pace_legend_current">Dieser Zeitraum</string>
+    <string name="pace_legend_previous">Vorheriger Zeitraum</string>
+    <string name="pace_empty">Weder in diesem noch im vorherigen Zeitraum gibt es Ausgaben. Dein Ausgabentempo erscheint hier.</string>
+
+    <!-- Dashboard net savings by month -->
+    <string name="net_savings_title">Ersparnis pro Monat</string>
+    <string name="net_savings_legend_saved">Gespart</string>
+    <string name="net_savings_legend_overspent">Zu viel ausgegeben</string>
+    <!-- Read out for each bar: month, then amount -->
+    <string name="net_savings_bar_saved">%1$s: %2$s gespart</string>
+    <string name="net_savings_bar_overspent">%1$s: %2$s zu viel ausgegeben</string>
+    <string name="net_savings_empty">Dieses Jahr gibt es noch keine Einnahmen oder Ausgaben. Die Ersparnis pro Monat erscheint hier.</string>
+
+    <!-- Dashboard category ranking -->
+    <string name="category_spending_title">Wohin dein Geld geflossen ist</string>
+    <plurals name="category_spending_subtitle">
+        <item quantity="one">%1$s in %2$d Kategorie</item>
+        <item quantity="other">%1$s in %2$d Kategorien</item>
+    </plurals>
+    <string name="category_spending_other">Weitere</string>
+    <string name="category_spending_expand_other">Weitere Kategorien anzeigen</string>
+    <string name="category_spending_collapse_other">Weitere Kategorien ausblenden</string>
+    <string name="category_spending_empty">Noch keine Ausgaben zum Aufschlüsseln. Füge eine hinzu und sieh, wohin dein Geld fließt.</string>
+
+    <!--
+        The built-in categories, one per BuiltInCategory key. A category shows this name until
+        the user renames it. Two of one type (expense: food_dining to other; income: the rest)
+        must never share a name in any language.
+    -->
+    <string name="category_default_food_dining">Essen &amp; Trinken</string>
+    <string name="category_default_groceries">Lebensmittel</string>
+    <string name="category_default_transport">Verkehr</string>
+    <string name="category_default_fuel">Tanken</string>
+    <string name="category_default_shopping">Shopping</string>
+    <string name="category_default_bills_utilities">Rechnungen &amp; Nebenkosten</string>
+    <string name="category_default_rent_home">Miete &amp; Wohnen</string>
+    <string name="category_default_health">Gesundheit</string>
+    <string name="category_default_education">Bildung</string>
+    <string name="category_default_entertainment">Unterhaltung</string>
+    <string name="category_default_travel">Reisen</string>
+    <string name="category_default_subscriptions">Abos</string>
+    <string name="category_default_personal_care">Körperpflege</string>
+    <string name="category_default_gifts_donations">Geschenke &amp; Spenden</string>
+    <string name="category_default_emi_loans">Raten &amp; Kredite</string>
+    <string name="category_default_other">Sonstiges</string>
+    <string name="category_default_salary">Gehalt</string>
+    <string name="category_default_freelance">Freiberuflich</string>
+    <string name="category_default_business">Gewerbe</string>
+    <string name="category_default_investments">Geldanlagen</string>
+    <string name="category_default_interest">Zinsen</string>
+    <string name="category_default_rental_income">Mieteinnahmen</string>
+    <string name="category_default_refunds_cashback">Erstattungen &amp; Cashback</string>
+    <string name="category_default_gifts_received">Erhaltene Geschenke</string>
+    <string name="category_default_other_income">Sonstige Einnahmen</string>
+
+    <!-- Category icons: picker sections, then what each icon is read out as -->
+    <string name="category_icon_group_food_and_shopping">Essen &amp; Einkaufen</string>
+    <string name="category_icon_group_home_and_bills">Wohnen &amp; Rechnungen</string>
+    <string name="category_icon_group_getting_around">Unterwegs</string>
+    <string name="category_icon_group_health_and_life">Gesundheit &amp; Leben</string>
+    <string name="category_icon_group_money">Geld</string>
+    <string name="category_icon_restaurant">Restaurant</string>
+    <string name="category_icon_shopping_basket">Einkaufskorb</string>
+    <string name="category_icon_shopping_bag">Einkaufstasche</string>
+    <string name="category_icon_storefront">Geschäft</string>
+    <string name="category_icon_local_cafe">Kaffee</string>
+    <string name="category_icon_fastfood">Fast Food</string>
+    <string name="category_icon_local_pizza">Pizza</string>
+    <string name="category_icon_local_bar">Getränke</string>
+    <string name="category_icon_checkroom">Kleidung</string>
+    <string name="category_icon_devices">Elektronik</string>
+    <string name="category_icon_receipt_long">Rechnung</string>
+    <string name="category_icon_home">Zuhause</string>
+    <string name="category_icon_subscriptions">Abos</string>
+    <string name="category_icon_apartment">Wohnung</string>
+    <string name="category_icon_bolt">Strom</string>
+    <string name="category_icon_water_drop">Wasser</string>
+    <string name="category_icon_wifi">Internet</string>
+    <string name="category_icon_phone_android">Handy</string>
+    <string name="category_icon_local_laundry_service">Wäsche</string>
+    <string name="category_icon_build">Reparaturen</string>
+    <string name="category_icon_directions_car">Auto</string>
+    <string name="category_icon_local_gas_station">Tanken</string>
+    <string name="category_icon_flight">Flug</string>
+    <string name="category_icon_directions_bus">Bus</string>
+    <string name="category_icon_train">Bahn</string>
+    <string name="category_icon_two_wheeler">Zweirad</string>
+    <string name="category_icon_local_taxi">Taxi</string>
+    <string name="category_icon_directions_bike">Fahrrad</string>
+    <string name="category_icon_hotel">Hotel</string>
+    <string name="category_icon_medical_services">Arzt</string>
+    <string name="category_icon_school">Bildung</string>
+    <string name="category_icon_movie">Kino</string>
+    <string name="category_icon_spa">Körperpflege</string>
+    <string name="category_icon_card_giftcard">Geschenk</string>
+    <string name="category_icon_fitness_center">Fitness</string>
+    <string name="category_icon_pets">Haustiere</string>
+    <string name="category_icon_child_care">Kinder</string>
+    <string name="category_icon_menu_book">Bücher</string>
+    <string name="category_icon_sports_esports">Spiele</string>
+    <string name="category_icon_volunteer_activism">Spende</string>
+    <string name="category_icon_category">Sonstiges</string>
+    <string name="category_icon_payments">Gehalt</string>
+    <string name="category_icon_laptop">Freiberuflich</string>
+    <string name="category_icon_trending_up">Geldanlagen</string>
+    <string name="category_icon_savings">Ersparnisse</string>
+    <string name="category_icon_currency_exchange">Erstattung</string>
+    <string name="category_icon_redeem">Erhaltenes Geschenk</string>
+    <string name="category_icon_account_balance_wallet">Geldbörse</string>
+    <string name="category_icon_credit_card">Karte</string>
+    <string name="category_icon_account_balance">Bank</string>
+    <string name="category_icon_work">Arbeit</string>
+    <string name="category_icon_shield">Versicherung</string>
+    <string name="category_icon_percent">Steuern</string>
+    <string name="category_icon_currency_rupee">Bargeld</string>
+    <string name="category_icon_receipt">Beleg</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_insights">Übersicht</string>
+    <string name="nav_transactions">Verlauf</string>
+    <string name="nav_add_transaction">Buchung hinzufügen</string>
+    <string name="nav_settings">Einstellungen</string>
+
+    <!-- Transactions -->
+    <string name="transactions_title">Verlauf</string>
+    <string name="transactions_search">Suchen</string>
+    <string name="transactions_search_close">Suche schließen</string>
+    <string name="transactions_search_placeholder">Titel, Notiz oder Kategorie suchen</string>
+    <string name="transactions_search_all_time">Im gesamten Verlauf suchen</string>
+    <string name="transactions_no_matches_title">Keine Treffer</string>
+    <string name="transactions_no_matches_description">In diesem Zeitraum passt nichts zu \"%1$s\"</string>
+    <string name="transactions_no_matches_all_time_description">Nichts passt zu \"%1$s\"</string>
+    <string name="transactions_clear_category_filter">Kategoriefilter entfernen</string>
+    <string name="transactions_transaction_deleted">Buchung gelöscht</string>
+    <string name="transactions_undo">Rückgängig</string>
+    <!-- Type chips: name, then how many it lists -->
+    <string name="transactions_filter_all">Alle</string>
+    <!-- Summary strip -->
+    <string name="transactions_summary_income">Einnahmen</string>
+    <string name="transactions_summary_expense">Ausgaben</string>
+    <string name="transactions_summary_net">Netto</string>
+    <string name="transactions_summary_total">Summe</string>
+    <string name="transactions_summary_entries">Einträge</string>
+    <string name="transactions_summary_biggest">Größte</string>
+    <string name="transactions_summary_results">Treffer</string>
+    <string name="transactions_summary_average">Durchschnitt</string>
+    <!-- Empty list; the argument is one of the periods below, e.g. "No income this month" -->
+    <string name="transactions_empty_all">Keine Buchungen %1$s</string>
+    <string name="transactions_empty_expense">Keine Ausgaben %1$s</string>
+    <string name="transactions_empty_income">Keine Einnahmen %1$s</string>
+    <string name="transactions_empty_this_week">diese Woche</string>
+    <string name="transactions_empty_this_month">diesen Monat</string>
+    <string name="transactions_empty_this_year">dieses Jahr</string>
+    <string name="transactions_empty_in_period">für %1$s</string>
+    <string name="transactions_empty_all_time">bisher</string>
+    <string name="transactions_empty_hint">Tippe auf +, um eine zu erfassen</string>
+
+    <!-- Add / edit transaction -->
+    <string name="transaction_add_expense">Ausgabe hinzufügen</string>
+    <string name="transaction_add_income">Einnahme hinzufügen</string>
+    <string name="transaction_edit_expense">Ausgabe bearbeiten</string>
+    <string name="transaction_edit_income">Einnahme bearbeiten</string>
+    <string name="transaction_close">Schließen</string>
+    <string name="transaction_back">Zurück</string>
+    <string name="transaction_delete">Löschen</string>
+    <string name="transaction_type_expense">Ausgabe</string>
+    <string name="transaction_type_income">Einnahme</string>
+    <string name="transaction_amount">Betrag</string>
+    <string name="transaction_summary_no_category">Keine Kategorie</string>
+    <string name="transaction_summary_edit_amount">Betrag bearbeiten</string>
+    <string name="transaction_category">Kategorie</string>
+    <string name="transaction_category_new">Neu</string>
+    <string name="transaction_title">Titel</string>
+    <string name="transaction_title_placeholder_expense">Wofür hast du Geld ausgegeben?</string>
+    <string name="transaction_title_placeholder_income">Woher kommt diese Einnahme?</string>
+    <string name="transaction_title_required">Gib einen Titel ein</string>
+    <string name="transaction_date">Datum</string>
+    <string name="transaction_date_today">Heute</string>
+    <string name="transaction_date_yesterday">Gestern</string>
+    <string name="transaction_date_pick">Datum wählen</string>
+    <string name="transaction_date_confirm">OK</string>
+    <string name="transaction_date_cancel">Abbrechen</string>
+    <string name="transaction_note_add">📝 Notiz hinzufügen · optional</string>
+    <string name="transaction_note">Notiz</string>
+    <string name="transaction_note_remove">Notiz entfernen</string>
+    <string name="transaction_save">Speichern</string>
+    <string name="transaction_save_amount">%1$s speichern</string>
+    <string name="transaction_update">Aktualisieren</string>
+    <string name="transaction_update_amount">%1$s aktualisieren</string>
+    <string name="bill_scan_title">Beleg scannen</string>
+    <string name="bill_scan_subtitle">Betrag, Titel und Datum aus einem Foto übernehmen</string>
+    <string name="bill_scan_reading">Beleg wird gelesen…</string>
+    <string name="bill_scan_try_again">Erneut versuchen</string>
+    <string name="bill_fill_banner_title">Aus deinem Beleg übernommen</string>
+    <string name="bill_fill_banner_message">Prüfe die Angaben vor dem Speichern</string>
+    <string name="bill_fill_clear">Leeren</string>
+    <string name="bill_fill_tag">✨ Vom Beleg</string>
+    <string name="bill_fill_tag_suggested">✨ Vorschlag</string>
+    <string name="bill_fill_other_amounts">Weitere Beträge auf dem Beleg</string>
+    <string name="bill_fill_total_missing">Die Summe wurde nicht gefunden. Wähle unten einen Betrag oder tippe ihn ein.</string>
+    <string name="transaction_delete_dialog_title">Buchung löschen?</string>
+    <string name="transaction_delete_dialog_message">Sie wird aus deinen Buchungen und Summen entfernt.</string>
+    <string name="transaction_delete_dialog_cancel">Abbrechen</string>
+    <string name="transaction_delete_dialog_confirm">Löschen</string>
+
+    <!-- Dashboard recent activity -->
+    <string name="recent_activity_title">Letzte Buchungen</string>
+    <string name="section_view_all">Alle anzeigen</string>
+    <string name="home_empty_title">Noch keine Buchungen</string>
+    <string name="home_empty_description">Füge deine erste Ausgabe hinzu, um Auswertungen zu sehen</string>
+
+    <!-- Dashboard smart insights -->
+    <string name="insights_title">Smarte Einblicke</string>
+    <string name="insight_saved_title">Gut gespart! 🎉</string>
+    <string name="insight_saved_description">Du hast in diesem Zeitraum %1$s gespart</string>
+    <string name="insight_highest_spending_title">Größter Posten</string>
+    <string name="insight_highest_spending_description">%1$s ist deine größte Ausgabenkategorie</string>
+    <string name="insight_spending_improved_title">Weniger ausgegeben 📉</string>
+    <string name="insight_spending_improved_description">Deine Ausgaben sind niedriger als im letzten Monat</string>
+    <string name="insight_spending_increased_title">Ausgaben im Blick behalten ⚠️</string>
+    <string name="insight_spending_increased_description">Deine Ausgaben sind gegenüber dem letzten Monat gestiegen</string>
+
+    <!-- Add/edit category sheet -->
+    <string name="category_editor_title_new">Neue Kategorie</string>
+    <string name="category_editor_title_edit">Kategorie bearbeiten</string>
+    <string name="category_editor_create">Kategorie erstellen</string>
+    <string name="category_editor_save">Änderungen speichern</string>
+    <string name="category_editor_delete">Kategorie löschen</string>
+    <string name="category_editor_name_label">Name</string>
+    <string name="category_editor_name_placeholder">Name der Kategorie</string>
+    <string name="category_editor_name_error_blank">Gib einen Namen ein</string>
+    <plurals name="category_editor_name_error_too_long">
+        <item quantity="one">Höchstens %1$d Zeichen</item>
+        <item quantity="other">Höchstens %1$d Zeichen</item>
+    </plurals>
+    <string name="category_editor_name_error_duplicate">Du hast schon eine Kategorie mit diesem Namen</string>
+    <string name="category_editor_type_expense">Ausgabenkategorie</string>
+    <string name="category_editor_type_income">Einnahmenkategorie</string>
+    <string name="category_editor_icon_label">Symbol</string>
+
+    <!-- Manage categories -->
+    <string name="manage_categories_title">Kategorien</string>
+    <string name="manage_categories_back">Zurück</string>
+    <string name="manage_categories_search">Kategorien suchen</string>
+    <string name="manage_categories_search_close">Suche schließen</string>
+    <string name="manage_categories_search_placeholder">Kategorien suchen</string>
+    <string name="manage_categories_new">Neue Kategorie</string>
+    <string name="manage_categories_section_most_used">Diesen Monat am häufigsten genutzt</string>
+    <string name="manage_categories_section_unused">Diesen Monat nicht genutzt</string>
+    <!-- Under a category the app came with, ahead of how much it is used -->
+    <string name="manage_categories_built_in">Standard · %1$s</string>
+    <!-- Beside a built-in category the user has renamed -->
+    <string name="manage_categories_badge_your_name">Dein Name</string>
+    <string name="manage_categories_badge_custom">Eigene</string>
+    <plurals name="manage_categories_usage_this_month">
+        <item quantity="one">%1$d Buchung · %2$s diesen Monat</item>
+        <item quantity="other">%1$d Buchungen · %2$s diesen Monat</item>
+    </plurals>
+    <plurals name="manage_categories_usage_total">
+        <item quantity="one">%1$d Buchung insgesamt</item>
+        <item quantity="other">%1$d Buchungen insgesamt</item>
+    </plurals>
+    <string name="manage_categories_usage_none">Noch keine Buchungen</string>
+    <string name="manage_categories_empty">Hier gibt es noch keine Kategorien</string>
+    <string name="manage_categories_no_results">Keine Kategorie passt zu \"%1$s\"</string>
+    <string name="category_delete_dialog_title">\"%1$s\" löschen?</string>
+    <string name="category_delete_dialog_message">Keine Buchung nutzt diese Kategorie. Das Löschen kann nicht rückgängig gemacht werden.</string>
+    <plurals name="category_delete_move_message">
+        <item quantity="one">%1$d Buchung nutzt diese Kategorie. Wähle, wohin sie verschoben werden soll:</item>
+        <item quantity="other">%1$d Buchungen nutzen diese Kategorie. Wähle, wohin sie verschoben werden sollen:</item>
+    </plurals>
+    <plurals name="category_delete_no_target">
+        <item quantity="one">%1$d Buchung nutzt diese Kategorie und es gibt keine andere Kategorie dieser Art, in die sie verschoben werden kann. Erstelle zuerst eine.</item>
+        <item quantity="other">%1$d Buchungen nutzen diese Kategorie und es gibt keine andere Kategorie dieser Art, in die sie verschoben werden können. Erstelle zuerst eine.</item>
+    </plurals>
+    <string name="category_delete_move_warning">Das Löschen der Kategorie kann nicht rückgängig gemacht werden.</string>
+    <string name="category_delete_confirm">Löschen</string>
+    <string name="category_delete_move_confirm">Verschieben und löschen</string>
+    <string name="category_delete_cancel">Abbrechen</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Einstellungen</string>
+    <string name="settings_dialog_cancel">Abbrechen</string>
+    <string name="settings_soon">Bald</string>
+    <string name="settings_footer">❤️ Mit Jetpack Compose gemacht</string>
+
+    <!-- Settings: profile -->
+    <string name="settings_profile_edit">Namen bearbeiten</string>
+    <string name="settings_profile_no_name">Füge deinen Namen hinzu</string>
+    <string name="settings_profile_dialog_title">Dein Name</string>
+    <string name="settings_profile_name_label">Name</string>
+    <string name="settings_profile_save">Speichern</string>
+
+    <!-- Settings: appearance -->
+    <string name="settings_section_appearance">Darstellung</string>
+    <string name="settings_theme">Design</string>
+    <string name="settings_theme_subtitle">Wie das Gerät oder selbst wählen</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Hell</string>
+    <string name="theme_dark">Dunkel</string>
+
+    <!-- Settings: language. The subtitle is English in every language, so the row can always be found -->
+    <string name="settings_language">Sprache</string>
+
+    <!-- Language screen -->
+    <string name="language_title">Sprache</string>
+    <string name="language_back">Zurück</string>
+    <string name="language_section_suggested">Vorschläge für dich</string>
+    <string name="language_section_all">Alle Sprachen</string>
+    <string name="language_system_default">Systemstandard</string>
+    <!-- %1$s is the phone's language, e.g. English (India) -->
+    <string name="language_system_default_subtitle">%1$s · wie auf deinem Handy</string>
+    <string name="language_preview_label">Vorschau</string>
+    <!-- On the button that applies a language; %1$s is the language's own name for itself -->
+    <string name="language_use">%1$s verwenden</string>
+    <string name="language_changed">Sprache geändert</string>
+    <string name="language_feedback_prompt">Eine Übersetzung stimmt nicht?</string>
+    <string name="language_feedback_action">Sag uns Bescheid</string>
+    <string name="language_feedback_no_email_app">Auf diesem Handy wurde keine E-Mail-App gefunden</string>
+
+    <!-- Settings: data -->
+    <string name="settings_section_data">Daten</string>
+    <string name="settings_categories">Kategorien</string>
+    <plurals name="settings_categories_count">
+        <item quantity="one">%1$d Kategorie</item>
+        <item quantity="other">%1$d Kategorien</item>
+    </plurals>
+    <plurals name="settings_categories_custom">
+        <item quantity="one">%1$d eigene</item>
+        <item quantity="other">%1$d eigene</item>
+    </plurals>
+    <string name="settings_export">Export &amp; Sicherung</string>
+    <string name="settings_export_subtitle">Eine Kopie deiner Daten speichern</string>
+
+    <!-- Settings: about -->
+    <string name="settings_section_about">Über die App</string>
+    <string name="settings_version">Version</string>
+
+    <!-- Settings: danger zone -->
+    <string name="settings_section_danger">Gefahrenbereich</string>
+    <string name="settings_delete_all">Alle Daten löschen</string>
+    <string name="settings_delete_all_subtitle">Alle Buchungen und eigenen Kategorien</string>
+    <string name="settings_delete_all_dialog_title">Alle Daten löschen?</string>
+    <string name="settings_delete_all_dialog_message">Alle Buchungen und alle Kategorien, die du hinzugefügt hast, werden gelöscht. Die Standardkategorien und deine Einstellungen bleiben erhalten. Das kann nicht rückgängig gemacht werden.</string>
+    <string name="settings_delete_all_dialog_field">%1$s eingeben</string>
+    <string name="settings_delete_all_confirm">Alles löschen</string>
+    <string name="settings_all_data_deleted">Alle Daten wurden gelöscht</string>
+
+    <!-- Settings: developer section, shown in debug builds only -->
+    <string name="settings_section_developer">Entwickler</string>
+    <string name="settings_load_sample_data">Beispieldaten laden</string>
+    <string name="settings_load_sample_data_subtitle">Sechs Monate erfundene Buchungen zum Testen</string>
+    <string name="settings_load_sample_data_dialog_title">Beispieldaten laden?</string>
+    <string name="settings_load_sample_data_dialog_message">Alle deine Buchungen werden durch Beispielbuchungen ersetzt. Das kann nicht rückgängig gemacht werden.</string>
+    <string name="settings_load_sample_data_confirm">Ersetzen</string>
+    <plurals name="settings_sample_data_loaded">
+        <item quantity="one">%1$d Beispielbuchung geladen</item>
+        <item quantity="other">%1$d Beispielbuchungen geladen</item>
+    </plurals>
+
+    <!-- Settings: app lock -->
+    <string name="settings_section_security">Sicherheit</string>
+    <string name="settings_app_lock">App-Sperre</string>
+    <string name="settings_app_lock_biometric">Mit Biometrie oder Displaysperre entsperren</string>
+    <string name="settings_app_lock_credential">Mit deiner Displaysperre entsperren</string>
+    <string name="settings_app_lock_unavailable">Richte in den Geräteeinstellungen eine Displaysperre ein, um die App-Sperre zu nutzen</string>
+    <string name="settings_lock_after">Sperren nach</string>
+    <string name="lock_timeout_dialog_title">Sperren nach</string>
+    <string name="lock_timeout_immediately">Sofort</string>
+    <string name="lock_timeout_30_seconds">30 Sekunden</string>
+    <string name="lock_timeout_1_minute">1 Minute</string>
+    <string name="lock_timeout_5_minutes">5 Minuten</string>
+    <string name="lock_timeout_dialog_cancel">Abbrechen</string>
+    <string name="app_lock_enable_prompt_title">App-Sperre einschalten</string>
+    <string name="app_lock_enable_prompt_subtitle">Bestätige, dass du es bist, um ExpenseTracker Pro zu sperren</string>
+    <string name="app_lock_enable_lockout">Zu viele Versuche. Versuch es gleich noch einmal.</string>
+    <string name="app_lock_enable_lockout_permanent">Die Biometrie ist gesperrt. Entsperre dein Gerät mit der Displaysperre und versuch es dann noch einmal.</string>
+    <string name="app_lock_enable_no_credential">Richte zuerst in den Geräteeinstellungen eine Displaysperre ein.</string>
+    <string name="app_lock_enable_error">Es konnte nicht bestätigt werden, dass du es bist. Die App-Sperre ist weiterhin aus.</string>
+
+    <!-- Lock screen -->
+    <string name="lock_title">ExpenseTracker Pro ist gesperrt</string>
+    <string name="lock_unlock">Entsperren</string>
+    <string name="lock_prompt_title">ExpenseTracker Pro entsperren</string>
+    <string name="lock_prompt_subtitle">Bestätige, dass du es bist, um fortzufahren</string>
+    <string name="lock_message_canceled">Die Anmeldung wurde abgebrochen. Tippe auf Entsperren, um es noch einmal zu versuchen.</string>
+    <string name="lock_message_lockout">Zu viele Versuche. Warte einen Moment und tippe dann auf Entsperren.</string>
+    <string name="lock_message_lockout_permanent">Die Biometrie wurde nach zu vielen Versuchen gesperrt. Tippe auf Entsperren und nutze deine Displaysperre.</string>
+    <string name="lock_message_error">Es konnte nicht geprüft werden, dass du es bist. Tippe auf Entsperren, um es noch einmal zu versuchen.</string>
+
+    <!-- What went wrong with a save or delete, shown in a snackbar -->
+    <string name="error_category_not_found">Diese Kategorie gibt es nicht mehr</string>
+    <string name="error_category_in_use">Diese Kategorie enthält noch Buchungen</string>
+    <string name="error_name_too_long">Dieser Name ist zu lang</string>
+    <string name="error_incompatible_reassign_target">Buchungen können nicht in diese Kategorie verschoben werden</string>
+    <string name="error_storage_failure">Die Änderungen konnten nicht gespeichert werden. Vielleicht ist der Speicher voll.</string>
+    <string name="error_file_read_failed">Die Datei konnte nicht gelesen werden. Prüfe, ob sie noch verfügbar ist.</string>
+    <string name="error_backup_invalid">Diese Datei ist keine Sicherung von Expense Tracker</string>
+    <string name="error_backup_too_new">Diese Sicherung stammt aus einer neueren Version der App</string>
+    <string name="error_bill_unreadable">Dieser Beleg konnte nicht gelesen werden</string>
+    <string name="error_file_write_failed">Die Datei konnte nicht gespeichert werden. Prüfe, ob der Speicherort noch verfügbar ist und Platz hat.</string>
+
+    <!-- Export & backup -->
+    <string name="export_backup_title">Export &amp; Sicherung</string>
+    <string name="export_backup_back">Zurück</string>
+    <string name="export_section_title">Export</string>
+    <string name="export_csv_title">Als CSV exportieren</string>
+    <string name="export_csv_subtitle">Öffne deine Buchungen in Excel oder Google Sheets</string>
+    <string name="export_period_label">Zeitraum</string>
+    <string name="export_button">CSV exportieren</string>
+    <!-- On the snackbar after a file was saved: sends the file to another app -->
+    <string name="export_share">Teilen</string>
+    <string name="backup_section_title">Sicherung</string>
+    <string name="backup_title">Sichern &amp; wiederherstellen</string>
+    <string name="backup_subtitle">Alles in einer Datei, auch deine eigenen Kategorien</string>
+    <!-- %1$s is a time of day, e.g. 4:20 pm -->
+    <string name="backup_last_today">Letzte Sicherung: heute, %1$s</string>
+    <string name="backup_last_yesterday">Letzte Sicherung: gestern, %1$s</string>
+    <!-- %1$s is a date and time, e.g. 11 Oct 2026, 4:20 pm -->
+    <string name="backup_last_on">Letzte Sicherung: %1$s</string>
+    <string name="backup_create_button">Sicherung erstellen</string>
+    <string name="backup_restore_button">Aus Datei wiederherstellen</string>
+    <string name="backup_saved">Sicherung gespeichert</string>
+    <string name="backup_privacy_note">Dateien werden dort gespeichert, wo du es festlegst. Die App lädt nichts hoch.</string>
+    <plurals name="restore_success">
+        <item quantity="one">%1$d Buchung wiederhergestellt</item>
+        <item quantity="other">%1$d Buchungen wiederhergestellt</item>
+    </plurals>
+    <string name="restore_sheet_title">Diese Sicherung wiederherstellen?</string>
+    <string name="restore_sheet_created">Erstellt</string>
+    <string name="restore_sheet_transactions">Buchungen</string>
+    <string name="restore_sheet_custom_categories">Eigene Kategorien</string>
+    <string name="restore_sheet_period">Zeitraum</string>
+    <plurals name="restore_sheet_warning">
+        <item quantity="one">Damit wird alles ersetzt, was gerade in der App ist (%1$d Buchung). Das kann nicht rückgängig gemacht werden. Erstelle vorher eine Sicherung, wenn du die aktuellen Daten noch brauchst.</item>
+        <item quantity="other">Damit wird alles ersetzt, was gerade in der App ist (%1$d Buchungen). Das kann nicht rückgängig gemacht werden. Erstelle vorher eine Sicherung, wenn du die aktuellen Daten noch brauchst.</item>
+    </plurals>
+    <string name="restore_sheet_confirm">Ersetzen und wiederherstellen</string>
+    <string name="restore_sheet_cancel">Abbrechen</string>
+    <plurals name="export_success">
+        <item quantity="one">%1$d Buchung exportiert</item>
+        <item quantity="other">%1$d Buchungen exportiert</item>
+    </plurals>
+</resources>

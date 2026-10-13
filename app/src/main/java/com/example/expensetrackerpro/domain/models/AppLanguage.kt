@@ -13,15 +13,29 @@ enum class AppLanguage(
     val badge: String
 ) {
     ENGLISH(tag = "en", nativeName = "English", englishName = "English", badge = "En"),
-    HINDI(tag = "hi", nativeName = "हिन्दी", englishName = "Hindi", badge = "हि");
+    HINDI(tag = "hi", nativeName = "हिन्दी", englishName = "Hindi", badge = "हि"),
+    SPANISH(tag = "es", nativeName = "Español", englishName = "Spanish", badge = "Es"),
+    FRENCH(tag = "fr", nativeName = "Français", englishName = "French", badge = "Fr"),
+    GERMAN(tag = "de", nativeName = "Deutsch", englishName = "German", badge = "De"),
+
+    // Written for Brazil, and the only Portuguese the app has, so it serves every Portuguese phone
+    PORTUGUESE_BRAZIL(tag = "pt-BR", nativeName = "Português (Brasil)", englishName = "Portuguese", badge = "Pt");
+
+    /** The language without its region, e.g. `pt`. No two entries share one. */
+    val languageCode: String get() = tag.languageCode()
 
     companion object {
-        /** The language of a tag such as `hi` or `hi-IN`, or null when the app is not translated into it. */
+        /**
+         * The language of a tag such as `hi`, `hi-IN` or `pt_PT`, or null when the app is not
+         * translated into it. Only the language counts, as it does when Android picks the texts.
+         */
         fun findByTag(tag: String): AppLanguage? {
-            val language = tag.substringBefore('-').substringBefore('_').lowercase()
+            val language = tag.languageCode()
 
-            return entries.find { it.tag == language }
+            return entries.find { it.languageCode == language }
         }
+
+        private fun String.languageCode(): String = substringBefore('-').substringBefore('_').lowercase()
     }
 }
 

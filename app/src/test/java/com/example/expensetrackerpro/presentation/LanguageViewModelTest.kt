@@ -107,7 +107,7 @@ class LanguageViewModelTest {
         assertEquals(LanguageChoice.SystemDefault, state.selected)
         assertEquals("English (India)", state.systemLanguageName)
         assertEquals(listOf(AppLanguage.HINDI), state.suggested)
-        assertEquals(listOf(AppLanguage.ENGLISH), state.others)
+        assertEquals(AppLanguage.entries - AppLanguage.HINDI, state.others)
         assertEquals("1.4", state.versionName)
         // Nothing to apply or preview until another language is picked
         assertFalse(state.isApplyVisible)

@@ -7,6 +7,7 @@ import com.example.expensetrackerpro.domain.models.BuiltInCategory
 import com.example.expensetrackerpro.domain.models.LanguageChange
 import com.example.expensetrackerpro.domain.models.LanguageChoice
 import com.example.expensetrackerpro.domain.repository.AppLanguageRepository
+import com.example.expensetrackerpro.domain.time.HourFormatProvider
 import com.example.expensetrackerpro.domain.repository.CategoryRepository
 import com.example.expensetrackerpro.domain.usecase.category.LocalizeDefaultCategoriesUseCase
 import com.example.expensetrackerpro.utils.DateFormatter
@@ -98,9 +99,22 @@ class FakeAppLanguageRepository(initial: LanguageChoice = LanguageChoice.SystemD
     }
 }
 
+/** The phone's clock setting, 12-hour until a test changes it. */
+class FakeHourFormatProvider(var is24Hours: Boolean = false) : HourFormatProvider {
+
+    override fun uses24Hours(): Boolean = is24Hours
+}
+
 /** A formatter for [locale] in [timeZone], whatever the machine running the test is set to. */
-fun dateFormatter(locale: Locale = Locale.US, timeZone: TimeZone = KOLKATA): DateFormatter =
-    DateFormatter(localeProvider = { locale }, timeProvider = FakeTimeProvider(nowMillis = 0L, timeZone = timeZone))
+fun dateFormatter(
+    locale: Locale = Locale.US,
+    timeZone: TimeZone = KOLKATA,
+    hourFormatProvider: HourFormatProvider = FakeHourFormatProvider()
+): DateFormatter = DateFormatter(
+    localeProvider = { locale },
+    timeProvider = FakeTimeProvider(nowMillis = 0L, timeZone = timeZone),
+    hourFormatProvider = hourFormatProvider
+)
 
 fun localizeDefaultCategories(
     repository: CategoryRepository,

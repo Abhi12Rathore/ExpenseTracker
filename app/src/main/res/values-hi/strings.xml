@@ -403,7 +403,7 @@
     <string name="settings_delete_all_subtitle">हर लेन-देन और कस्टम कैटेगरी</string>
     <string name="settings_delete_all_dialog_title">सारा डेटा हटाएं?</string>
     <string name="settings_delete_all_dialog_message">हर लेन-देन और आपकी जोड़ी हुई हर कैटेगरी हटा दी जाएगी। बिल्ट-इन कैटेगरी और आपकी सेटिंग्स बनी रहेंगी। इसे वापस नहीं लाया जा सकता।</string>
-    <string name="settings_delete_all_dialog_field">पक्का करने के लिए %1$s टाइप करें</string>
+    <string name="settings_delete_all_dialog_field">%1$s टाइप करें</string>
     <string name="settings_delete_all_confirm">सब कुछ हटाएं</string>
     <string name="settings_all_data_deleted">सारा डेटा हटा दिया गया</string>
 
