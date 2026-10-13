@@ -3,6 +3,7 @@ package com.example.expensetrackerpro.utils
 import com.example.expensetrackerpro.domain.locale.AppLocaleProvider
 import com.example.expensetrackerpro.domain.time.TimeProvider
 import java.text.BreakIterator
+import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -22,8 +23,15 @@ class DateFormatter @Inject constructor(
     /** e.g. `08 Oct, 2026` */
     fun formatDate(millis: Long): String = format("dd MMM, yyyy", millis)
 
-    /** e.g. `October 2026` */
-    fun formatMonthYear(millis: Long): String = format("MMMM yyyy", millis)
+    /**
+     * e.g. `October 2026`. Stands on its own as a title, so it starts with a capital even in the
+     * languages that write month names without one (`Octobre 2026`).
+     */
+    fun formatMonthYear(millis: Long): String {
+        val locale = localeProvider.current()
+
+        return format("MMMM yyyy", millis).replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+    }
 
     /** e.g. `2026` */
     fun formatYear(millis: Long): String = format("yyyy", millis)
@@ -43,7 +51,10 @@ class DateFormatter @Inject constructor(
         val letters = BreakIterator.getCharacterInstance(localeProvider.current()).apply { setText(month) }
         val end = letters.next()
 
-        return if (end == BreakIterator.DONE) month else month.substring(0, end)
+        val initial = if (end == BreakIterator.DONE) month else month.substring(0, end)
+
+        // Some languages write month names without a capital (`oct.`); an initial always has one
+        return initial.uppercase(localeProvider.current())
     }
 
     /** e.g. `Fri` */
@@ -61,11 +72,11 @@ class DateFormatter @Inject constructor(
     /** e.g. `Fri 9 Oct`, for the header of a day's transactions */
     fun formatDayHeader(millis: Long): String = format("EEE d MMM", millis)
 
-    /** The time of day on a 12-hour clock, e.g. `4:20 pm` */
-    fun formatTime(millis: Long): String = format("h:mm a", millis)
+    /** The time of day on the clock the language uses: `4:20 pm` in English, `16:20` in German. */
+    fun formatTime(millis: Long): String = format(timePattern(), millis)
 
     /** e.g. `11 Oct 2026, 4:20 pm` */
-    fun formatDateTime(millis: Long): String = format("d MMM yyyy, h:mm a", millis)
+    fun formatDateTime(millis: Long): String = format("d MMM yyyy, ${timePattern()}", millis)
 
     /**
      * The months two dates span, both inclusive, repeating only what differs: `Jan – Oct 2026`,
@@ -111,6 +122,14 @@ class DateFormatter @Inject constructor(
             else -> "${format("d MMM", startMillis)} – ${format("d MMM", endMillis)}"
         }
         return if (withYear) "$days ${formatYear(endMillis)}" else days
+    }
+
+    // A language whose own short time has an am/pm marker reads a 12-hour clock; the others a 24-hour one
+    private fun timePattern(): String {
+        val localized = DateFormat.getTimeInstance(DateFormat.SHORT, localeProvider.current()) as? SimpleDateFormat
+        val usesTwelveHours = localized == null || 'a' in localized.toPattern()
+
+        return if (usesTwelveHours) "h:mm a" else "HH:mm"
     }
 
     // In the phone's time zone, like every date in the app

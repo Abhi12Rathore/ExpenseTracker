@@ -44,13 +44,13 @@ class LanguageUseCasesTest {
     @Test
     fun followingThePhone_isItsFirstLanguageTheAppHas_regionIncluded() {
         assertEquals("en-IN", resolveAppLocale(LanguageChoice.SystemDefault, locales("en-IN", "hi-IN")).toLanguageTag())
-        // French is not translated, so Android shows the app in Hindi, and so are its dates
-        assertEquals("hi-IN", resolveAppLocale(LanguageChoice.SystemDefault, locales("fr-FR", "hi-IN")).toLanguageTag())
+        // Japanese is not translated, so Android shows the app in Hindi, and so are its dates
+        assertEquals("hi-IN", resolveAppLocale(LanguageChoice.SystemDefault, locales("ja-JP", "hi-IN")).toLanguageTag())
     }
 
     @Test
     fun followingAPhoneWithNoLanguageTheAppHas_isEnglish() {
-        assertEquals(Locale.ENGLISH, resolveAppLocale(LanguageChoice.SystemDefault, locales("fr-FR", "de-DE")))
+        assertEquals(Locale.ENGLISH, resolveAppLocale(LanguageChoice.SystemDefault, locales("ja-JP", "ko-KR")))
         assertEquals(Locale.ENGLISH, resolveAppLocale(LanguageChoice.SystemDefault, emptyList()))
     }
 
@@ -59,14 +59,52 @@ class LanguageUseCasesTest {
         assertEquals(AppLanguage.HINDI, AppLanguage.findByTag("hi"))
         assertEquals(AppLanguage.HINDI, AppLanguage.findByTag("hi-IN"))
         assertEquals(AppLanguage.ENGLISH, AppLanguage.findByTag("en_US"))
-        assertNull(AppLanguage.findByTag("fr"))
+        assertNull(AppLanguage.findByTag("ja"))
+        // Brazilian Portuguese is the app's only Portuguese, so it serves Portugal too
+        assertEquals(AppLanguage.PORTUGUESE_BRAZIL, AppLanguage.findByTag("pt-BR"))
+        assertEquals(AppLanguage.PORTUGUESE_BRAZIL, AppLanguage.findByTag("pt-PT"))
+        assertEquals(AppLanguage.PORTUGUESE_BRAZIL, AppLanguage.findByTag("pt"))
+    }
+
+    @Test
+    fun brazilianPortuguese_isAskedForByItsFullTag_andKeepsAPortuguesePhonesOwnRegion() {
+        val portuguese = LanguageChoice.Specific(AppLanguage.PORTUGUESE_BRAZIL)
+
+        assertEquals("pt-BR", resolveAppLocale(portuguese, locales("en-IN")).toLanguageTag())
+        assertEquals("pt-PT", resolveAppLocale(portuguese, locales("en-IN", "pt-PT")).toLanguageTag())
+        assertEquals("pt-PT", resolveAppLocale(LanguageChoice.SystemDefault, locales("pt-PT")).toLanguageTag())
+    }
+
+    @Test
+    fun aPhoneInAnyLanguageOfTheApp_isFollowedIntoIt() {
+        mapOf(
+            "es-MX" to AppLanguage.SPANISH,
+            "fr-CA" to AppLanguage.FRENCH,
+            "de-AT" to AppLanguage.GERMAN,
+            "pt-BR" to AppLanguage.PORTUGUESE_BRAZIL
+        ).forEach { (tag, language) ->
+            deviceLanguages.list = locales(tag, "en-US")
+
+            val options = getLanguageOptions()
+
+            assertEquals(language, options.systemLanguage)
+            assertEquals(listOf(AppLanguage.ENGLISH), options.suggested)
+            assertEquals(AppLanguage.entries - AppLanguage.ENGLISH, options.others)
+        }
+    }
+
+    @Test
+    fun noTwoLanguages_shareALanguageCodeOrABadge() {
+        assertEquals(AppLanguage.entries.size, AppLanguage.entries.map { it.languageCode }.toSet().size)
+        assertEquals(AppLanguage.entries.size, AppLanguage.entries.map { it.badge }.toSet().size)
+        assertEquals(AppLanguage.entries.size, AppLanguage.entries.map { it.nativeName }.toSet().size)
     }
 
     // --- What the Language screen offers
 
     @Test
     fun suggestions_areThePhonesOtherLanguagesTheAppHas_andTheRestComeAfter() {
-        deviceLanguages.list = locales("en-IN", "fr-FR", "hi-IN")
+        deviceLanguages.list = locales("en-IN", "ja-JP", "hi-IN")
 
         val options = getLanguageOptions()
 
@@ -75,7 +113,8 @@ class LanguageUseCasesTest {
         assertEquals(AppLanguage.ENGLISH, options.systemLanguage)
         assertEquals("English (India)", options.systemLanguageName)
         assertEquals(listOf(AppLanguage.HINDI), options.suggested)
-        assertEquals(listOf(AppLanguage.ENGLISH), options.others)
+        // Every language is listed once: under the suggestions or under the rest
+        assertEquals(AppLanguage.entries - AppLanguage.HINDI, options.others)
     }
 
     @Test
@@ -88,20 +127,20 @@ class LanguageUseCasesTest {
         assertEquals(english, options.current)
         assertEquals(AppLanguage.HINDI, options.systemLanguage)
         assertEquals(emptyList<AppLanguage>(), options.suggested)
-        assertEquals(listOf(AppLanguage.ENGLISH, AppLanguage.HINDI), options.others)
+        assertEquals(AppLanguage.entries, options.others)
     }
 
     @Test
     fun aLanguageThePhoneListsTwice_isSuggestedOnce() {
-        deviceLanguages.list = locales("fr-FR", "en-GB", "hi-IN", "en-IN", "hi")
+        deviceLanguages.list = locales("ja-JP", "en-GB", "hi-IN", "en-IN", "hi")
 
         val options = getLanguageOptions()
 
-        // French is first but not translated: the app follows the phone into English
+        // Japanese is first but not translated: the app follows the phone into English
         assertEquals(AppLanguage.ENGLISH, options.systemLanguage)
-        assertEquals("Français (France)", options.systemLanguageName)
+        assertEquals("日本語 (日本)", options.systemLanguageName)
         assertEquals(listOf(AppLanguage.HINDI), options.suggested)
-        assertEquals(listOf(AppLanguage.ENGLISH), options.others)
+        assertEquals(AppLanguage.entries - AppLanguage.HINDI, options.others)
     }
 
     // --- Applying and undoing

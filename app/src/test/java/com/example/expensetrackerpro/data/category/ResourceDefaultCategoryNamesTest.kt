@@ -7,11 +7,13 @@ import com.example.expensetrackerpro.data.local.expenseDatabase.AppDatabase
 import com.example.expensetrackerpro.data.local.expenseDatabase.ExpenseDatabaseCallback
 import com.example.expensetrackerpro.data.repository.CategoryRepositoryImpl
 import com.example.expensetrackerpro.domain.error.Outcome
+import com.example.expensetrackerpro.domain.models.AppLanguage
 import com.example.expensetrackerpro.domain.models.BuiltInCategory
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.usecase.category.LocalizeDefaultCategoriesUseCase
+import com.example.expensetrackerpro.domain.usecase.category.ValidateCategoryNameUseCase
 import com.example.expensetrackerpro.fakes.FakeAppLocaleProvider
 import com.example.expensetrackerpro.fakes.HINDI
 import kotlinx.coroutines.flow.first
@@ -41,16 +43,23 @@ class ResourceDefaultCategoryNamesTest {
         // Asking for one language does not change what the next call gets
         assertEquals("Fuel", names.nameOf(BuiltInCategory.FUEL, Locale.forLanguageTag("en-IN")))
         assertEquals("EMI और लोन", names.nameOf(BuiltInCategory.EMI_LOANS, HINDI))
+        assertEquals("Supermercado", names.nameOf(BuiltInCategory.GROCERIES, Locale.forLanguageTag("es-MX")))
+        assertEquals("Courses", names.nameOf(BuiltInCategory.GROCERIES, Locale.FRANCE))
+        assertEquals("Lebensmittel", names.nameOf(BuiltInCategory.GROCERIES, Locale.GERMANY))
+        assertEquals("Mercado", names.nameOf(BuiltInCategory.GROCERIES, Locale.forLanguageTag("pt-BR")))
+        // The app's Portuguese is Brazil's, and Portugal gets it too
+        assertEquals("Mercado", names.nameOf(BuiltInCategory.GROCERIES, Locale.forLanguageTag("pt-PT")))
     }
 
     @Test
     fun aLanguageTheAppLacks_getsTheEnglishName() {
-        assertEquals("Salary", names.nameOf(BuiltInCategory.SALARY, Locale.FRENCH))
+        assertEquals("Salary", names.nameOf(BuiltInCategory.SALARY, Locale.JAPANESE))
     }
 
     @Test
     fun everyBuiltIn_isTranslated_andNoTwoOfATypeShareAName() {
-        listOf(Locale.ENGLISH, HINDI).forEach { locale ->
+        val locales = AppLanguage.entries.map { Locale.forLanguageTag(it.tag) }
+        locales.forEach { locale ->
             TransactionType.entries.forEach { type ->
                 val ofType = BuiltInCategory.entries.filter { it.type == type }.map { names.nameOf(it, locale).lowercase() }
 
@@ -60,6 +69,11 @@ class ResourceDefaultCategoryNamesTest {
         BuiltInCategory.entries.forEach { builtIn ->
             // EMI is the only word the two languages share, and it is never the whole name
             assertNotEquals(builtIn.key, names.nameOf(builtIn, Locale.ENGLISH), names.nameOf(builtIn, HINDI))
+            // No name runs past what a category may be called, or it could not be saved again unchanged
+            locales.forEach { locale ->
+                val name = names.nameOf(builtIn, locale)
+                assertTrue("$locale ${builtIn.key}: $name", name.length <= ValidateCategoryNameUseCase.NAME_MAX_LENGTH)
+            }
         }
     }
 

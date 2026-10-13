@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -85,7 +86,7 @@ fun FinancialSummaryCard(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // The amounts take the room they need; a label longer than its amount is cut, not wrapped
+            // The two amounts share what the savings rate leaves; a label too long for its share is cut, not wrapped
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 SummaryItem(
                     stringResource(R.string.summary_income),
@@ -103,8 +104,8 @@ fun FinancialSummaryCard(
                     stringResource(R.string.summary_savings),
                     stringResource(R.string.percent_value, data.savingsRate.toInt()),
                     Icons.Rounded.AutoGraph,
-                    // The shortest value of the three
-                    Modifier.weight(0.6f)
+                    // As wide as its label, which in some languages is the longest of the three, up to a third of the row
+                    Modifier.widthIn(max = 120.dp)
                 )
             }
         }

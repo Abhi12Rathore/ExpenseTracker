@@ -260,4 +260,40 @@ class DateFormatterTest {
         assertEquals(hindiFormatter.formatMonthYear(day), following.formatMonthYear(day))
         assertTrue(devanagari.containsMatchIn(following.formatMonthYear(day)))
     }
+
+    // --- Other languages
+
+    @Test
+    fun theClock_isTheOneTheLanguageUses() {
+        val afternoon = millis(2026, Calendar.OCTOBER, 11, hour = 16) + 20 * 60_000
+        val morning = millis(2026, Calendar.OCTOBER, 11, hour = 9)
+
+        // 24 hours where the language itself writes times that way
+        listOf("de", "fr", "es", "pt-BR").forEach { tag ->
+            val formatter = dateFormatter(Locale.forLanguageTag(tag))
+
+            assertEquals(tag, "16:20", formatter.formatTime(afternoon))
+            assertEquals(tag, "09:00", formatter.formatTime(morning))
+            assertTrue(tag, formatter.formatDateTime(afternoon).endsWith(", 16:20"))
+        }
+        // 12 hours, as before, in English and Hindi
+        assertTrue(dateFormatter(Locale.US).formatTime(afternoon).startsWith("4:20"))
+        assertTrue(hindiFormatter.formatTime(afternoon).startsWith("4:20"))
+    }
+
+    @Test
+    fun aMonthInitial_isACapital_evenWhereMonthNamesAreNot() {
+        val october = millis(2026, Calendar.OCTOBER, 17)
+
+        assertEquals("O", dateFormatter(Locale.FRENCH).formatMonthInitial(october))
+        assertEquals("O", dateFormatter(Locale.forLanguageTag("es")).formatMonthInitial(october))
+        assertEquals("O", dateFormatter(Locale.forLanguageTag("pt-BR")).formatMonthInitial(october))
+        assertEquals("O", dateFormatter(Locale.GERMAN).formatMonthInitial(october))
+        // A month and year stand alone as a title, so they start with a capital as well
+        assertEquals("Octobre 2026", dateFormatter(Locale.FRENCH).formatMonthYear(october))
+        assertEquals("Outubro 2026", dateFormatter(Locale.forLanguageTag("pt-BR")).formatMonthYear(october))
+        // Inside a date the month keeps the language's own spelling
+        assertTrue(dateFormatter(Locale.FRENCH).formatDate(october).contains("oct"))
+        assertEquals("Oktober 2026", dateFormatter(Locale.GERMAN).formatMonthYear(october))
+    }
 }

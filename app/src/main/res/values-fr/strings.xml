@@ -1,0 +1,530 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    French. Everyday words, as banking and budgeting apps use them, rather than literal ones.
+    The reader is addressed as "vous". A non-breaking space (\u00A0) goes before ? ! and :
+
+    Glossary (keep these the same everywhere):
+        transaction        transaction          expense    dépense        income    revenu
+        savings / saved    épargne / épargné    balance    solde          amount    montant
+        category           catégorie            settings   Paramètres     note      note
+        backup / restore   sauvegarde / restaurer                         export    export, exporter
+        delete             supprimer            save       enregistrer    cancel    annuler
+        undo               annuler              search     rechercher     title     titre
+        bill (scanned)     ticket               app lock   verrouillage de l’appli
+        screen lock        verrouillage de l’écran   built-in / custom  par défaut / personnalisée
+
+    Kept as they are: CSV, Excel, Google Sheets, cashback, freelance and the app's name.
+
+    Numbers use Western digits. Not here on purpose: strings marked translatable="false"
+    in values/strings.xml, which read the same in every language.
+-->
+<resources>
+
+    <!-- Dashboard header -->
+    <string name="greeting_morning">Bonjour 👋</string>
+    <string name="greeting_afternoon">Bon après-midi 👋</string>
+    <string name="greeting_evening">Bonsoir 👋</string>
+    <string name="greeting_no_name">Bienvenue</string>
+
+    <!-- Date filter -->
+    <string name="filter_week">Semaine</string>
+    <string name="filter_month">Mois</string>
+    <string name="filter_year">Année</string>
+    <string name="filter_previous_period">Période précédente</string>
+    <string name="filter_next_period">Période suivante</string>
+    <string name="filter_custom_range">Choisir une plage de dates</string>
+    <string name="filter_custom_confirm">OK</string>
+    <string name="filter_custom_cancel">Annuler</string>
+    <string name="filter_custom">Personnalisé</string>
+    <string name="filter_all_time">Tout</string>
+    <string name="filter_choose_granularity">Changer la durée de la période</string>
+
+    <!-- Dashboard balance card -->
+    <string name="balance_label">Solde · %1$s</string>
+    <string name="summary_income">Revenus</string>
+    <string name="summary_expense">Dépenses</string>
+    <string name="summary_savings">Épargne</string>
+
+    <string name="comparison_more_saved">▲ %1$s d’épargne en plus par rapport à %2$s</string>
+    <string name="comparison_less_saved">▼ %1$s d’épargne en moins par rapport à %2$s</string>
+    <string name="comparison_same_saved">Autant d’épargne que %1$s</string>
+    <!-- What a period is compared with; each completes "… than" -->
+    <string name="compared_with_this_time_last_week">la même période de la semaine dernière</string>
+    <string name="compared_with_this_time_last_month">la même période du mois dernier</string>
+    <string name="compared_with_this_time_last_year">la même période de l’année dernière</string>
+    <string name="compared_with_week_before">la semaine précédente</string>
+
+    <!-- Dashboard spending bars -->
+    <string name="spending_daily_title">Dépenses par jour</string>
+    <string name="spending_monthly_title">Dépenses par mois</string>
+    <string name="spending_average_per_day">moy. %1$s/jour</string>
+    <string name="spending_average_per_month">moy. %1$s/mois</string>
+    <string name="spending_tooltip_open_transactions">Voir dans l’historique</string>
+    <string name="spending_empty">Aucune dépense sur cette période pour l’instant. Celles que vous ajouterez s’afficheront ici.</string>
+    <plurals name="transaction_count">
+        <item quantity="one">%1$d transaction</item>
+        <item quantity="many">%1$d transactions</item>
+        <item quantity="other">%1$d transactions</item>
+    </plurals>
+
+    <!-- Dashboard spending pace -->
+    <string name="pace_title">Rythme des dépenses</string>
+    <string name="pace_less">%1$s de moins par rapport à %2$s</string>
+    <string name="pace_more">%1$s de plus par rapport à %2$s</string>
+    <string name="pace_same">Autant de dépenses que %1$s</string>
+    <string name="pace_legend_current">Cette période</string>
+    <string name="pace_legend_previous">Période précédente</string>
+    <string name="pace_empty">Aucune dépense sur cette période ni sur la précédente. Votre rythme s’affichera ici.</string>
+
+    <!-- Dashboard net savings by month -->
+    <string name="net_savings_title">Épargne nette par mois</string>
+    <string name="net_savings_legend_saved">Épargné</string>
+    <string name="net_savings_legend_overspent">Dépassement</string>
+    <!-- Read out for each bar: month, then amount -->
+    <string name="net_savings_bar_saved">%1$s\u00A0: %2$s épargnés</string>
+    <string name="net_savings_bar_overspent">%1$s\u00A0: %2$s de dépassement</string>
+    <string name="net_savings_empty">Aucun revenu ni dépense cette année pour l’instant. L’épargne de chaque mois s’affichera ici.</string>
+
+    <!-- Dashboard category ranking -->
+    <string name="category_spending_title">Où est passé votre argent</string>
+    <plurals name="category_spending_subtitle">
+        <item quantity="one">%1$s dans %2$d catégorie</item>
+        <item quantity="many">%1$s dans %2$d catégories</item>
+        <item quantity="other">%1$s dans %2$d catégories</item>
+    </plurals>
+    <string name="category_spending_other">Autres</string>
+    <string name="category_spending_expand_other">Afficher les autres catégories</string>
+    <string name="category_spending_collapse_other">Masquer les autres catégories</string>
+    <string name="category_spending_empty">Aucune dépense à détailler pour l’instant. Ajoutez-en une pour voir où part votre argent.</string>
+
+    <!--
+        The built-in categories, one per BuiltInCategory key. A category shows this name until
+        the user renames it. Two of one type (expense: food_dining to other; income: the rest)
+        must never share a name in any language.
+    -->
+    <string name="category_default_food_dining">Repas et restaurants</string>
+    <string name="category_default_groceries">Courses</string>
+    <string name="category_default_transport">Transports</string>
+    <string name="category_default_fuel">Carburant</string>
+    <string name="category_default_shopping">Shopping</string>
+    <string name="category_default_bills_utilities">Factures et charges</string>
+    <string name="category_default_rent_home">Loyer et logement</string>
+    <string name="category_default_health">Santé</string>
+    <string name="category_default_education">Éducation</string>
+    <string name="category_default_entertainment">Loisirs</string>
+    <string name="category_default_travel">Voyages</string>
+    <string name="category_default_subscriptions">Abonnements</string>
+    <string name="category_default_personal_care">Soins personnels</string>
+    <string name="category_default_gifts_donations">Cadeaux et dons</string>
+    <string name="category_default_emi_loans">Mensualités et prêts</string>
+    <string name="category_default_other">Autres</string>
+    <string name="category_default_salary">Salaire</string>
+    <string name="category_default_freelance">Freelance</string>
+    <string name="category_default_business">Activité professionnelle</string>
+    <string name="category_default_investments">Placements</string>
+    <string name="category_default_interest">Intérêts</string>
+    <string name="category_default_rental_income">Revenus locatifs</string>
+    <string name="category_default_refunds_cashback">Remboursements et cashback</string>
+    <string name="category_default_gifts_received">Cadeaux reçus</string>
+    <string name="category_default_other_income">Autres revenus</string>
+
+    <!-- Category icons: picker sections, then what each icon is read out as -->
+    <string name="category_icon_group_food_and_shopping">Alimentation et achats</string>
+    <string name="category_icon_group_home_and_bills">Logement et factures</string>
+    <string name="category_icon_group_getting_around">Déplacements</string>
+    <string name="category_icon_group_health_and_life">Santé et vie quotidienne</string>
+    <string name="category_icon_group_money">Argent</string>
+    <string name="category_icon_restaurant">Restaurant</string>
+    <string name="category_icon_shopping_basket">Panier de courses</string>
+    <string name="category_icon_shopping_bag">Sac de shopping</string>
+    <string name="category_icon_storefront">Boutique</string>
+    <string name="category_icon_local_cafe">Café</string>
+    <string name="category_icon_fastfood">Restauration rapide</string>
+    <string name="category_icon_local_pizza">Pizza</string>
+    <string name="category_icon_local_bar">Boissons</string>
+    <string name="category_icon_checkroom">Vêtements</string>
+    <string name="category_icon_devices">Électronique</string>
+    <string name="category_icon_receipt_long">Facture</string>
+    <string name="category_icon_home">Maison</string>
+    <string name="category_icon_subscriptions">Abonnements</string>
+    <string name="category_icon_apartment">Appartement</string>
+    <string name="category_icon_bolt">Électricité</string>
+    <string name="category_icon_water_drop">Eau</string>
+    <string name="category_icon_wifi">Internet</string>
+    <string name="category_icon_phone_android">Téléphone</string>
+    <string name="category_icon_local_laundry_service">Laverie</string>
+    <string name="category_icon_build">Réparations</string>
+    <string name="category_icon_directions_car">Voiture</string>
+    <string name="category_icon_local_gas_station">Carburant</string>
+    <string name="category_icon_flight">Avion</string>
+    <string name="category_icon_directions_bus">Bus</string>
+    <string name="category_icon_train">Train</string>
+    <string name="category_icon_two_wheeler">Deux-roues</string>
+    <string name="category_icon_local_taxi">Taxi</string>
+    <string name="category_icon_directions_bike">Vélo</string>
+    <string name="category_icon_hotel">Hôtel</string>
+    <string name="category_icon_medical_services">Soins médicaux</string>
+    <string name="category_icon_school">Éducation</string>
+    <string name="category_icon_movie">Cinéma</string>
+    <string name="category_icon_spa">Soins personnels</string>
+    <string name="category_icon_card_giftcard">Cadeau</string>
+    <string name="category_icon_fitness_center">Sport</string>
+    <string name="category_icon_pets">Animaux</string>
+    <string name="category_icon_child_care">Enfants</string>
+    <string name="category_icon_menu_book">Livres</string>
+    <string name="category_icon_sports_esports">Jeux vidéo</string>
+    <string name="category_icon_volunteer_activism">Don</string>
+    <string name="category_icon_category">Autre</string>
+    <string name="category_icon_payments">Salaire</string>
+    <string name="category_icon_laptop">Freelance</string>
+    <string name="category_icon_trending_up">Placements</string>
+    <string name="category_icon_savings">Épargne</string>
+    <string name="category_icon_currency_exchange">Remboursement</string>
+    <string name="category_icon_redeem">Cadeau reçu</string>
+    <string name="category_icon_account_balance_wallet">Portefeuille</string>
+    <string name="category_icon_credit_card">Carte</string>
+    <string name="category_icon_account_balance">Banque</string>
+    <string name="category_icon_work">Travail</string>
+    <string name="category_icon_shield">Assurance</string>
+    <string name="category_icon_percent">Impôts</string>
+    <string name="category_icon_currency_rupee">Espèces</string>
+    <string name="category_icon_receipt">Reçu</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_insights">Aperçu</string>
+    <string name="nav_transactions">Historique</string>
+    <string name="nav_add_transaction">Ajouter une transaction</string>
+    <string name="nav_settings">Paramètres</string>
+
+    <!-- Transactions -->
+    <string name="transactions_title">Historique</string>
+    <string name="transactions_search">Rechercher</string>
+    <string name="transactions_search_close">Fermer la recherche</string>
+    <string name="transactions_search_placeholder">Rechercher un titre, une note ou une catégorie</string>
+    <string name="transactions_search_all_time">Rechercher dans tout l’historique</string>
+    <string name="transactions_no_matches_title">Aucun résultat</string>
+    <string name="transactions_no_matches_description">Rien ne correspond à \"%1$s\" sur cette période</string>
+    <string name="transactions_no_matches_all_time_description">Rien ne correspond à \"%1$s\"</string>
+    <string name="transactions_clear_category_filter">Retirer le filtre de catégorie</string>
+    <string name="transactions_transaction_deleted">Transaction supprimée</string>
+    <string name="transactions_undo">Annuler</string>
+    <!-- Type chips: name, then how many it lists -->
+    <string name="transactions_filter_all">Tout</string>
+    <!-- Summary strip -->
+    <string name="transactions_summary_income">Revenus</string>
+    <string name="transactions_summary_expense">Dépenses</string>
+    <string name="transactions_summary_net">Net</string>
+    <string name="transactions_summary_total">Total</string>
+    <string name="transactions_summary_entries">Opérations</string>
+    <string name="transactions_summary_biggest">La plus élevée</string>
+    <string name="transactions_summary_results">Résultats</string>
+    <string name="transactions_summary_average">Moyenne</string>
+    <!-- Empty list; the argument is one of the periods below, e.g. "No income this month" -->
+    <string name="transactions_empty_all">Aucune transaction %1$s</string>
+    <string name="transactions_empty_expense">Aucune dépense %1$s</string>
+    <string name="transactions_empty_income">Aucun revenu %1$s</string>
+    <string name="transactions_empty_this_week">cette semaine</string>
+    <string name="transactions_empty_this_month">ce mois-ci</string>
+    <string name="transactions_empty_this_year">cette année</string>
+    <string name="transactions_empty_in_period">pour %1$s</string>
+    <string name="transactions_empty_all_time">pour l’instant</string>
+    <string name="transactions_empty_hint">Touchez + pour en ajouter une</string>
+
+    <!-- Add / edit transaction -->
+    <string name="transaction_add_expense">Ajouter une dépense</string>
+    <string name="transaction_add_income">Ajouter un revenu</string>
+    <string name="transaction_edit_expense">Modifier la dépense</string>
+    <string name="transaction_edit_income">Modifier le revenu</string>
+    <string name="transaction_close">Fermer</string>
+    <string name="transaction_back">Retour</string>
+    <string name="transaction_delete">Supprimer</string>
+    <string name="transaction_type_expense">Dépense</string>
+    <string name="transaction_type_income">Revenu</string>
+    <string name="transaction_amount">Montant</string>
+    <string name="transaction_summary_no_category">Sans catégorie</string>
+    <string name="transaction_summary_edit_amount">Modifier le montant</string>
+    <string name="transaction_category">Catégorie</string>
+    <string name="transaction_category_new">Nouvelle</string>
+    <string name="transaction_title">Titre</string>
+    <string name="transaction_title_placeholder_expense">Pour quoi avez-vous dépensé\u00A0?</string>
+    <string name="transaction_title_placeholder_income">D’où vient ce revenu\u00A0?</string>
+    <string name="transaction_title_required">Saisissez un titre</string>
+    <string name="transaction_date">Date</string>
+    <string name="transaction_date_today">Aujourd’hui</string>
+    <string name="transaction_date_yesterday">Hier</string>
+    <string name="transaction_date_pick">Choisir une date</string>
+    <string name="transaction_date_confirm">OK</string>
+    <string name="transaction_date_cancel">Annuler</string>
+    <string name="transaction_note_add">📝 Ajouter une note · facultatif</string>
+    <string name="transaction_note">Note</string>
+    <string name="transaction_note_remove">Supprimer la note</string>
+    <string name="transaction_save">Enregistrer</string>
+    <string name="transaction_save_amount">Enregistrer %1$s</string>
+    <string name="transaction_update">Mettre à jour</string>
+    <string name="transaction_update_amount">Mettre à jour %1$s</string>
+    <string name="bill_scan_title">Scanner un ticket</string>
+    <string name="bill_scan_subtitle">Remplissez le montant, le titre et la date à partir d’une photo</string>
+    <string name="bill_scan_reading">Lecture du ticket…</string>
+    <string name="bill_scan_try_again">Réessayer</string>
+    <string name="bill_fill_banner_title">Rempli à partir de votre ticket</string>
+    <string name="bill_fill_banner_message">Vérifiez les informations avant d’enregistrer</string>
+    <string name="bill_fill_clear">Effacer</string>
+    <string name="bill_fill_tag">✨ Du ticket</string>
+    <string name="bill_fill_tag_suggested">✨ Suggestion</string>
+    <string name="bill_fill_other_amounts">Autres montants sur le ticket</string>
+    <string name="bill_fill_total_missing">Total introuvable. Choisissez un montant ci-dessous ou saisissez-le.</string>
+    <string name="transaction_delete_dialog_title">Supprimer la transaction\u00A0?</string>
+    <string name="transaction_delete_dialog_message">Elle sera retirée de vos transactions et de vos totaux.</string>
+    <string name="transaction_delete_dialog_cancel">Annuler</string>
+    <string name="transaction_delete_dialog_confirm">Supprimer</string>
+
+    <!-- Dashboard recent activity -->
+    <string name="recent_activity_title">Activité récente</string>
+    <string name="section_view_all">Tout voir</string>
+    <string name="home_empty_title">Aucune transaction pour l’instant</string>
+    <string name="home_empty_description">Ajoutez votre première dépense pour voir vos analyses</string>
+
+    <!-- Dashboard smart insights -->
+    <string name="insights_title">Analyses</string>
+    <string name="insight_saved_title">Belle épargne\u00A0! 🎉</string>
+    <string name="insight_saved_description">Vous avez épargné %1$s sur cette période</string>
+    <string name="insight_highest_spending_title">Plus grosse dépense</string>
+    <string name="insight_highest_spending_description">%1$s est votre plus gros poste de dépenses</string>
+    <string name="insight_spending_improved_title">Dépenses en baisse 📉</string>
+    <string name="insight_spending_improved_description">Vos dépenses sont plus faibles que le mois dernier</string>
+    <string name="insight_spending_increased_title">Attention aux dépenses ⚠️</string>
+    <string name="insight_spending_increased_description">Vos dépenses ont augmenté par rapport au mois dernier</string>
+
+    <!-- Add/edit category sheet -->
+    <string name="category_editor_title_new">Nouvelle catégorie</string>
+    <string name="category_editor_title_edit">Modifier la catégorie</string>
+    <string name="category_editor_create">Créer la catégorie</string>
+    <string name="category_editor_save">Enregistrer les modifications</string>
+    <string name="category_editor_delete">Supprimer la catégorie</string>
+    <string name="category_editor_name_label">Nom</string>
+    <string name="category_editor_name_placeholder">Nom de la catégorie</string>
+    <string name="category_editor_name_error_blank">Saisissez un nom</string>
+    <plurals name="category_editor_name_error_too_long">
+        <item quantity="one">Utilisez %1$d caractère au maximum</item>
+        <item quantity="many">Utilisez %1$d caractères au maximum</item>
+        <item quantity="other">Utilisez %1$d caractères au maximum</item>
+    </plurals>
+    <string name="category_editor_name_error_duplicate">Vous avez déjà une catégorie de ce nom</string>
+    <string name="category_editor_type_expense">Catégorie de dépense</string>
+    <string name="category_editor_type_income">Catégorie de revenu</string>
+    <string name="category_editor_icon_label">Icône</string>
+
+    <!-- Manage categories -->
+    <string name="manage_categories_title">Catégories</string>
+    <string name="manage_categories_back">Retour</string>
+    <string name="manage_categories_search">Rechercher des catégories</string>
+    <string name="manage_categories_search_close">Fermer la recherche</string>
+    <string name="manage_categories_search_placeholder">Rechercher des catégories</string>
+    <string name="manage_categories_new">Nouvelle catégorie</string>
+    <string name="manage_categories_section_most_used">Les plus utilisées ce mois-ci</string>
+    <string name="manage_categories_section_unused">Non utilisées ce mois-ci</string>
+    <!-- Under a category the app came with, ahead of how much it is used -->
+    <string name="manage_categories_built_in">Par défaut · %1$s</string>
+    <!-- Beside a built-in category the user has renamed -->
+    <string name="manage_categories_badge_your_name">Votre nom</string>
+    <string name="manage_categories_badge_custom">Personnalisée</string>
+    <plurals name="manage_categories_usage_this_month">
+        <item quantity="one">%1$d transaction · %2$s ce mois-ci</item>
+        <item quantity="many">%1$d transactions · %2$s ce mois-ci</item>
+        <item quantity="other">%1$d transactions · %2$s ce mois-ci</item>
+    </plurals>
+    <plurals name="manage_categories_usage_total">
+        <item quantity="one">%1$d transaction au total</item>
+        <item quantity="many">%1$d transactions au total</item>
+        <item quantity="other">%1$d transactions au total</item>
+    </plurals>
+    <string name="manage_categories_usage_none">Aucune transaction pour l’instant</string>
+    <string name="manage_categories_empty">Aucune catégorie ici pour l’instant</string>
+    <string name="manage_categories_no_results">Aucune catégorie ne correspond à \"%1$s\"</string>
+    <string name="category_delete_dialog_title">Supprimer \"%1$s\"\u00A0?</string>
+    <string name="category_delete_dialog_message">Aucune transaction n’utilise cette catégorie. Sa suppression est définitive.</string>
+    <plurals name="category_delete_move_message">
+        <item quantity="one">%1$d transaction utilise cette catégorie. Choisissez où la déplacer\u00A0:</item>
+        <item quantity="many">%1$d transactions utilisent cette catégorie. Choisissez où les déplacer\u00A0:</item>
+        <item quantity="other">%1$d transactions utilisent cette catégorie. Choisissez où les déplacer\u00A0:</item>
+    </plurals>
+    <plurals name="category_delete_no_target">
+        <item quantity="one">%1$d transaction utilise cette catégorie et il n’existe aucune autre catégorie du même type où la déplacer. Créez-en une d’abord.</item>
+        <item quantity="many">%1$d transactions utilisent cette catégorie et il n’existe aucune autre catégorie du même type où les déplacer. Créez-en une d’abord.</item>
+        <item quantity="other">%1$d transactions utilisent cette catégorie et il n’existe aucune autre catégorie du même type où les déplacer. Créez-en une d’abord.</item>
+    </plurals>
+    <string name="category_delete_move_warning">La suppression de la catégorie est définitive.</string>
+    <string name="category_delete_confirm">Supprimer</string>
+    <string name="category_delete_move_confirm">Déplacer et supprimer</string>
+    <string name="category_delete_cancel">Annuler</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Paramètres</string>
+    <string name="settings_dialog_cancel">Annuler</string>
+    <string name="settings_soon">Bientôt</string>
+    <string name="settings_footer">❤️ Créé avec Jetpack Compose</string>
+
+    <!-- Settings: profile -->
+    <string name="settings_profile_edit">Modifier le nom</string>
+    <string name="settings_profile_no_name">Ajoutez votre nom</string>
+    <string name="settings_profile_dialog_title">Votre nom</string>
+    <string name="settings_profile_name_label">Nom</string>
+    <string name="settings_profile_save">Enregistrer</string>
+
+    <!-- Settings: appearance -->
+    <string name="settings_section_appearance">Apparence</string>
+    <string name="settings_theme">Thème</string>
+    <string name="settings_theme_subtitle">Comme l’appareil, ou celui de votre choix</string>
+    <string name="theme_system">Système</string>
+    <string name="theme_light">Clair</string>
+    <string name="theme_dark">Sombre</string>
+
+    <!-- Settings: language. The subtitle is English in every language, so the row can always be found -->
+    <string name="settings_language">Langue</string>
+
+    <!-- Language screen -->
+    <string name="language_title">Langue</string>
+    <string name="language_back">Retour</string>
+    <string name="language_section_suggested">Suggestions pour vous</string>
+    <string name="language_section_all">Toutes les langues</string>
+    <string name="language_system_default">Langue du système</string>
+    <!-- %1$s is the phone's language, e.g. English (India) -->
+    <string name="language_system_default_subtitle">%1$s · celle de votre téléphone</string>
+    <string name="language_preview_label">Aperçu</string>
+    <!-- On the button that applies a language; %1$s is the language's own name for itself -->
+    <string name="language_use">Utiliser %1$s</string>
+    <string name="language_changed">Langue modifiée</string>
+    <string name="language_feedback_prompt">Une traduction vous semble incorrecte\u00A0?</string>
+    <string name="language_feedback_action">Dites-le-nous</string>
+    <string name="language_feedback_no_email_app">Aucune appli de messagerie sur ce téléphone</string>
+
+    <!-- Settings: data -->
+    <string name="settings_section_data">Données</string>
+    <string name="settings_categories">Catégories</string>
+    <plurals name="settings_categories_count">
+        <item quantity="one">%1$d catégorie</item>
+        <item quantity="many">%1$d catégories</item>
+        <item quantity="other">%1$d catégories</item>
+    </plurals>
+    <plurals name="settings_categories_custom">
+        <item quantity="one">%1$d personnalisée</item>
+        <item quantity="many">%1$d personnalisées</item>
+        <item quantity="other">%1$d personnalisées</item>
+    </plurals>
+    <string name="settings_export">Export et sauvegarde</string>
+    <string name="settings_export_subtitle">Enregistrez une copie de vos données</string>
+
+    <!-- Settings: about -->
+    <string name="settings_section_about">À propos</string>
+    <string name="settings_version">Version</string>
+
+    <!-- Settings: danger zone -->
+    <string name="settings_section_danger">Zone de danger</string>
+    <string name="settings_delete_all">Supprimer toutes les données</string>
+    <string name="settings_delete_all_subtitle">Toutes les transactions et catégories personnalisées</string>
+    <string name="settings_delete_all_dialog_title">Supprimer toutes les données\u00A0?</string>
+    <string name="settings_delete_all_dialog_message">Toutes les transactions et toutes les catégories que vous avez ajoutées seront supprimées. Les catégories par défaut et vos paramètres sont conservés. Cette action est définitive.</string>
+    <string name="settings_delete_all_dialog_field">Saisissez %1$s</string>
+    <string name="settings_delete_all_confirm">Tout supprimer</string>
+    <string name="settings_all_data_deleted">Toutes les données ont été supprimées</string>
+
+    <!-- Settings: developer section, shown in debug builds only -->
+    <string name="settings_section_developer">Développeur</string>
+    <string name="settings_load_sample_data">Charger des données d’exemple</string>
+    <string name="settings_load_sample_data_subtitle">Six mois de transactions fictives, pour les tests</string>
+    <string name="settings_load_sample_data_dialog_title">Charger des données d’exemple\u00A0?</string>
+    <string name="settings_load_sample_data_dialog_message">Toutes vos transactions seront remplacées par des exemples. Cette action est définitive.</string>
+    <string name="settings_load_sample_data_confirm">Remplacer</string>
+    <plurals name="settings_sample_data_loaded">
+        <item quantity="one">%1$d transaction d’exemple chargée</item>
+        <item quantity="many">%1$d transactions d’exemple chargées</item>
+        <item quantity="other">%1$d transactions d’exemple chargées</item>
+    </plurals>
+
+    <!-- Settings: app lock -->
+    <string name="settings_section_security">Sécurité</string>
+    <string name="settings_app_lock">Verrouillage de l’appli</string>
+    <string name="settings_app_lock_biometric">Déverrouillez par biométrie ou avec le verrouillage de l’écran</string>
+    <string name="settings_app_lock_credential">Déverrouillez avec le verrouillage de l’écran</string>
+    <string name="settings_app_lock_unavailable">Définissez un verrouillage de l’écran dans les paramètres de l’appareil pour utiliser le verrouillage de l’appli</string>
+    <string name="settings_lock_after">Verrouiller après</string>
+    <string name="lock_timeout_dialog_title">Verrouiller après</string>
+    <string name="lock_timeout_immediately">Immédiatement</string>
+    <string name="lock_timeout_30_seconds">30 secondes</string>
+    <string name="lock_timeout_1_minute">1 minute</string>
+    <string name="lock_timeout_5_minutes">5 minutes</string>
+    <string name="lock_timeout_dialog_cancel">Annuler</string>
+    <string name="app_lock_enable_prompt_title">Activer le verrouillage de l’appli</string>
+    <string name="app_lock_enable_prompt_subtitle">Confirmez votre identité pour verrouiller ExpenseTracker Pro</string>
+    <string name="app_lock_enable_lockout">Trop de tentatives. Réessayez dans un instant.</string>
+    <string name="app_lock_enable_lockout_permanent">La biométrie est bloquée. Déverrouillez l’appareil avec son verrouillage de l’écran, puis réessayez.</string>
+    <string name="app_lock_enable_no_credential">Définissez d’abord un verrouillage de l’écran dans les paramètres de l’appareil.</string>
+    <string name="app_lock_enable_error">Impossible de confirmer votre identité. Le verrouillage de l’appli reste désactivé.</string>
+
+    <!-- Lock screen -->
+    <string name="lock_title">ExpenseTracker Pro est verrouillée</string>
+    <string name="lock_unlock">Déverrouiller</string>
+    <string name="lock_prompt_title">Déverrouiller ExpenseTracker Pro</string>
+    <string name="lock_prompt_subtitle">Confirmez votre identité pour continuer</string>
+    <string name="lock_message_canceled">Authentification annulée. Touchez Déverrouiller pour réessayer.</string>
+    <string name="lock_message_lockout">Trop de tentatives. Patientez un instant, puis touchez Déverrouiller pour réessayer.</string>
+    <string name="lock_message_lockout_permanent">La biométrie est bloquée après trop de tentatives. Touchez Déverrouiller et utilisez le verrouillage de l’écran.</string>
+    <string name="lock_message_error">Impossible de vérifier votre identité. Touchez Déverrouiller pour réessayer.</string>
+
+    <!-- What went wrong with a save or delete, shown in a snackbar -->
+    <string name="error_category_not_found">Cette catégorie n’existe plus</string>
+    <string name="error_category_in_use">Cette catégorie contient encore des transactions</string>
+    <string name="error_name_too_long">Ce nom est trop long</string>
+    <string name="error_incompatible_reassign_target">Les transactions ne peuvent pas être déplacées vers cette catégorie</string>
+    <string name="error_storage_failure">Impossible d’enregistrer vos modifications. L’espace de stockage est peut-être plein.</string>
+    <string name="error_file_read_failed">Impossible de lire le fichier. Vérifiez qu’il est toujours disponible.</string>
+    <string name="error_backup_invalid">Ce fichier n’est pas une sauvegarde Expense Tracker</string>
+    <string name="error_backup_too_new">Cette sauvegarde provient d’une version plus récente de l’appli</string>
+    <string name="error_bill_unreadable">Impossible de lire ce ticket</string>
+    <string name="error_file_write_failed">Impossible d’enregistrer le fichier. Vérifiez que l’emplacement est toujours disponible et qu’il reste de la place.</string>
+
+    <!-- Export & backup -->
+    <string name="export_backup_title">Export et sauvegarde</string>
+    <string name="export_backup_back">Retour</string>
+    <string name="export_section_title">Export</string>
+    <string name="export_csv_title">Exporter en CSV</string>
+    <string name="export_csv_subtitle">Ouvrez vos transactions dans Excel ou Google Sheets</string>
+    <string name="export_period_label">Période</string>
+    <string name="export_button">Exporter en CSV</string>
+    <!-- On the snackbar after a file was saved: sends the file to another app -->
+    <string name="export_share">Partager</string>
+    <string name="backup_section_title">Sauvegarde</string>
+    <string name="backup_title">Sauvegarde et restauration</string>
+    <string name="backup_subtitle">Tout, y compris vos catégories personnalisées, dans un seul fichier</string>
+    <!-- %1$s is a time of day, e.g. 4:20 pm -->
+    <string name="backup_last_today">Dernière sauvegarde\u00A0: aujourd’hui, %1$s</string>
+    <string name="backup_last_yesterday">Dernière sauvegarde\u00A0: hier, %1$s</string>
+    <!-- %1$s is a date and time, e.g. 11 Oct 2026, 4:20 pm -->
+    <string name="backup_last_on">Dernière sauvegarde\u00A0: %1$s</string>
+    <string name="backup_create_button">Créer une sauvegarde</string>
+    <string name="backup_restore_button">Restaurer depuis un fichier</string>
+    <string name="backup_saved">Sauvegarde enregistrée</string>
+    <string name="backup_privacy_note">Les fichiers sont enregistrés à l’emplacement de votre choix. L’appli n’envoie rien en ligne.</string>
+    <plurals name="restore_success">
+        <item quantity="one">%1$d transaction restaurée</item>
+        <item quantity="many">%1$d transactions restaurées</item>
+        <item quantity="other">%1$d transactions restaurées</item>
+    </plurals>
+    <string name="restore_sheet_title">Restaurer cette sauvegarde\u00A0?</string>
+    <string name="restore_sheet_created">Créée</string>
+    <string name="restore_sheet_transactions">Transactions</string>
+    <string name="restore_sheet_custom_categories">Catégories personnalisées</string>
+    <string name="restore_sheet_period">Période</string>
+    <plurals name="restore_sheet_warning">
+        <item quantity="one">Tout le contenu actuel de l’appli (%1$d transaction) sera remplacé. Cette action est définitive. Créez d’abord une sauvegarde si vous avez besoin des données actuelles.</item>
+        <item quantity="many">Tout le contenu actuel de l’appli (%1$d transactions) sera remplacé. Cette action est définitive. Créez d’abord une sauvegarde si vous avez besoin des données actuelles.</item>
+        <item quantity="other">Tout le contenu actuel de l’appli (%1$d transactions) sera remplacé. Cette action est définitive. Créez d’abord une sauvegarde si vous avez besoin des données actuelles.</item>
+    </plurals>
+    <string name="restore_sheet_confirm">Remplacer et restaurer</string>
+    <string name="restore_sheet_cancel">Annuler</string>
+    <plurals name="export_success">
+        <item quantity="one">%1$d transaction exportée</item>
+        <item quantity="many">%1$d transactions exportées</item>
+        <item quantity="other">%1$d transactions exportées</item>
+    </plurals>
+</resources>

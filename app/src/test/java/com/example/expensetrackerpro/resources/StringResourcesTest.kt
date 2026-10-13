@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.resources
 
+import com.example.expensetrackerpro.domain.models.AppLanguage
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -59,7 +60,7 @@ class StringResourcesTest {
     @Test
     fun theTestFindsTheFiles() {
         assertTrue("values/strings.xml should have strings", english.texts.size > 100)
-        assertTrue("Hindi should be among the translations", "hi" in translations.keys)
+        assertEquals(setOf("hi", "es", "fr", "de", "pt-rBR"), translations.keys)
     }
 
     @Test
@@ -123,6 +124,17 @@ class StringResourcesTest {
         }
     }
 
+    @Test
+    fun everyLanguageOfTheApp_hasItsStrings_andIsOfferedToAndroid() {
+        // values-pt-rBR is the folder of the tag pt-BR
+        val folders = AppLanguage.entries.filter { it != AppLanguage.ENGLISH }.map { it.tag.replace("-", "-r") }.toSet()
+        assertEquals(folders, translations.keys)
+
+        val config = File(resDir, "xml/locales_config.xml").readText()
+        val offered = Regex("android:name=\"([^\"]+)\"").findAll(config).map { it.groupValues[1] }.toList()
+        assertEquals(AppLanguage.entries.map { it.tag }, offered)
+    }
+
     private companion object {
         val PLACEHOLDER = Regex("%\\d+\\$[a-zA-Z]")
 
@@ -130,7 +142,12 @@ class StringResourcesTest {
         val REQUIRED_QUANTITIES = mapOf(
             "en" to setOf("one", "other"),
             // "one" covers 0 and 1 in Hindi
-            "hi" to setOf("one", "other")
+            "hi" to setOf("one", "other"),
+            "de" to setOf("one", "other"),
+            // "many" is for whole millions ("1 000 000 de transactions")
+            "es" to setOf("one", "many", "other"),
+            "fr" to setOf("one", "many", "other"),
+            "pt-rBR" to setOf("one", "many", "other")
         )
     }
 }

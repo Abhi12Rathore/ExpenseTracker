@@ -304,7 +304,7 @@ private fun LanguageChangedSnackbar(
     onEvent: (SettingsEvent) -> Unit
 ) {
     val shownLanguage = LocalConfiguration.current.locales[0].language
-    val isInNewLanguage = change != null && shownLanguage == change.language.tag
+    val isInNewLanguage = change != null && shownLanguage == change.language.languageCode
     val changed = stringResource(R.string.language_changed)
     val changedInEnglish = stringResource(R.string.language_changed_english)
     val message = if (changed == changedInEnglish) {
