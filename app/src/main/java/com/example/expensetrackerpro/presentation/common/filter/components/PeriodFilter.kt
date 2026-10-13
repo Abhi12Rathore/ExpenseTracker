@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation.common.filter.components
 
+import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,8 +65,8 @@ fun PeriodFilter(
         )
 
         PeriodStepper(
-            title = state.title(),
-            subtitle = state.subtitle(),
+            title = state.title(LocalDateFormatter.current),
+            subtitle = state.subtitle(LocalDateFormatter.current),
             canGoPrevious = !isCustom,
             canGoNext = state.canStepForward,
             onPrevious = { onEvent(PeriodFilterEvent.PreviousPeriod) },
@@ -135,7 +136,7 @@ fun CompactPeriodFilter(
 
         PeriodStepper(
             // An unbounded range has no days to name
-            title = if (isAllTime) allTimeLabel else state.shortLabel(),
+            title = if (isAllTime) allTimeLabel else state.shortLabel(LocalDateFormatter.current),
             subtitle = null,
             canGoPrevious = granularity != null,
             canGoNext = state.canStepForward,

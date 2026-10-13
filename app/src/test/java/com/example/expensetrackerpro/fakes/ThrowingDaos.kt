@@ -44,6 +44,8 @@ class ThrowingCategoryDao(private val error: Exception) : CategoryDao() {
 
     override suspend fun deleteCategory(category: CategoryEntity) = throw error
 
+    override suspend fun renameBuiltIn(id: Int, name: String) = throw error
+
     override fun getAllCategories(): Flow<List<CategoryEntity>> = emptyFlow()
 
     override fun getCategoriesByType(type: TransactionType): Flow<List<CategoryEntity>> = emptyFlow()

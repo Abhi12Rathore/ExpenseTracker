@@ -1,5 +1,8 @@
 package com.example.expensetrackerpro.presentation
 
+import com.example.expensetrackerpro.fakes.dateFormatter
+import com.example.expensetrackerpro.fakes.FakeCategoryRepository
+import com.example.expensetrackerpro.fakes.localizeDefaultCategories
 import androidx.lifecycle.SavedStateHandle
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.error.DomainError
@@ -74,7 +77,7 @@ class ExportBackupViewModelTest {
 
     private val transactions = FakeTransactionRepository(listOf(march, october10, lastYear, october1))
     private val files = FakeFileExportRepository()
-    private val buildCsv = BuildTransactionsCsvUseCase()
+    private val buildCsv = BuildTransactionsCsvUseCase(dateFormatter())
 
     private val october = DateRange(millisAt(2026, Calendar.OCTOBER, 1), millisAt(2026, Calendar.NOVEMBER, 1))
     private val year2026 = DateRange(millisAt(2026, Calendar.JANUARY, 1), millisAt(2027, Calendar.JANUARY, 1))
@@ -105,7 +108,7 @@ class ExportBackupViewModelTest {
             GetDateRangeUseCase(time),
             GetCustomDateRangeUseCase(time),
             ExportTransactionsUseCase(getTransactions, buildCsv, files),
-            GetExportFileNameUseCase(time),
+            GetExportFileNameUseCase(time, dateFormatter()),
             backupController(getTransactions),
             savedStateHandle
         )
@@ -117,7 +120,7 @@ class ExportBackupViewModelTest {
         return BackupController(
             CreateBackupUseCase(backups, backupInfo, time, BuildInfo(isDebug = false, versionName = "1.0")),
             PreviewBackupUseCase(readBackup, getTransactions),
-            RestoreBackupUseCase(readBackup, backups),
+            RestoreBackupUseCase(readBackup, backups, localizeDefaultCategories(FakeCategoryRepository())),
             ObserveLastBackupUseCase(backupInfo, ObserveTodayUseCase(time), time)
         )
     }

@@ -45,6 +45,7 @@ class SettingsViewModel @Inject constructor(
     getCategoryCounts: GetCategoryCountsUseCase,
     private val loadSampleData: LoadSampleDataUseCase,
     private val deleteAllData: DeleteAllDataUseCase,
+    private val languageChangeController: LanguageChangeController,
     private val buildInfo: BuildInfo
 ) : ViewModel() {
 
@@ -63,7 +64,10 @@ class SettingsViewModel @Inject constructor(
             getAppLockSettings(),
             getUserProfile(),
             getCategoryCounts(),
-            screenState
+            // The language is merged in first: combine takes five flows at most
+            combine(screenState, languageChangeController.state) { state, language ->
+                state.copy(language = language.choice, languageChange = language.change)
+            }
         ) { themeMode, appLock, profile, categoryCounts, state ->
             state.copy(
                 themeMode = themeMode,
@@ -87,8 +91,12 @@ class SettingsViewModel @Inject constructor(
                 screenState.update { it.copy(profileNameDraft = null) }
             is SettingsEvent.ThemeModeSelected ->
                 viewModelScope.launch { setThemeMode(event.mode) }
-            SettingsEvent.ScreenResumed ->
+            SettingsEvent.LanguageUndoClicked -> languageChangeController.undo()
+            SettingsEvent.LanguageChangeShown -> languageChangeController.onChangeShown()
+            SettingsEvent.ScreenResumed -> {
                 screenState.update { it.copy(biometricStatus = getBiometricStatus()) }
+                languageChangeController.refresh()
+            }
             is SettingsEvent.AppLockToggled -> toggleAppLock(event.enabled)
             SettingsEvent.AppLockPromptLaunched ->
                 screenState.update { it.copy(isAuthRequested = false) }

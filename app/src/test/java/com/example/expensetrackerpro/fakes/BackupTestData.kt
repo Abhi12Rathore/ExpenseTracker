@@ -10,8 +10,16 @@ fun categoryRecord(
     name: String = "Food",
     type: String = "EXPENSE",
     icon: String = "restaurant",
-    isCustom: Boolean = false
-) = BackupCategoryRecord(id = id, name = name, type = type, icon = icon, isCustom = isCustom)
+    isCustom: Boolean = false,
+    builtInKey: String? = null
+) = BackupCategoryRecord(
+    id = id,
+    name = name,
+    type = type,
+    icon = icon,
+    isCustom = isCustom,
+    builtInKey = builtInKey
+)
 
 fun transactionRecord(
     title: String = "Lunch",

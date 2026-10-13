@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.scan
 
+import com.example.expensetrackerpro.domain.models.BuiltInCategory
 import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.error.getOrNull
@@ -95,13 +96,18 @@ class ScanBillUseCaseTest {
     @Test
     fun aHint_resolvesToItsFirstCategoryThatIsThere() {
         val resolve = ResolveCategoryHintUseCase()
-        val transport = category(id = 1, name = "Transport")
-        val fuel = category(id = 2, name = "fuel")
+        // Found by what they are, not by what they are called in the app's language
+        val transport = category(id = 1, name = "आना-जाना").copy(isCustom = false, builtInKey = BuiltInCategory.TRANSPORT)
+        val fuel = category(id = 2, name = "ईंधन").copy(isCustom = false, builtInKey = BuiltInCategory.FUEL)
         val salary = category(id = 3, name = "Salary", type = TransactionType.INCOME)
+        // A built-in the user renamed, and a custom category that happens to share the name
+        val renamed = category(id = 4, name = "Fuel").copy(isCustom = false)
+        val custom = category(id = 5, name = "Transport")
 
         assertEquals(fuel, resolve(CategoryHint.FUEL, listOf(transport, fuel)))
         assertEquals(transport, resolve(CategoryHint.FUEL, listOf(transport)))
         assertNull(resolve(CategoryHint.FUEL, listOf(salary)))
+        assertNull(resolve(CategoryHint.FUEL, listOf(renamed, custom)))
         assertNull(resolve(CategoryHint.FOOD, emptyList<Category>()))
     }
 }

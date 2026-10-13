@@ -1,6 +1,9 @@
 package com.example.expensetrackerpro.presentation.homeScreen
 
 
+import androidx.compose.ui.res.stringResource
+import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -110,7 +113,7 @@ fun HomeContent(
             item {
                 FinancialSummaryCard(
                     data = dashboard.summary,
-                    periodLabel = uiState.filter.shortLabel(),
+                    periodLabel = uiState.filter.shortLabel(LocalDateFormatter.current),
                     comparison = dashboard.comparison,
                     balanceTrend = dashboard.balanceTrend
                 )
@@ -169,7 +172,7 @@ fun HomeContent(
 
             item {
                 DashboardSectionHeader(
-                    title = "Recent Activity",
+                    title = stringResource(R.string.recent_activity_title),
                     onAction = onViewAllTransactions
                 )
             }

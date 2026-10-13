@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.domain.usecase.backup
 
+import org.junit.Assert.assertNull
+import com.example.expensetrackerpro.domain.models.BuiltInCategory
 import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.error.getOrNull
@@ -269,5 +271,70 @@ class ValidateBackupUseCaseTest {
         val backup = validate(withTransaction(title = "")).getOrNull()
 
         assertEquals("", backup?.transactions?.single()?.title)
+    }
+
+    // --- Built-in keys
+
+    @Test
+    fun aBuiltInKey_isKept_soTheCategoryFollowsTheAppsLanguage() {
+        val backup = validate(
+            backupDocument(
+                categories = listOf(
+                    categoryRecord(id = 1, name = "खाना-पीना", builtInKey = "food_dining"),
+                    categoryRecord(id = 2, name = "Salary", type = "INCOME", icon = "payments", builtInKey = "salary")
+                ),
+                transactions = emptyList()
+            )
+        ).getOrNull()
+
+        assertEquals(
+            listOf(BuiltInCategory.FOOD_DINING, BuiltInCategory.SALARY),
+            backup?.categories?.map { it.builtInKey }
+        )
+    }
+
+    @Test
+    fun aFileFromBeforeBuiltInKeys_stillRestores_withItsNamesAsTheyAre() {
+        // backupDocument() has no keys at all
+        val backup = validate(backupDocument()).getOrNull()
+
+        assertEquals(listOf("Food", "Salary", "Pottery"), backup?.categories?.map { it.name })
+        assertTrue(backup?.categories.orEmpty().all { it.builtInKey == null })
+    }
+
+    @Test
+    fun aKeyThisVersionDoesNotKnow_isDropped_andTheCategoryKeepsItsName() {
+        val backup = validate(withCategories(categoryRecord(name = "Crypto", builtInKey = "crypto"))).getOrNull()
+
+        val category = backup?.categories?.first()
+        assertEquals("Crypto", category?.name)
+        assertNull(category?.builtInKey)
+    }
+
+    @Test
+    fun aBuiltInKeyOnACustomCategory_isInvalid() {
+        assertEquals(
+            invalid,
+            validate(withCategories(categoryRecord(name = "Food", isCustom = true, builtInKey = "food_dining")))
+        )
+    }
+
+    @Test
+    fun aBuiltInKeyOfTheOtherType_isInvalid() {
+        // salary is an income category
+        assertEquals(invalid, validate(withCategories(categoryRecord(name = "Pay", builtInKey = "salary"))))
+    }
+
+    @Test
+    fun twoCategoriesWithTheSameBuiltInKey_areInvalid() {
+        assertEquals(
+            invalid,
+            validate(
+                withCategories(
+                    categoryRecord(id = 1, name = "Food", builtInKey = "food_dining"),
+                    categoryRecord(id = 5, name = "Dining", builtInKey = "food_dining")
+                )
+            )
+        )
     }
 }

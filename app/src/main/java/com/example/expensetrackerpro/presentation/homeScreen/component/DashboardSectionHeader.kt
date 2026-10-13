@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.presentation.homeScreen.component
 
+import androidx.compose.ui.res.stringResource
+import com.example.expensetrackerpro.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,7 +33,7 @@ fun DashboardSectionHeader(title: String, onAction: () -> Unit) {
     ) {
         Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         TextButton(onClick = onAction) {
-            Text("View All", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.section_view_all), style = MaterialTheme.typography.labelLarge)
             Icon(Icons.AutoMirrored.Rounded.ArrowForwardIos, null, Modifier.size(14.dp))
         }
     }

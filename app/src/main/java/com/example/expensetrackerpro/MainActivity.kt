@@ -9,6 +9,7 @@ import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -22,29 +23,36 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.navigation.compose.rememberNavController
 import com.example.expensetrackerpro.domain.models.ThemeMode
+import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import com.example.expensetrackerpro.presentation.lock.LockScreen
 import com.example.expensetrackerpro.presentation.main.MainViewModel
 import com.example.expensetrackerpro.presentation.main.uistate.MainEffect
 import com.example.expensetrackerpro.presentation.main.uistate.MainEvent
+import com.example.expensetrackerpro.utils.DateFormatter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : FragmentActivity() {
+// An AppCompatActivity so that AppCompat can apply the language chosen for the app
+class MainActivity : AppCompatActivity() {
 
     private val viewModel: MainViewModel by viewModels()
+
+    @Inject
+    lateinit var dateFormatter: DateFormatter
 
     // Follows the whole app rather than this activity, so rotation and dialogs never count as
     // leaving. Registering replays ON_START, which is harmless: nothing has been backgrounded yet.
@@ -71,6 +79,8 @@ class MainActivity : FragmentActivity() {
         }
 
         enableEdgeToEdge()
+        // A change of language creates the activity again, while the ViewModel stays
+        viewModel.onEvent(MainEvent.ActivityCreated)
         ProcessLifecycleOwner.get().lifecycle.addObserver(appVisibilityObserver)
 
         setContent {
@@ -145,10 +155,12 @@ class MainActivity : FragmentActivity() {
                             )
                         } else {
                             appContentState.SaveableStateProvider(APP_CONTENT_KEY) {
-                                AppNavHost(
-                                    navController = navController,
-                                    snackbarHostState = snackbarHostState
-                                )
+                                CompositionLocalProvider(LocalDateFormatter provides dateFormatter) {
+                                    AppNavHost(
+                                        navController = navController,
+                                        snackbarHostState = snackbarHostState
+                                    )
+                                }
                             }
                         }
                     }

@@ -6,6 +6,7 @@ import com.example.expensetrackerpro.domain.models.Backup
 import com.example.expensetrackerpro.domain.models.BackupCategoryRecord
 import com.example.expensetrackerpro.domain.models.BackupDocument
 import com.example.expensetrackerpro.domain.models.BackupTransactionRecord
+import com.example.expensetrackerpro.domain.models.BuiltInCategory
 import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.CategoryId
@@ -40,6 +41,9 @@ class ValidateBackupUseCase @Inject constructor(
         }
         val categoriesById = categories.associateBy { it.id }
         if (categoriesById.size != categories.size) return invalid
+        // Two categories can't both be the same built-in
+        val builtInKeys = categories.mapNotNull { it.builtInKey }
+        if (builtInKeys.distinct().size != builtInKeys.size) return invalid
         // With no category of a type, no transaction of that type could be added after the restore
         if (TransactionType.entries.any { type -> categories.none { it.type == type } }) return invalid
 
@@ -62,12 +66,18 @@ class ValidateBackupUseCase @Inject constructor(
         // The database gives out ids from 1; it would replace any other with one of its own
         if (id <= 0) return null
 
+        val categoryType = type.toTransactionType() ?: return null
+        // A key this version does not know is dropped: the category keeps the name in the file
+        val builtIn = builtInKey?.let(BuiltInCategory::findByKey)
+        if (builtIn != null && (isCustom || builtIn.type != categoryType)) return null
+
         return Category(
             id = CategoryId(id),
             name = name,
-            type = type.toTransactionType() ?: return null,
+            type = categoryType,
             icon = CategoryIcon.findByKey(icon) ?: return null,
-            isCustom = isCustom
+            isCustom = isCustom,
+            builtInKey = builtIn
         )
     }
 

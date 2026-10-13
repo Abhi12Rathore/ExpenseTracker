@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.presentation.homeScreen.component
 
+import androidx.compose.ui.res.stringResource
+import com.example.expensetrackerpro.R
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,7 +29,7 @@ fun HomeEmptyState() {
             Modifier.size(64.dp),
             tint = MaterialTheme.colorScheme.outlineVariant
         )
-        Text("No transactions yet", style = MaterialTheme.typography.titleMedium)
-        Text("Add your first expense to see insights", style = MaterialTheme.typography.bodySmall)
+        Text(stringResource(R.string.home_empty_title), style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.home_empty_description), style = MaterialTheme.typography.bodySmall)
     }
 }

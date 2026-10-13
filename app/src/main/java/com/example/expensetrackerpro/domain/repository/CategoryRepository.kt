@@ -19,6 +19,12 @@ interface CategoryRepository {
 
     suspend fun updateCategory(category: Category): Outcome<Unit>
 
+    /**
+     * Gives each built-in category in [namesById] the name the app has for it. All or nothing;
+     * one the user has renamed in the meantime keeps their name.
+     */
+    suspend fun renameBuiltInCategories(namesById: Map<CategoryId, String>): Outcome<Unit>
+
     /** Fails with CategoryInUse, leaving the category in place, when transactions still use it. */
     suspend fun deleteCategory(category: Category): Outcome<Unit>
 

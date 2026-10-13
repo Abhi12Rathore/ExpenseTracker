@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation.homeScreen.component.charts
 
+import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -128,13 +129,14 @@ fun SpendingBarChart(
     val labelBackdrop = labelBackdropColor()
 
     // Text is laid out once per period rather than on every animation frame
+    val dateFormatter = LocalDateFormatter.current
     val textMeasurer = rememberTextMeasurer()
     val axisStyle = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.extendedColors.chartAxisText)
     val axisMax = remember(chart) {
         niceAxisMax(maxOf(buckets.maxOf { it.amount }, chart.average))
     }
     val xLabels = remember(periodKey, axisStyle) {
-        xAxisLabels(chart).map { it.index to textMeasurer.measure(it.text, axisStyle) }
+        xAxisLabels(chart, dateFormatter).map { it.index to textMeasurer.measure(it.text, axisStyle) }
     }
     val gridLabels = remember(axisMax, axisStyle) {
         GridlineFractions.map { fraction ->
@@ -263,7 +265,7 @@ fun SpendingBarChart(
             buckets.forEachIndexed { index, bucket ->
                 val description = stringResource(
                     R.string.spending_bar_description,
-                    bucket.label(chart.bucketSize),
+                    bucket.label(chart.bucketSize, dateFormatter),
                     CurrencyFormatter.format(bucket.amount)
                 )
                 Box(
@@ -289,7 +291,7 @@ fun SpendingBarChart(
                     text = stringResource(
                         R.string.spending_tooltip,
                         CurrencyFormatter.format(bucket.amount),
-                        bucket.label(chart.bucketSize),
+                        bucket.label(chart.bucketSize, dateFormatter),
                         pluralStringResource(
                             R.plurals.transaction_count,
                             bucket.transactionCount,

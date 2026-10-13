@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.expensetrackerpro.presentation.exportBackup.ExportBackupScreen
+import com.example.expensetrackerpro.presentation.language.LanguageScreen
 import com.example.expensetrackerpro.presentation.manageCategories.ManageCategoryScreen
 import com.example.expensetrackerpro.presentation.navigation.Screens
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.AddEditTransactionScreen
@@ -33,6 +34,9 @@ fun AppNavHost(
                 },
                 onNavigateToExportBackup = {
                     navController.navigate(Screens.ExportBackup.route)
+                },
+                onNavigateToLanguage = {
+                    navController.navigate(Screens.Language.route)
                 }
             )
         }
@@ -57,6 +61,13 @@ fun AppNavHost(
         // Destination 4: Full Screen Export & backup
         composable(Screens.ExportBackup.route) {
             ExportBackupScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // Destination 5: Full Screen Language
+        composable(Screens.Language.route) {
+            LanguageScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

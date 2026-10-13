@@ -21,7 +21,7 @@ import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.presentation.common.category.CategoryIconTile
 import com.example.expensetrackerpro.utils.CurrencyFormatter
-import com.example.expensetrackerpro.utils.DateFormatter
+import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import com.example.expensetrackerpro.ui.theme.extendedColors
 
 @Composable
@@ -71,7 +71,7 @@ fun RecentActivityTile(
                     MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = DateFormatter.formatDate(transaction.dateMillis),
+                text = LocalDateFormatter.current.formatDate(transaction.dateMillis),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.outline
             )

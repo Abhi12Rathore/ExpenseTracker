@@ -12,7 +12,8 @@ fun CategoryEntity.toDomain(): Category = Category(
     name = name,
     type = type,
     icon = icon,
-    isCustom = isCustom
+    isCustom = isCustom,
+    builtInKey = builtInKey
 )
 
 fun Category.toEntity(): CategoryEntity = CategoryEntity(
@@ -20,7 +21,8 @@ fun Category.toEntity(): CategoryEntity = CategoryEntity(
     name = name,
     type = type,
     icon = icon,
-    isCustom = isCustom
+    isCustom = isCustom,
+    builtInKey = builtInKey
 )
 
 fun CategoryUsageEntity.toDomain(): CategoryUsage = CategoryUsage(

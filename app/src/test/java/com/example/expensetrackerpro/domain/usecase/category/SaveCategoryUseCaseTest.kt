@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.domain.usecase.category
 
+import org.junit.Assert.assertNull
+import com.example.expensetrackerpro.domain.models.BuiltInCategory
 import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.InvalidInputReason
 import com.example.expensetrackerpro.domain.error.Outcome
@@ -120,5 +122,44 @@ class SaveCategoryUseCaseTest {
         assertEquals(Outcome.Failure(storageFailure), saveCategory(draft("Fitness", id = gym.id)))
 
         assertEquals(listOf(food, gym, salary), repository.current)
+    }
+
+    // --- Built-in categories and the app's language
+
+    private val fuel = category(id = 4, name = "Fuel", icon = CategoryIcon.LOCAL_GAS_STATION)
+        .copy(isCustom = false, builtInKey = BuiltInCategory.FUEL)
+
+    @Test
+    fun renamingABuiltIn_clearsItsKey_soTheUsersNameIsNeverReplaced() = runTest {
+        repository.insertCategory(fuel)
+
+        saveCategory(draft("Petrol", id = fuel.id, icon = fuel.icon))
+
+        val stored = repository.current.single { it.id == fuel.id }
+        assertEquals("Petrol", stored.name)
+        assertNull(stored.builtInKey)
+        // Still not a custom category: it is a built-in under the user's name
+        assertFalse(stored.isCustom)
+        assertTrue(stored.isRenamedBuiltIn)
+    }
+
+    @Test
+    fun changingOnlyABuiltInsIcon_keepsItsKey() = runTest {
+        repository.insertCategory(fuel)
+
+        // Saved with the space the field may have left around the same name
+        saveCategory(draft(" Fuel ", id = fuel.id, icon = CategoryIcon.DIRECTIONS_CAR))
+
+        val stored = repository.current.single { it.id == fuel.id }
+        assertEquals(CategoryIcon.DIRECTIONS_CAR, stored.icon)
+        assertEquals(BuiltInCategory.FUEL, stored.builtInKey)
+        assertFalse(stored.isRenamedBuiltIn)
+    }
+
+    @Test
+    fun aNewCategory_hasNoBuiltInKey() = runTest {
+        saveCategory(draft("Fuel for the bike"))
+
+        assertNull(repository.current.single { it.name == "Fuel for the bike" }.builtInKey)
     }
 }

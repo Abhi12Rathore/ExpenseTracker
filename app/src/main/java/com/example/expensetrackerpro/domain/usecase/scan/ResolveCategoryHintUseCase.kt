@@ -11,7 +11,7 @@ import javax.inject.Inject
 class ResolveCategoryHintUseCase @Inject constructor() {
 
     operator fun invoke(hint: CategoryHint, categories: List<Category>): Category? =
-        hint.categoryNames.firstNotNullOfOrNull { name ->
-            categories.find { it.name.equals(name, ignoreCase = true) }
+        hint.categories.firstNotNullOfOrNull { builtIn ->
+            categories.find { it.builtInKey == builtIn }
         }
 }

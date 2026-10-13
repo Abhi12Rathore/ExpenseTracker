@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.R
@@ -41,7 +42,7 @@ import com.example.expensetrackerpro.presentation.common.filter.comparedWithLabe
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.presentation.homeScreen.component.charts.BalanceSparkline
 import com.example.expensetrackerpro.utils.CurrencyFormatter
-import com.example.expensetrackerpro.utils.DateFormatter
+import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 
 private const val CHIP_BACKGROUND_ALPHA = 0.08f
 private const val MIN_AMOUNT_FONT_SCALE = 0.6f
@@ -84,10 +85,27 @@ fun FinancialSummaryCard(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                SummaryItem("Income", CurrencyFormatter.format(data.totalIncome), Icons.Rounded.TrendingUp)
-                SummaryItem("Expense", CurrencyFormatter.format(data.totalExpense), Icons.Rounded.TrendingDown)
-                SummaryItem("Savings", "${data.savingsRate.toInt()}%", Icons.Rounded.AutoGraph)
+            // The amounts take the room they need; a label longer than its amount is cut, not wrapped
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                SummaryItem(
+                    stringResource(R.string.summary_income),
+                    CurrencyFormatter.format(data.totalIncome),
+                    Icons.Rounded.TrendingUp,
+                    Modifier.weight(1f)
+                )
+                SummaryItem(
+                    stringResource(R.string.summary_expense),
+                    CurrencyFormatter.format(data.totalExpense),
+                    Icons.Rounded.TrendingDown,
+                    Modifier.weight(1f)
+                )
+                SummaryItem(
+                    stringResource(R.string.summary_savings),
+                    stringResource(R.string.percent_value, data.savingsRate.toInt()),
+                    Icons.Rounded.AutoGraph,
+                    // The shortest value of the three
+                    Modifier.weight(0.6f)
+                )
             }
         }
     }
@@ -141,15 +159,26 @@ private fun ShrinkToFitText(text: String, style: TextStyle, modifier: Modifier =
 }
 
 @Composable
-private fun SummaryItem(label: String, value: String, icon: ImageVector) {
-    Column {
+private fun SummaryItem(label: String, value: String, icon: ImageVector, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null,
                 Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(4.dp))
-            Text(label, style = MaterialTheme.typography.labelSmall)
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
-        Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text(
+            value,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
@@ -159,7 +188,7 @@ private fun FinancialSummaryCardPreview() {
     ExpenseTrackerProTheme {
         FinancialSummaryCard(
             data = PreviewData.financialSummary,
-            periodLabel = DateFormatter.formatShortMonthYear(PreviewData.DATE_MILLIS),
+            periodLabel = LocalDateFormatter.current.formatShortMonthYear(PreviewData.DATE_MILLIS),
             comparison = PreviewData.periodComparison,
             balanceTrend = PreviewData.balanceTrend
         )

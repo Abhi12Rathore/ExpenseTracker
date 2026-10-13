@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.data.sample
 
+import com.example.expensetrackerpro.domain.models.BuiltInCategory
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.domain.models.sumOfMoney
@@ -209,10 +210,10 @@ class SampleTransactionGenerator @Inject constructor(
 
         fun <T> List<T>.pick(): T = this[random.nextInt(size)]
 
-        fun income(day: Int, title: String, rupees: Int, category: String, notes: List<String>) =
+        fun income(day: Int, title: String, rupees: Int, category: BuiltInCategory, notes: List<String>) =
             add(day, title, rupees, category, TransactionType.INCOME, notes)
 
-        fun expense(day: Int, title: String, rupees: Int, category: String, notes: List<String>) =
+        fun expense(day: Int, title: String, rupees: Int, category: BuiltInCategory, notes: List<String>) =
             add(day, title, rupees, category, TransactionType.EXPENSE, notes)
 
         // Always draws the same four numbers, so one entry's note never shifts the next entry
@@ -220,7 +221,7 @@ class SampleTransactionGenerator @Inject constructor(
             day: Int,
             title: String,
             rupees: Int,
-            category: String,
+            category: BuiltInCategory,
             type: TransactionType,
             notes: List<String>
         ) {
@@ -240,7 +241,7 @@ class SampleTransactionGenerator @Inject constructor(
                 amount = Money.ofRupees(rupees.toLong()),
                 note = if (hasNote) note else "",
                 dateMillis = calendar.timeInMillis,
-                categoryName = category,
+                category = category,
                 type = type
             )
         }
@@ -272,32 +273,32 @@ class SampleTransactionGenerator @Inject constructor(
         const val FIRST_HOUR = 7
         const val LAST_HOUR = 22
 
-        // Names of the default categories
-        const val FOOD = "Food & Dining"
-        const val GROCERIES = "Groceries"
-        const val TRANSPORT = "Transport"
-        const val FUEL = "Fuel"
-        const val SHOPPING = "Shopping"
-        const val BILLS = "Bills & Utilities"
-        const val RENT = "Rent & Home"
-        const val HEALTH = "Health"
-        const val EDUCATION = "Education"
-        const val ENTERTAINMENT = "Entertainment"
-        const val TRAVEL = "Travel"
-        const val SUBSCRIPTIONS = "Subscriptions"
-        const val PERSONAL_CARE = "Personal Care"
-        const val GIFTS = "Gifts & Donations"
-        const val EMI = "EMI & Loans"
-        const val OTHER = "Other"
-        const val SALARY = "Salary"
-        const val FREELANCE = "Freelance"
-        const val BUSINESS = "Business"
-        const val INVESTMENTS = "Investments"
-        const val INTEREST = "Interest"
-        const val RENTAL_INCOME = "Rental Income"
-        const val REFUNDS = "Refunds & Cashback"
-        const val GIFTS_RECEIVED = "Gifts Received"
-        const val OTHER_INCOME = "Other Income"
+        // The built-in categories, under the short names used above
+        val FOOD = BuiltInCategory.FOOD_DINING
+        val GROCERIES = BuiltInCategory.GROCERIES
+        val TRANSPORT = BuiltInCategory.TRANSPORT
+        val FUEL = BuiltInCategory.FUEL
+        val SHOPPING = BuiltInCategory.SHOPPING
+        val BILLS = BuiltInCategory.BILLS_UTILITIES
+        val RENT = BuiltInCategory.RENT_HOME
+        val HEALTH = BuiltInCategory.HEALTH
+        val EDUCATION = BuiltInCategory.EDUCATION
+        val ENTERTAINMENT = BuiltInCategory.ENTERTAINMENT
+        val TRAVEL = BuiltInCategory.TRAVEL
+        val SUBSCRIPTIONS = BuiltInCategory.SUBSCRIPTIONS
+        val PERSONAL_CARE = BuiltInCategory.PERSONAL_CARE
+        val GIFTS = BuiltInCategory.GIFTS_DONATIONS
+        val EMI = BuiltInCategory.EMI_LOANS
+        val OTHER = BuiltInCategory.OTHER
+        val SALARY = BuiltInCategory.SALARY
+        val FREELANCE = BuiltInCategory.FREELANCE
+        val BUSINESS = BuiltInCategory.BUSINESS
+        val INVESTMENTS = BuiltInCategory.INVESTMENTS
+        val INTEREST = BuiltInCategory.INTEREST
+        val RENTAL_INCOME = BuiltInCategory.RENTAL_INCOME
+        val REFUNDS = BuiltInCategory.REFUNDS_CASHBACK
+        val GIFTS_RECEIVED = BuiltInCategory.GIFTS_RECEIVED
+        val OTHER_INCOME = BuiltInCategory.OTHER_INCOME
 
         // Year, Calendar month, day
         val DIWALI_DATES = listOf(

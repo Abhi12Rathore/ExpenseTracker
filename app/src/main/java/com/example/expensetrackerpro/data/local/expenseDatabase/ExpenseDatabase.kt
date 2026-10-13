@@ -15,6 +15,8 @@ import com.example.expensetrackerpro.data.local.dao.SampleDataDao
 import com.example.expensetrackerpro.data.local.dao.TransactionDao
 import com.example.expensetrackerpro.data.local.entity.CategoryEntity
 import com.example.expensetrackerpro.data.local.entity.TransactionEntity
+import com.example.expensetrackerpro.domain.category.DefaultCategoryNames
+import com.example.expensetrackerpro.domain.locale.AppLocaleProvider
 import com.example.expensetrackerpro.domain.models.DefaultCategories
 import com.example.expensetrackerpro.data.local.utils.Converters
 
@@ -22,7 +24,7 @@ import com.example.expensetrackerpro.data.local.utils.Converters
 @Database(
     entities = [TransactionEntity::class, CategoryEntity::class],
     // Pre-release: every schema change bumps this, and the destructive fallback resets the data
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -39,7 +41,10 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun sampleDataDao(): SampleDataDao
 }
 
-internal class ExpenseDatabaseCallback : RoomDatabase.Callback() {
+internal class ExpenseDatabaseCallback(
+    private val names: DefaultCategoryNames,
+    private val localeProvider: AppLocaleProvider
+) : RoomDatabase.Callback() {
 
     /**
      * onCreate is called only the first time the database is created.
@@ -47,14 +52,27 @@ internal class ExpenseDatabaseCallback : RoomDatabase.Callback() {
      */
     override fun onCreate(db: SupportSQLiteDatabase) {
         super.onCreate(db)
+        seedDefaultCategories(db)
+    }
 
+    // A schema change before release empties the database without calling onCreate, which would
+    // leave the app with no categories at all
+    override fun onDestructiveMigration(db: SupportSQLiteDatabase) {
+        super.onDestructiveMigration(db)
+        seedDefaultCategories(db)
+    }
+
+    private fun seedDefaultCategories(db: SupportSQLiteDatabase) {
         val converters = Converters()
+        // In the app's language now; LocalizeDefaultCategoriesUseCase renames them when it changes
+        val locale = localeProvider.current()
         DefaultCategories.all.forEach { category ->
             val values = ContentValues().apply {
-                put("name", category.name)
+                put("name", names.nameOf(category, locale))
                 put("type", converters.fromTransactionType(category.type))
                 put("icon", converters.fromCategoryIcon(category.icon))
-                put("isCustom", category.isCustom)
+                put("isCustom", false)
+                put("builtInKey", converters.fromBuiltInCategory(category))
             }
             db.insert("categories", SQLiteDatabase.CONFLICT_REPLACE, values)
         }

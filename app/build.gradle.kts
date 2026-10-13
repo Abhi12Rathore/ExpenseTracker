@@ -22,6 +22,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Adds en-XA (longer, accented text) and ar-XB, for finding clipped layouts
+            isPseudoLocalesEnabled = true
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -41,6 +45,17 @@ android {
         compose = true
         // For BuildConfig.DEBUG, which keeps the developer options out of release builds
         buildConfig = true
+    }
+    bundle {
+        language {
+            // Every language ships to every phone: the app's language is chosen in the app, so
+            // it can be one the phone itself is not set to
+            enableSplit = false
+        }
+    }
+    lint {
+        // A string added in English only would show up untranslated in every other language
+        error += "MissingTranslation"
     }
     testOptions {
         unitTests {

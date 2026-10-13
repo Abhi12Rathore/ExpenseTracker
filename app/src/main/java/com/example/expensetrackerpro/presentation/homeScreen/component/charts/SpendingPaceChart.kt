@@ -51,6 +51,7 @@ import com.example.expensetrackerpro.presentation.common.filter.comparedWithLabe
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.ui.theme.extendedColors
 import com.example.expensetrackerpro.utils.CurrencyFormatter
+import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import com.example.expensetrackerpro.utils.DateFormatter
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -183,6 +184,7 @@ fun SpendingPaceChart(
     val previousTotal = pace.previous.lastOrNull()?.total ?: Money.ZERO
 
     // Text is laid out once per period rather than on every animation frame
+    val dateFormatter = LocalDateFormatter.current
     val textMeasurer = rememberTextMeasurer()
     val axisStyle = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.extendedColors.chartAxisText)
     val axisMax = remember(currentTotal, previousTotal) { niceAxisMax(maxOf(currentTotal, previousTotal)) }
@@ -192,7 +194,7 @@ fun SpendingPaceChart(
         }
     }
     val xLabels = remember(periodKey, axisStyle) {
-        paceAxisLabels(pace).map { it.index to textMeasurer.measure(it.text, axisStyle) }
+        paceAxisLabels(pace, dateFormatter).map { it.index to textMeasurer.measure(it.text, axisStyle) }
     }
     val endLabel = remember(currentTotal, axisStyle, currentColor) {
         textMeasurer.measure(
@@ -367,15 +369,15 @@ private fun paceTooltip(pace: SpendingPace, index: Int): String? {
 @Composable
 private fun paceTooltipValue(point: PacePoint): String = stringResource(
     R.string.pace_tooltip_value,
-    DateFormatter.formatDayMonth(point.dateMillis),
+    LocalDateFormatter.current.formatDayMonth(point.dateMillis),
     CurrencyFormatter.formatWhole(point.total)
 )
 
 /** Every weekday for a week (`Mon` … `Sun`); every seventh day of the month beyond that. */
-private fun paceAxisLabels(pace: SpendingPace): List<AxisLabel> =
+private fun paceAxisLabels(pace: SpendingPace, dateFormatter: DateFormatter): List<AxisLabel> =
     if (pace.dayCount <= DAYS_PER_LABEL) {
         // The previous period is always complete, so it has a date for every weekday
-        pace.previous.mapIndexed { index, point -> AxisLabel(index, DateFormatter.formatWeekday(point.dateMillis)) }
+        pace.previous.mapIndexed { index, point -> AxisLabel(index, dateFormatter.formatWeekday(point.dateMillis)) }
     } else {
         // A month starts on the 1st, so the day of the month is the position plus one
         (0 until pace.dayCount step DAYS_PER_LABEL).map { AxisLabel(it, (it + 1).toString()) }

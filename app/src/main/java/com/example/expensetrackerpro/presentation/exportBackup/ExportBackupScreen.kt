@@ -73,7 +73,7 @@ import com.example.expensetrackerpro.presentation.exportBackup.uistate.ExportPer
 import com.example.expensetrackerpro.presentation.settings.components.SettingsItem
 import com.example.expensetrackerpro.presentation.settings.components.SettingsSectionCard
 import com.example.expensetrackerpro.ui.theme.extendedColors
-import com.example.expensetrackerpro.utils.DateFormatter
+import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 
 private const val CSV_MIME_TYPE = "text/csv"
 private const val BACKUP_MIME_TYPE = "application/json"
@@ -385,11 +385,11 @@ private fun ButtonLabel(text: String, isWorking: Boolean) {
 @Composable
 private fun lastBackupText(lastBackup: LastBackup): String = when (lastBackup.day) {
     DayLabel.TODAY ->
-        stringResource(R.string.backup_last_today, DateFormatter.formatTime(lastBackup.millis))
+        stringResource(R.string.backup_last_today, LocalDateFormatter.current.formatTime(lastBackup.millis))
     DayLabel.YESTERDAY ->
-        stringResource(R.string.backup_last_yesterday, DateFormatter.formatTime(lastBackup.millis))
+        stringResource(R.string.backup_last_yesterday, LocalDateFormatter.current.formatTime(lastBackup.millis))
     DayLabel.OTHER ->
-        stringResource(R.string.backup_last_on, DateFormatter.formatDateTime(lastBackup.millis))
+        stringResource(R.string.backup_last_on, LocalDateFormatter.current.formatDateTime(lastBackup.millis))
 }
 
 @Composable
@@ -426,13 +426,13 @@ private fun exportSummary(state: ExportBackupUiState): String {
     val newest = state.newestMillis
     val range = when {
         // The range end is exclusive, so the last day shown is the one before it
-        state.period != ExportPeriod.ALL_TIME -> DateFormatter.formatDayRange(
+        state.period != ExportPeriod.ALL_TIME -> LocalDateFormatter.current.formatDayRange(
             state.dateRange.startMillis,
             state.dateRange.endMillis - 1,
             withYear = true
         )
         // All time has no days of its own, so it is named by what it holds
-        oldest != null && newest != null -> DateFormatter.formatDayRange(oldest, newest, withYear = true)
+        oldest != null && newest != null -> LocalDateFormatter.current.formatDayRange(oldest, newest, withYear = true)
         else -> stringResource(R.string.filter_all_time)
     }
 

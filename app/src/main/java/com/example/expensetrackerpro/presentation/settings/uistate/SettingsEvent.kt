@@ -13,7 +13,11 @@ sealed interface SettingsEvent {
 
     data class ThemeModeSelected(val mode: ThemeMode) : SettingsEvent
 
-    // The user may have changed their screen lock in system settings while away
+    // The snackbar shown after the app's language was changed
+    data object LanguageUndoClicked : SettingsEvent
+    data object LanguageChangeShown : SettingsEvent
+
+    // The user may have changed their screen lock or the app's language in system settings while away
     data object ScreenResumed : SettingsEvent
     data class AppLockToggled(val enabled: Boolean) : SettingsEvent
     data object AppLockPromptLaunched : SettingsEvent

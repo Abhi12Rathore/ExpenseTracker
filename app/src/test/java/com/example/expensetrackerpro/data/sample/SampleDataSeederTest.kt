@@ -1,5 +1,8 @@
 package com.example.expensetrackerpro.data.sample
 
+import com.example.expensetrackerpro.fakes.FakeDefaultCategoryNames
+import com.example.expensetrackerpro.fakes.FakeAppLocaleProvider
+import com.example.expensetrackerpro.data.category.ResourceDefaultCategoryNames
 import android.app.Application
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -46,9 +49,14 @@ class SampleDataSeederTest {
         database = Room.inMemoryDatabaseBuilder(
             ApplicationProvider.getApplicationContext(),
             AppDatabase::class.java
-        ).allowMainThreadQueries().addCallback(ExpenseDatabaseCallback()).build()
+        ).allowMainThreadQueries().addCallback(ExpenseDatabaseCallback(ResourceDefaultCategoryNames(ApplicationProvider.getApplicationContext()), FakeAppLocaleProvider())).build()
 
-        val seeder = SampleDataSeeder(database.sampleDataDao(), generator)
+        val seeder = SampleDataSeeder(
+            database.sampleDataDao(),
+            generator,
+            ResourceDefaultCategoryNames(ApplicationProvider.getApplicationContext()),
+            FakeAppLocaleProvider()
+        )
         loadSampleData = LoadSampleDataUseCase(seeder)
     }
 
@@ -85,10 +93,11 @@ class SampleDataSeederTest {
 
         val stored = transactions().sortedBy { it.dateMillis }
         assertEquals(expected.map { it.title to it.amount }.sortedBy { it.first }, stored.map { it.title to it.amount }.sortedBy { it.first })
-        assertEquals(expected.map { it.categoryName }.toSet(), stored.map { it.categoryName }.toSet())
+        val names = FakeDefaultCategoryNames.english
+        assertEquals(expected.map { names.getValue(it.category) }.toSet(), stored.map { it.categoryName }.toSet())
 
         // The icon shown comes from the category each one was filed under
-        val iconByName = DefaultCategories.all.associate { it.name to it.icon }
+        val iconByName = DefaultCategories.all.associate { names.getValue(it) to it.icon }
         assertTrue(stored.all { it.categoryIcon == iconByName[it.categoryName] })
     }
 

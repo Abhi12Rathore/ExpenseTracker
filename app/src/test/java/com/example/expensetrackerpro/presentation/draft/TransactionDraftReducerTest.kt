@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation.draft
 
+import com.example.expensetrackerpro.domain.models.BuiltInCategory
 import com.example.expensetrackerpro.domain.models.CategoryHint
 import com.example.expensetrackerpro.domain.models.DateChoice
 import com.example.expensetrackerpro.domain.models.DateSelection
@@ -32,8 +33,8 @@ class TransactionDraftReducerTest {
     private val resolveDate = ResolveTransactionDateUseCase(FakeTimeProvider(now))
     private val reducer = TransactionDraftReducer(FormatAmountInputUseCase(), resolveDate, ResolveCategoryHintUseCase())
 
-    private val groceries = category(id = 1, name = "Groceries")
-    private val health = category(id = 2, name = "Health")
+    private val groceries = category(id = 1, name = "Groceries").copy(builtInKey = BuiltInCategory.GROCERIES)
+    private val health = category(id = 2, name = "Health").copy(builtInKey = BuiltInCategory.HEALTH)
 
     private val emptyForm = AddEditTransactionUiState(availableCategories = listOf(groceries, health))
         .withDate(resolveDate(DateSelection.Today))

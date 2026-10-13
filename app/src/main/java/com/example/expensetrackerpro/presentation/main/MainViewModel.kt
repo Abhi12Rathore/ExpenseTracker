@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.expensetrackerpro.domain.error.onFailure
 import com.example.expensetrackerpro.domain.models.Transaction
-import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesUseCase
+import com.example.expensetrackerpro.domain.usecase.category.LocalizeDefaultCategoriesUseCase
 import com.example.expensetrackerpro.domain.usecase.theme.GetThemeModeUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.ObserveDeletedTransactionsUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.RestoreTransactionUseCase
@@ -18,7 +18,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -26,7 +25,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    getCategories: GetCategoriesUseCase,
+    private val localizeDefaultCategories: LocalizeDefaultCategoriesUseCase,
     getThemeMode: GetThemeModeUseCase,
     observeDeletedTransactions: ObserveDeletedTransactionsUseCase,
     private val restoreTransaction: RestoreTransactionUseCase,
@@ -44,15 +43,6 @@ class MainViewModel @Inject constructor(
             // Keeps collecting so a change made in Settings re-themes the app immediately
             getThemeMode().collect { mode ->
                 _uiState.update { it.copy(themeMode = mode, isThemeLoaded = true) }
-            }
-        }
-        viewModelScope.launch {
-            // The first load opens the database (creating and seeding it on first run)
-            try {
-                getCategories().first()
-            } finally {
-                // Released even if the load fails, so the splash can never get stuck
-                _uiState.update { it.copy(isDataLoaded = true) }
             }
         }
         viewModelScope.launch {
@@ -79,12 +69,29 @@ class MainViewModel @Inject constructor(
 
     fun onEvent(event: MainEvent) {
         when (event) {
+            MainEvent.ActivityCreated -> prepareData()
             MainEvent.AppBackgrounded -> appLockController.onAppBackgrounded()
             MainEvent.AppForegrounded -> appLockController.onAppForegrounded()
             MainEvent.UnlockClicked -> appLockController.onUnlockClicked()
             MainEvent.PromptLaunched -> appLockController.onPromptLaunched()
             is MainEvent.AuthFinished -> appLockController.onAuthFinished(event.result)
             is MainEvent.UndoDelete -> undoDelete(event.transaction)
+        }
+    }
+
+    /**
+     * Puts the built-in categories into the app's language. The first run is also what opens the
+     * database, creating and seeding it on first launch, and the splash stays up until it is done.
+     */
+    private fun prepareData() {
+        viewModelScope.launch {
+            try {
+                // A failure leaves the names in the previous language, which the next start puts right
+                localizeDefaultCategories()
+            } finally {
+                // Released even if it throws, so the splash can never get stuck
+                _uiState.update { it.copy(isDataLoaded = true) }
+            }
         }
     }
 

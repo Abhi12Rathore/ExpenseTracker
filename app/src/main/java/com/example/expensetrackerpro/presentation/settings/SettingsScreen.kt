@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.Timer
@@ -22,8 +23,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,6 +34,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -46,6 +50,8 @@ import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.AuthResult
 import com.example.expensetrackerpro.domain.models.BiometricStatus
 import com.example.expensetrackerpro.domain.models.CategoryCounts
+import com.example.expensetrackerpro.domain.models.LanguageChange
+import com.example.expensetrackerpro.domain.models.LanguageChoice
 import com.example.expensetrackerpro.domain.models.ThemeMode
 import com.example.expensetrackerpro.domain.models.UserProfile
 import com.example.expensetrackerpro.presentation.common.filter.components.PillSegmentedControl
@@ -63,11 +69,13 @@ import com.example.expensetrackerpro.presentation.settings.uistate.SettingsMessa
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsUiState
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.ui.theme.extendedColors
+import kotlinx.coroutines.withTimeoutOrNull
 
 @Composable
 fun SettingsScreen(
     onNavigateToCategories: () -> Unit,
     onNavigateToExportBackup: () -> Unit,
+    onNavigateToLanguage: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -93,7 +101,8 @@ fun SettingsScreen(
         state = uiState,
         onEvent = viewModel::onEvent,
         onNavigateToCategories = onNavigateToCategories,
-        onNavigateToExportBackup = onNavigateToExportBackup
+        onNavigateToExportBackup = onNavigateToExportBackup,
+        onNavigateToLanguage = onNavigateToLanguage
     )
 }
 
@@ -102,7 +111,8 @@ fun SettingsContent(
     state: SettingsUiState,
     onEvent: (SettingsEvent) -> Unit,
     onNavigateToCategories: () -> Unit,
-    onNavigateToExportBackup: () -> Unit
+    onNavigateToExportBackup: () -> Unit,
+    onNavigateToLanguage: () -> Unit
 ) {
     SettingsDialogs(state = state, onEvent = onEvent)
 
@@ -129,6 +139,8 @@ fun SettingsContent(
         snackbarHostState.showSnackbar(messageText)
         onEvent(SettingsEvent.MessageShown)
     }
+
+    LanguageChangedSnackbar(change = state.languageChange, snackbarHostState = snackbarHostState, onEvent = onEvent)
 
     val palette = MaterialTheme.extendedColors.categoryPalette
 
@@ -171,6 +183,22 @@ fun SettingsContent(
                             label = { themeLabels.getValue(it) },
                             onSelect = { onEvent(SettingsEvent.ThemeModeSelected(it)) },
                             modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                )
+                SettingsDivider()
+                SettingsItem(
+                    icon = Icons.Default.Language,
+                    iconTint = palette.blue,
+                    title = stringResource(R.string.settings_language),
+                    // English in every language, so the row can be found in one that can't be read
+                    subtitle = stringResource(R.string.settings_language_subtitle),
+                    onClick = onNavigateToLanguage,
+                    trailing = {
+                        Text(
+                            text = state.language.label(),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 )
@@ -264,6 +292,55 @@ fun SettingsContent(
     }
 }
 
+/**
+ * Says the language has changed, in the new language and in English, and offers to undo it for
+ * [LANGUAGE_UNDO_MILLIS]. Shown only once the screen is drawn in the new language: until then
+ * the message itself would still be in the old one.
+ */
+@Composable
+private fun LanguageChangedSnackbar(
+    change: LanguageChange?,
+    snackbarHostState: SnackbarHostState,
+    onEvent: (SettingsEvent) -> Unit
+) {
+    val shownLanguage = LocalConfiguration.current.locales[0].language
+    val isInNewLanguage = change != null && shownLanguage == change.language.tag
+    val changed = stringResource(R.string.language_changed)
+    val changedInEnglish = stringResource(R.string.language_changed_english)
+    val message = if (changed == changedInEnglish) {
+        changed
+    } else {
+        stringResource(R.string.language_changed_both, changed, changedInEnglish)
+    }
+    val undoLabel = stringResource(R.string.language_undo)
+
+    LaunchedEffect(change, isInNewLanguage) {
+        if (!isInNewLanguage) return@LaunchedEffect
+        // Longer than a snackbar's own durations, as the message may be in a language just learnt of
+        val result = withTimeoutOrNull(LANGUAGE_UNDO_MILLIS) {
+            snackbarHostState.showSnackbar(
+                message = message,
+                actionLabel = undoLabel,
+                duration = SnackbarDuration.Indefinite
+            )
+        }
+        onEvent(
+            if (result == SnackbarResult.ActionPerformed) {
+                SettingsEvent.LanguageUndoClicked
+            } else {
+                SettingsEvent.LanguageChangeShown
+            }
+        )
+    }
+}
+
+/** The language's own name for itself, which reads the same in every language. */
+@Composable
+private fun LanguageChoice.label(): String = when (this) {
+    LanguageChoice.SystemDefault -> stringResource(R.string.language_system_default)
+    is LanguageChoice.Specific -> language.nativeName
+}
+
 /** Whichever dialog the state says is open. */
 @Composable
 private fun SettingsDialogs(state: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
@@ -350,6 +427,8 @@ private fun AuthResult.enableErrorRes(): Int? = when (this) {
     AuthResult.ERROR -> R.string.app_lock_enable_error
 }
 
+private const val LANGUAGE_UNDO_MILLIS = 8_000L
+
 private val previewState = SettingsUiState(
     profile = UserProfile(name = "Abhishek"),
     categoryCounts = CategoryCounts(total = 28, custom = 3),
@@ -364,7 +443,8 @@ private fun SettingsContentPreview() {
             state = previewState.copy(appLock = AppLockSettings(enabled = true)),
             onEvent = {},
             onNavigateToCategories = {},
-            onNavigateToExportBackup = {}
+            onNavigateToExportBackup = {},
+            onNavigateToLanguage = {}
         )
     }
 }
@@ -377,7 +457,8 @@ private fun SettingsContentDeveloperPreview() {
             state = previewState.copy(profile = UserProfile(), isDeveloperSectionVisible = true),
             onEvent = {},
             onNavigateToCategories = {},
-            onNavigateToExportBackup = {}
+            onNavigateToExportBackup = {},
+            onNavigateToLanguage = {}
         )
     }
 }
@@ -390,7 +471,8 @@ private fun SettingsContentDeleteAllPreview() {
             state = previewState.copy(deleteAllConfirmation = "DELETE"),
             onEvent = {},
             onNavigateToCategories = {},
-            onNavigateToExportBackup = {}
+            onNavigateToExportBackup = {},
+            onNavigateToLanguage = {}
         )
     }
 }

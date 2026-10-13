@@ -1,5 +1,17 @@
 package com.example.expensetrackerpro.presentation
 
+import com.example.expensetrackerpro.domain.models.LanguageChange
+import com.example.expensetrackerpro.domain.models.LanguageChoice
+import com.example.expensetrackerpro.domain.models.AppLanguage
+import com.example.expensetrackerpro.presentation.settings.LanguageChangeController
+import com.example.expensetrackerpro.domain.usecase.language.SetAppLanguageUseCase
+import com.example.expensetrackerpro.domain.usecase.language.ResolveAppLocaleUseCase
+import com.example.expensetrackerpro.domain.usecase.language.ForgetLanguageChangeUseCase
+import com.example.expensetrackerpro.domain.usecase.language.UndoLanguageChangeUseCase
+import com.example.expensetrackerpro.domain.usecase.language.ObserveLanguageChangeUseCase
+import com.example.expensetrackerpro.domain.usecase.language.GetLanguageOptionsUseCase
+import com.example.expensetrackerpro.fakes.FakeDeviceLanguages
+import com.example.expensetrackerpro.fakes.FakeAppLanguageRepository
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.models.AppLockSettings
@@ -62,6 +74,9 @@ class SettingsViewModelTest {
         )
     )
 
+    private val languages = FakeAppLanguageRepository()
+    private val deviceLanguages = FakeDeviceLanguages()
+
     private fun viewModel(
         repository: FakeThemePreferenceRepository = FakeThemePreferenceRepository(),
         isDebug: Boolean = true
@@ -76,8 +91,70 @@ class SettingsViewModelTest {
         GetCategoryCountsUseCase(categories),
         LoadSampleDataUseCase(sampleData),
         DeleteAllDataUseCase(appData),
+        LanguageChangeController(
+            GetLanguageOptionsUseCase(languages, deviceLanguages, ResolveAppLocaleUseCase()),
+            ObserveLanguageChangeUseCase(languages),
+            UndoLanguageChangeUseCase(languages),
+            ForgetLanguageChangeUseCase(languages)
+        ),
         BuildInfo(isDebug = isDebug, versionName = "1.0")
     )
+
+    private val hindi = LanguageChoice.Specific(AppLanguage.HINDI)
+
+    private fun setAppLanguage(choice: LanguageChoice) =
+        SetAppLanguageUseCase(languages, deviceLanguages, ResolveAppLocaleUseCase())(choice)
+
+    @Test
+    fun showsTheLanguageTheAppIsIn_andReadsItAgainWhenTheScreenResumes() = runTest {
+        languages.stored = hindi
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+
+        assertEquals(hindi, viewModel.uiState.value.language)
+
+        // Changed on the Language screen, or in the phone's settings for the app
+        languages.stored = LanguageChoice.SystemDefault
+        viewModel.onEvent(SettingsEvent.ScreenResumed)
+
+        assertEquals(LanguageChoice.SystemDefault, viewModel.uiState.value.language)
+    }
+
+    @Test
+    fun aLanguageChange_isOfferedAnUndo_whichPutsThePreviousLanguageBack() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        assertNull(viewModel.uiState.value.languageChange)
+
+        setAppLanguage(hindi)
+
+        assertEquals(
+            LanguageChange(previous = LanguageChoice.SystemDefault, language = AppLanguage.HINDI),
+            viewModel.uiState.value.languageChange
+        )
+
+        viewModel.onEvent(SettingsEvent.LanguageUndoClicked)
+
+        assertEquals(LanguageChoice.SystemDefault, languages.stored)
+        // Going back is not itself offered an Undo
+        assertNull(viewModel.uiState.value.languageChange)
+    }
+
+    @Test
+    fun aLanguageChangeThatWasShown_staysAndIsNoLongerOffered() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        setAppLanguage(hindi)
+
+        viewModel.onEvent(SettingsEvent.LanguageChangeShown)
+
+        assertEquals(hindi, languages.stored)
+        assertNull(viewModel.uiState.value.languageChange)
+
+        // With nothing left to undo, a late Undo changes nothing
+        viewModel.onEvent(SettingsEvent.LanguageUndoClicked)
+        assertEquals(hindi, languages.stored)
+    }
 
     @Test
     fun showsTheSavedThemeMode() = runTest {
