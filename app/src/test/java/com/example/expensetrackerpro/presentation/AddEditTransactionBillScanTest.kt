@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation
 
+import com.example.expensetrackerpro.domain.models.BuiltInCategory
 import androidx.lifecycle.SavedStateHandle
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.error.DomainError
@@ -71,6 +72,7 @@ class AddEditTransactionBillScanTest {
     private val timeProvider = FakeTimeProvider(now)
 
     private val dining = category(id = 1, name = "Food & Dining", type = TransactionType.EXPENSE)
+        .copy(builtInKey = BuiltInCategory.FOOD_DINING)
     private val bills = category(id = 2, name = "Bills", type = TransactionType.EXPENSE)
     private val salary = category(id = 3, name = "Salary", type = TransactionType.INCOME)
 

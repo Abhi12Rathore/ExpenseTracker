@@ -42,7 +42,7 @@ import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.BackupPreview
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
-import com.example.expensetrackerpro.utils.DateFormatter
+import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 
 private val CardShape = RoundedCornerShape(20.dp)
 
@@ -119,7 +119,7 @@ fun RestoreBackupSheetContent(
 
                 DetailRow(
                     label = stringResource(R.string.restore_sheet_created),
-                    value = DateFormatter.formatDateTime(preview.createdAtMillis)
+                    value = LocalDateFormatter.current.formatDateTime(preview.createdAtMillis)
                 )
                 DetailRow(
                     label = stringResource(R.string.restore_sheet_transactions),
@@ -133,7 +133,7 @@ fun RestoreBackupSheetContent(
                 if (oldest != null && newest != null) {
                     DetailRow(
                         label = stringResource(R.string.restore_sheet_period),
-                        value = DateFormatter.formatMonthRange(oldest, newest)
+                        value = LocalDateFormatter.current.formatMonthRange(oldest, newest)
                     )
                 }
             }

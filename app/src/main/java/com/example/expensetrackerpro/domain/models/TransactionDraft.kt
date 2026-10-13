@@ -16,17 +16,18 @@ data class TransactionDraft(
 )
 
 /**
- * The kind of spending a draft looks like. [categoryNames] are the default categories it stands
- * for, most fitting first; it is only a suggestion, and none if the user has deleted them all.
+ * The kind of spending a draft looks like. [categories] are the built-in categories it stands
+ * for, most fitting first; it is only a suggestion, and none if the user has renamed or deleted
+ * them all.
  */
-enum class CategoryHint(val categoryNames: List<String>) {
-    FOOD(listOf("Food & Dining")),
-    GROCERIES(listOf("Groceries")),
-    FUEL(listOf("Fuel", "Transport")),
-    TRANSPORT(listOf("Transport")),
-    HEALTH(listOf("Health")),
-    SHOPPING(listOf("Shopping")),
-    BILLS(listOf("Bills & Utilities")),
-    ENTERTAINMENT(listOf("Entertainment")),
-    TRAVEL(listOf("Travel"))
+enum class CategoryHint(val categories: List<BuiltInCategory>) {
+    FOOD(listOf(BuiltInCategory.FOOD_DINING)),
+    GROCERIES(listOf(BuiltInCategory.GROCERIES)),
+    FUEL(listOf(BuiltInCategory.FUEL, BuiltInCategory.TRANSPORT)),
+    TRANSPORT(listOf(BuiltInCategory.TRANSPORT)),
+    HEALTH(listOf(BuiltInCategory.HEALTH)),
+    SHOPPING(listOf(BuiltInCategory.SHOPPING)),
+    BILLS(listOf(BuiltInCategory.BILLS_UTILITIES)),
+    ENTERTAINMENT(listOf(BuiltInCategory.ENTERTAINMENT)),
+    TRAVEL(listOf(BuiltInCategory.TRAVEL))
 }

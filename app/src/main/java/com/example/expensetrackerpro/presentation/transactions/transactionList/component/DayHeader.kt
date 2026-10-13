@@ -18,12 +18,12 @@ import com.example.expensetrackerpro.domain.models.DayLabel
 import com.example.expensetrackerpro.domain.models.TransactionDayGroup
 import com.example.expensetrackerpro.ui.theme.extendedColors
 import com.example.expensetrackerpro.utils.CurrencyFormatter
-import com.example.expensetrackerpro.utils.DateFormatter
+import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 
 /** `TODAY · FRI 9 OCT` on the left, the day's net on the right. Opaque, so rows pass under it. */
 @Composable
 fun DayHeader(day: TransactionDayGroup, modifier: Modifier = Modifier) {
-    val date = DateFormatter.formatDayHeader(day.dayStartMillis)
+    val date = LocalDateFormatter.current.formatDayHeader(day.dayStartMillis)
     val title = when (day.label) {
         DayLabel.TODAY -> stringResource(
             R.string.transactions_day_header_named,

@@ -1,5 +1,11 @@
 package com.example.expensetrackerpro.presentation
 
+import java.util.Locale
+import com.example.expensetrackerpro.domain.models.BuiltInCategory
+import com.example.expensetrackerpro.domain.locale.AppLocaleProvider
+import com.example.expensetrackerpro.fakes.HINDI
+import com.example.expensetrackerpro.fakes.FakeAppLocaleProvider
+import com.example.expensetrackerpro.fakes.localizeDefaultCategories
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.Outcome
@@ -20,7 +26,6 @@ import com.example.expensetrackerpro.domain.usecase.applock.GetAppLockSettingsUs
 import com.example.expensetrackerpro.domain.usecase.applock.GetBiometricStatusUseCase
 import com.example.expensetrackerpro.domain.usecase.applock.GetCurrentTimeMillisUseCase
 import com.example.expensetrackerpro.domain.usecase.applock.ShouldLockUseCase
-import com.example.expensetrackerpro.domain.usecase.category.GetCategoriesUseCase
 import com.example.expensetrackerpro.domain.usecase.theme.GetThemeModeUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.DeleteTransactionUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.ObserveDeletedTransactionsUseCase
@@ -71,9 +76,12 @@ class MainViewModelTest {
         categoryRepository: CategoryRepository = FakeCategoryRepository(),
         themeRepository: ThemePreferenceRepository = FakeThemePreferenceRepository(),
         appLockRepository: AppLockRepository = FakeAppLockRepository(),
-        transactionRepository: TransactionRepository = FakeTransactionRepository()
+        transactionRepository: TransactionRepository = FakeTransactionRepository(),
+        localeProvider: AppLocaleProvider = FakeAppLocaleProvider(),
+        // The activity reports itself created as soon as the app starts
+        isActivityCreated: Boolean = true
     ) = MainViewModel(
-        GetCategoriesUseCase(categoryRepository),
+        localizeDefaultCategories(categoryRepository, localeProvider),
         GetThemeModeUseCase(themeRepository),
         ObserveDeletedTransactionsUseCase(transactionRepository),
         RestoreTransactionUseCase(transactionRepository),
@@ -83,7 +91,7 @@ class MainViewModelTest {
             ShouldLockUseCase(timeProvider),
             GetCurrentTimeMillisUseCase(timeProvider)
         )
-    )
+    ).apply { if (isActivityCreated) onEvent(MainEvent.ActivityCreated) }
 
     private fun lockedViewModel(timeout: LockTimeout = LockTimeout.SECONDS_30) =
         mainViewModel(appLockRepository = FakeAppLockRepository(AppLockSettings(true, timeout)))
@@ -131,6 +139,61 @@ class MainViewModelTest {
 
         assertTrue(viewModel.uiState.value.isReady)
         assertEquals(ThemeMode.DARK, viewModel.uiState.value.themeMode)
+    }
+
+    @Test
+    fun notReadyUntilTheActivityIsCreated() = runTest {
+        val viewModel = mainViewModel(isActivityCreated = false)
+
+        assertFalse(viewModel.uiState.value.isReady)
+
+        viewModel.onEvent(MainEvent.ActivityCreated)
+
+        assertTrue(viewModel.uiState.value.isReady)
+    }
+
+    @Test
+    fun builtInCategories_takeTheAppsLanguage_atStartAndWheneverTheActivityIsCreatedAgain() = runTest {
+        val repository = FakeCategoryRepository(
+            listOf(
+                category(id = 1, name = "Fuel").copy(isCustom = false, builtInKey = BuiltInCategory.FUEL),
+                category(id = 2, name = "Pets")
+            )
+        )
+        val localeProvider = FakeAppLocaleProvider(HINDI)
+        val viewModel = mainViewModel(repository, localeProvider = localeProvider)
+
+        assertEquals(listOf("ईंधन", "Pets"), repository.current.map { it.name })
+
+        // A change of language creates the activity again
+        localeProvider.locale = Locale.ENGLISH
+        viewModel.onEvent(MainEvent.ActivityCreated)
+
+        assertEquals(listOf("Fuel", "Pets"), repository.current.map { it.name })
+    }
+
+    @Test
+    fun readyEvenWhenTheCategoriesCouldNotBeRenamed() = runTest {
+        val repository = FakeCategoryRepository(
+            listOf(category(id = 1, name = "Fuel").copy(isCustom = false, builtInKey = BuiltInCategory.FUEL))
+        ).apply { saveFailure = DomainError.StorageFailure() }
+
+        val viewModel = mainViewModel(repository, localeProvider = FakeAppLocaleProvider(HINDI))
+
+        assertTrue(viewModel.uiState.value.isReady)
+        assertEquals("Fuel", repository.current.single().name)
+    }
+
+    @Test
+    fun aChangeOfLanguage_whichCreatesTheActivityAgain_doesNotLockTheApp() = runTest {
+        val viewModel = unlockedViewModel(LockTimeout.IMMEDIATELY)
+
+        // What the activity reports when it is created again: it was never in the background
+        viewModel.onEvent(MainEvent.ActivityCreated)
+        viewModel.onEvent(MainEvent.AppForegrounded)
+
+        assertFalse(viewModel.uiState.value.isLocked)
+        assertFalse(viewModel.uiState.value.isPromptRequested)
     }
 
     @Test
@@ -381,6 +444,9 @@ private class PendingCategoryRepository : CategoryRepository {
     override suspend fun insertCategory(category: Category): Outcome<CategoryId> = Outcome.Success(category.id)
 
     override suspend fun updateCategory(category: Category): Outcome<Unit> = Outcome.Success(Unit)
+
+    override suspend fun renameBuiltInCategories(namesById: Map<CategoryId, String>): Outcome<Unit> =
+        Outcome.Success(Unit)
 
     override suspend fun deleteCategory(category: Category): Outcome<Unit> = Outcome.Success(Unit)
 

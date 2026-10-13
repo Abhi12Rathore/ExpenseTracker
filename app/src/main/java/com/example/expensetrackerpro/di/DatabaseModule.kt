@@ -9,6 +9,8 @@ import com.example.expensetrackerpro.data.local.dao.SampleDataDao
 import com.example.expensetrackerpro.data.local.dao.TransactionDao
 import com.example.expensetrackerpro.data.local.expenseDatabase.AppDatabase
 import com.example.expensetrackerpro.data.local.expenseDatabase.ExpenseDatabaseCallback
+import com.example.expensetrackerpro.domain.category.DefaultCategoryNames
+import com.example.expensetrackerpro.domain.locale.AppLocaleProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,7 +25,9 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideAppDatabase(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
+        defaultCategoryNames: DefaultCategoryNames,
+        appLocaleProvider: AppLocaleProvider
     ): AppDatabase =
         Room.databaseBuilder(
             context,
@@ -31,7 +35,7 @@ object DatabaseModule {
             "finance_pro_db"
         )
             .fallbackToDestructiveMigration()
-            .addCallback(ExpenseDatabaseCallback())
+            .addCallback(ExpenseDatabaseCallback(defaultCategoryNames, appLocaleProvider))
             .build()
 
     @Provides

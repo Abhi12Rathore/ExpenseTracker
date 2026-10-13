@@ -1,12 +1,23 @@
 package com.example.expensetrackerpro.utils
 
+import com.example.expensetrackerpro.domain.locale.AppLocaleProvider
+import com.example.expensetrackerpro.domain.time.TimeProvider
+import java.text.BreakIterator
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import javax.inject.Inject
 
-/** The single place epoch millis are turned into text for the UI. */
-object DateFormatter {
+/**
+ * The single place epoch millis are turned into text for the UI. Month and day names are in
+ * the app's language, which is not always the phone's; digits are always Western. The examples
+ * below are in English.
+ */
+class DateFormatter @Inject constructor(
+    private val localeProvider: AppLocaleProvider,
+    private val timeProvider: TimeProvider
+) {
 
     /** e.g. `08 Oct, 2026` */
     fun formatDate(millis: Long): String = format("dd MMM, yyyy", millis)
@@ -23,8 +34,17 @@ object DateFormatter {
     /** e.g. `Oct` */
     fun formatShortMonth(millis: Long): String = format("MMM", millis)
 
-    /** The month's first letter, e.g. `O`, for tight chart axes. */
-    fun formatMonthInitial(millis: Long): String = formatShortMonth(millis).take(1)
+    /**
+     * The month's first letter, e.g. `O`, for tight chart axes. A letter is taken with the marks
+     * written onto it, so a Hindi month keeps its vowel sign (`जु` for July, not a bare `ज`).
+     */
+    fun formatMonthInitial(millis: Long): String {
+        val month = formatShortMonth(millis)
+        val letters = BreakIterator.getCharacterInstance(localeProvider.current()).apply { setText(month) }
+        val end = letters.next()
+
+        return if (end == BreakIterator.DONE) month else month.substring(0, end)
+    }
 
     /** e.g. `Fri` */
     fun formatWeekday(millis: Long): String = format("EEE", millis)
@@ -52,8 +72,8 @@ object DateFormatter {
      * `Oct 2026` for a single month, `Nov 2025 – Oct 2026` across a year.
      */
     fun formatMonthRange(startMillis: Long, endMillis: Long): String {
-        val start = Calendar.getInstance().apply { timeInMillis = startMillis }
-        val end = Calendar.getInstance().apply { timeInMillis = endMillis }
+        val start = calendarAt(startMillis)
+        val end = calendarAt(endMillis)
         val sameYear = start.get(Calendar.YEAR) == end.get(Calendar.YEAR)
         val sameMonth = sameYear && start.get(Calendar.MONTH) == end.get(Calendar.MONTH)
 
@@ -65,8 +85,7 @@ object DateFormatter {
     }
 
     /**
-     * ISO 8601, e.g. `2026-10-08`, for files and file names. Always in Western digits,
-     * whatever the device's language.
+     * ISO 8601, e.g. `2026-10-08`, for files and file names. The same in every language.
      */
     fun formatIsoDate(millis: Long): String = format("yyyy-MM-dd", millis, Locale.US)
 
@@ -76,8 +95,8 @@ object DateFormatter {
      * crosses a year always shows both (`29 Dec 2025 – 4 Jan 2026`).
      */
     fun formatDayRange(startMillis: Long, endMillis: Long, withYear: Boolean): String {
-        val start = Calendar.getInstance().apply { timeInMillis = startMillis }
-        val end = Calendar.getInstance().apply { timeInMillis = endMillis }
+        val start = calendarAt(startMillis)
+        val end = calendarAt(endMillis)
         val sameYear = start.get(Calendar.YEAR) == end.get(Calendar.YEAR)
         val sameMonth = sameYear && start.get(Calendar.MONTH) == end.get(Calendar.MONTH)
         val sameDay = sameMonth && start.get(Calendar.DAY_OF_MONTH) == end.get(Calendar.DAY_OF_MONTH)
@@ -94,7 +113,12 @@ object DateFormatter {
         return if (withYear) "$days ${formatYear(endMillis)}" else days
     }
 
+    // In the phone's time zone, like every date in the app
+    private fun calendarAt(millis: Long): Calendar = timeProvider.now().apply { timeInMillis = millis }
+
     // SimpleDateFormat is not thread-safe, so a new one is created per call
-    private fun format(pattern: String, millis: Long, locale: Locale = Locale.getDefault()): String =
-        SimpleDateFormat(pattern, locale).format(Date(millis))
+    private fun format(pattern: String, millis: Long, locale: Locale = localeProvider.current()): String =
+        SimpleDateFormat(pattern, locale)
+            .apply { timeZone = timeProvider.now().timeZone }
+            .format(Date(millis))
 }

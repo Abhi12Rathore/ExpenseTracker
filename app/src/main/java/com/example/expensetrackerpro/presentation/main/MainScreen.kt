@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -46,7 +47,8 @@ fun MainScreen(
     snackbarHostState: SnackbarHostState,
     onNavigateToTransactionForm: (TransactionId?) -> Unit,
     onNavigateToManageCategories: () -> Unit,
-    onNavigateToExportBackup: () -> Unit
+    onNavigateToExportBackup: () -> Unit,
+    onNavigateToLanguage: () -> Unit
 ) {
     val bottomNavController = rememberNavController()
 
@@ -145,7 +147,8 @@ fun MainScreen(
                 composable(BottomNavItem.Settings.route) {
                     SettingsScreen(
                         onNavigateToCategories = onNavigateToManageCategories,
-                        onNavigateToExportBackup = onNavigateToExportBackup
+                        onNavigateToExportBackup = onNavigateToExportBackup,
+                        onNavigateToLanguage = onNavigateToLanguage
                     )
                 }
             }
@@ -176,7 +179,10 @@ private fun MainBottomBar(
                     Text(
                         text = stringResource(item.titleRes),
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                        // One line in every language: a longer name is cut rather than wrapped
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(

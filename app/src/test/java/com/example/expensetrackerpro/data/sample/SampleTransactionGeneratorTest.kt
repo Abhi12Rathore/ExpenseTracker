@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.data.sample
 
+import com.example.expensetrackerpro.fakes.FakeDefaultCategoryNames
 import com.example.expensetrackerpro.domain.models.DefaultCategories
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.TransactionType
@@ -35,6 +36,9 @@ class SampleTransactionGeneratorTest {
     private val SampleTransaction.day get() = calendar().get(Calendar.DAY_OF_MONTH)
 
     private fun inCategory(name: String) = samples.filter { it.categoryName == name }
+
+    // Named in English here, so the expectations below read like the sample data
+    private val SampleTransaction.categoryName get() = FakeDefaultCategoryNames.english.getValue(category)
 
     private fun SampleTransaction.signed() = if (type == TransactionType.INCOME) amount else -amount
 
@@ -94,14 +98,14 @@ class SampleTransactionGeneratorTest {
     @Test
     fun everyDefaultCategory_isUsed_withItsOwnType() {
         assertEquals(
-            DefaultCategories.all.map { it.name to it.type }.toSet(),
-            samples.map { it.categoryName to it.type }.toSet()
+            DefaultCategories.all.map { it to it.type }.toSet(),
+            samples.map { it.category to it.type }.toSet()
         )
     }
 
     @Test
     fun everyDefaultCategory_isStillUsed_onTheFirstOfAMonth_andInOtherYears() {
-        val expected = DefaultCategories.all.map { it.name }.toSet()
+        val expected = DefaultCategories.all.toSet()
         val days = listOf(
             millisAt(2026, Calendar.OCTOBER, 1, hour = 0, minute = 5),
             millisAt(2025, Calendar.NOVEMBER, 15, hour = 12),
@@ -110,7 +114,7 @@ class SampleTransactionGeneratorTest {
         )
 
         days.forEach { day ->
-            val used = SampleTransactionGenerator(FakeTimeProvider(day))().map { it.categoryName }.toSet()
+            val used = SampleTransactionGenerator(FakeTimeProvider(day))().map { it.category }.toSet()
             assertEquals(expected, used)
         }
     }

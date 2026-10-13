@@ -27,14 +27,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.DateChoice
-import com.example.expensetrackerpro.utils.DateFormatter
+import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 
 /** "Today", "Yesterday", or the date itself when it is neither. */
 @Composable
 fun transactionDateLabel(dateChoice: DateChoice, dateMillis: Long): String = when (dateChoice) {
     DateChoice.TODAY -> stringResource(R.string.transaction_date_today)
     DateChoice.YESTERDAY -> stringResource(R.string.transaction_date_yesterday)
-    DateChoice.OTHER -> DateFormatter.formatDate(dateMillis)
+    DateChoice.OTHER -> LocalDateFormatter.current.formatDate(dateMillis)
 }
 
 /** Today and Yesterday shortcuts, plus a chip that opens a date picker ending today. */
@@ -78,7 +78,7 @@ fun DateSelectionSection(
                 onClick = { showDatePicker = true },
                 label = {
                     Text(
-                        if (dateChoice == DateChoice.OTHER) DateFormatter.formatDate(dateMillis)
+                        if (dateChoice == DateChoice.OTHER) LocalDateFormatter.current.formatDate(dateMillis)
                         else stringResource(R.string.transaction_date_pick)
                     )
                 },

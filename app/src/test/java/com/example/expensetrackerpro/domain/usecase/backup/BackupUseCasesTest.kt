@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.domain.usecase.backup
 
+import com.example.expensetrackerpro.fakes.FakeCategoryRepository
+import com.example.expensetrackerpro.fakes.localizeDefaultCategories
 import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.error.getOrNull
@@ -29,6 +31,7 @@ class BackupUseCasesTest {
     private val time = FakeTimeProvider(now)
 
     private val backups = FakeBackupRepository()
+    private val categories = FakeCategoryRepository()
     private val backupInfo = FakeBackupInfoRepository()
     private val transactions = FakeTransactionRepository(
         listOf(transaction(id = 1), transaction(id = 2), transaction(id = 3), transaction(id = 4))
@@ -39,7 +42,7 @@ class BackupUseCasesTest {
     private val createBackup = CreateBackupUseCase(backups, backupInfo, time, BuildInfo(isDebug = false, versionName = "1.4"))
     private val readBackup = ReadBackupUseCase(backups, ValidateBackupUseCase(ValidateCategoryNameUseCase()))
     private val previewBackup = PreviewBackupUseCase(readBackup, GetTransactionsUseCase(transactions))
-    private val restoreBackup = RestoreBackupUseCase(readBackup, backups)
+    private val restoreBackup = RestoreBackupUseCase(readBackup, backups, localizeDefaultCategories(categories))
 
     @Test
     fun createBackup_writesItStampedWithNowAndTheAppVersion_andRemembersWhen() = runTest {

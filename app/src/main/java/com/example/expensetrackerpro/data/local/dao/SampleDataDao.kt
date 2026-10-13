@@ -23,11 +23,18 @@ abstract class SampleDataDao {
     @Query("DELETE FROM transactions")
     abstract suspend fun deleteAllTransactions()
 
-    /** Adds those of [categories] that no stored category matches by name and type; returns all stored. */
+    /**
+     * Adds those of the built-in [categories] that are not stored, either under their key or,
+     * for one that lost its key, under the same name and type. Returns all stored.
+     */
     @Transaction
     open suspend fun addMissingCategories(categories: List<CategoryEntity>): List<CategoryEntity> {
-        val stored = getCategories().map { it.name to it.type }.toSet()
-        insertCategories(categories.filter { (it.name to it.type) !in stored })
+        val stored = getCategories()
+        val storedKeys = stored.mapNotNull { it.builtInKey }.toSet()
+        val storedNames = stored.map { it.name to it.type }.toSet()
+        insertCategories(
+            categories.filter { it.builtInKey !in storedKeys && (it.name to it.type) !in storedNames }
+        )
 
         return getCategories()
     }

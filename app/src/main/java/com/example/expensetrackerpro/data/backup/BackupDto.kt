@@ -18,14 +18,16 @@ data class BackupDto(
     val transactions: List<BackupTransactionDto>
 )
 
-/** [type] is the TransactionType's name and [icon] the CategoryIcon's key. */
+/** [type] is the TransactionType's name, [icon] the CategoryIcon's key and [builtInKey] the BuiltInCategory's. */
 @Serializable
 data class BackupCategoryDto(
     val id: Int,
     val name: String,
     val type: String,
     val icon: String,
-    val isCustom: Boolean
+    val isCustom: Boolean,
+    // Optional, and left out when null: files written before it existed have none
+    val builtInKey: String? = null
 )
 
 @Serializable

@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Hindi. Everyday words, as finance apps in India use them, rather than literal or formal ones.
+
+    Glossary (keep these the same everywhere):
+        transaction        लेन-देन              expense    खर्च           income    आय
+        savings / saved    बचत                  balance    बैलेंस          amount    राशि
+        category           कैटेगरी              settings   सेटिंग्स        note      नोट
+        backup / restore   बैकअप / रीस्टोर       export     एक्सपोर्ट       file      फ़ाइल
+        delete             हटाएं                save       सेव करें        cancel    रद्द करें
+        undo               वापस लें             search     खोजें           title     टाइटल
+        week / month / year  हफ़्ता / महीना / साल   today / yesterday  आज / कल
+        app lock           ऐप लॉक               screen lock  स्क्रीन लॉक   bill      बिल
+        built-in / custom  बिल्ट-इन / कस्टम
+
+    Kept in Latin letters, as people write them: EMI, UPI, CSV, Excel, Google Sheets, and the
+    app's name. Numbers use Western digits. Verbs on buttons take the polite form (करें, चुनें).
+    Not here on purpose: strings marked translatable="false" in values/strings.xml.
+-->
+<resources>
+    <!-- Dashboard header -->
+    <string name="greeting_morning">सुप्रभात 👋</string>
+    <string name="greeting_afternoon">नमस्ते 👋</string>
+    <string name="greeting_evening">शुभ संध्या 👋</string>
+    <string name="greeting_no_name">स्वागत है</string>
+
+    <!-- Date filter -->
+    <string name="filter_week">हफ़्ता</string>
+    <string name="filter_month">महीना</string>
+    <string name="filter_year">साल</string>
+    <string name="filter_previous_period">पिछली अवधि</string>
+    <string name="filter_next_period">अगली अवधि</string>
+    <string name="filter_custom_range">अपनी तारीखें चुनें</string>
+    <string name="filter_custom_confirm">ठीक है</string>
+    <string name="filter_custom_cancel">रद्द करें</string>
+    <string name="filter_custom">कस्टम</string>
+    <string name="filter_all_time">अब तक का सब</string>
+    <string name="filter_choose_granularity">अवधि की लंबाई बदलें</string>
+
+    <!-- Dashboard balance card -->
+    <string name="balance_label">बैलेंस · %1$s</string>
+    <string name="summary_income">आय</string>
+    <string name="summary_expense">खर्च</string>
+    <string name="summary_savings">बचत</string>
+
+    <string name="comparison_more_saved">▲ %2$s की तुलना में %1$s ज़्यादा बचत</string>
+    <string name="comparison_less_saved">▼ %2$s की तुलना में %1$s कम बचत</string>
+    <string name="comparison_same_saved">%1$s जितनी ही बचत</string>
+    <!-- What a period is compared with; each is followed by "की तुलना में" or "जितनी ही" -->
+    <string name="compared_with_this_time_last_week">पिछले हफ़्ते इसी समय</string>
+    <string name="compared_with_this_time_last_month">पिछले महीने इसी समय</string>
+    <string name="compared_with_this_time_last_year">पिछले साल इसी समय</string>
+    <string name="compared_with_week_before">उससे पिछले हफ़्ते</string>
+
+    <!-- Dashboard spending bars -->
+    <string name="spending_daily_title">रोज़ का खर्च</string>
+    <string name="spending_monthly_title">महीने का खर्च</string>
+    <string name="spending_average_per_day">औसत %1$s/दिन</string>
+    <string name="spending_average_per_month">औसत %1$s/महीना</string>
+    <string name="spending_tooltip_open_transactions">इन्हें लेन-देन में देखें</string>
+    <string name="spending_empty">इस अवधि में अभी कोई खर्च नहीं। जो खर्च आप जोड़ेंगे, वे यहाँ दिखेंगे।</string>
+    <plurals name="transaction_count">
+        <item quantity="one">%1$d लेन-देन</item>
+        <item quantity="other">%1$d लेन-देन</item>
+    </plurals>
+
+    <!-- Dashboard spending pace -->
+    <string name="pace_title">खर्च की रफ़्तार</string>
+    <string name="pace_less">%2$s की तुलना में %1$s कम</string>
+    <string name="pace_more">%2$s की तुलना में %1$s ज़्यादा</string>
+    <string name="pace_same">%1$s जितना ही खर्च</string>
+    <string name="pace_legend_current">यह अवधि</string>
+    <string name="pace_legend_previous">पिछली अवधि</string>
+    <string name="pace_empty">इस अवधि और इससे पिछली अवधि में कोई खर्च नहीं। आपकी रफ़्तार यहाँ दिखेगी।</string>
+
+    <!-- Dashboard net savings by month -->
+    <string name="net_savings_title">हर महीने की बचत</string>
+    <string name="net_savings_legend_saved">बचत</string>
+    <string name="net_savings_legend_overspent">ज़्यादा खर्च</string>
+    <string name="net_savings_bar_saved">%1$s: %2$s की बचत</string>
+    <string name="net_savings_bar_overspent">%1$s: %2$s ज़्यादा खर्च</string>
+    <string name="net_savings_empty">इस साल अभी कोई आय या खर्च नहीं। हर महीने की बचत यहाँ दिखेगी।</string>
+
+    <!-- Dashboard category ranking -->
+    <string name="category_spending_title">आपका पैसा कहाँ गया</string>
+    <plurals name="category_spending_subtitle">
+        <item quantity="one">%2$d कैटेगरी में %1$s</item>
+        <item quantity="other">%2$d कैटेगरी में %1$s</item>
+    </plurals>
+    <string name="category_spending_other">अन्य</string>
+    <string name="category_spending_expand_other">बाकी कैटेगरी दिखाएं</string>
+    <string name="category_spending_collapse_other">बाकी कैटेगरी छिपाएं</string>
+    <string name="category_spending_empty">अभी दिखाने के लिए कोई खर्च नहीं। एक खर्च जोड़ें और देखें कि पैसा कहाँ जाता है।</string>
+
+    <!-- The built-in categories. Two of one type must never share a name -->
+    <string name="category_default_food_dining">खाना-पीना</string>
+    <string name="category_default_groceries">किराना</string>
+    <string name="category_default_transport">आना-जाना</string>
+    <string name="category_default_fuel">ईंधन</string>
+    <string name="category_default_shopping">खरीदारी</string>
+    <string name="category_default_bills_utilities">बिल और यूटिलिटी</string>
+    <string name="category_default_rent_home">किराया और घर</string>
+    <string name="category_default_health">सेहत</string>
+    <string name="category_default_education">पढ़ाई</string>
+    <string name="category_default_entertainment">मनोरंजन</string>
+    <string name="category_default_travel">यात्रा</string>
+    <string name="category_default_subscriptions">सब्सक्रिप्शन</string>
+    <string name="category_default_personal_care">पर्सनल केयर</string>
+    <string name="category_default_gifts_donations">उपहार और दान</string>
+    <string name="category_default_emi_loans">EMI और लोन</string>
+    <string name="category_default_other">अन्य</string>
+    <string name="category_default_salary">सैलरी</string>
+    <string name="category_default_freelance">फ्रीलांस</string>
+    <string name="category_default_business">बिज़नेस</string>
+    <string name="category_default_investments">निवेश</string>
+    <string name="category_default_interest">ब्याज</string>
+    <string name="category_default_rental_income">किराये से आय</string>
+    <string name="category_default_refunds_cashback">रिफंड और कैशबैक</string>
+    <string name="category_default_gifts_received">मिले उपहार</string>
+    <string name="category_default_other_income">अन्य आय</string>
+
+    <!-- Category icons: picker sections, then what each icon is read out as -->
+    <string name="category_icon_group_food_and_shopping">खाना और खरीदारी</string>
+    <string name="category_icon_group_home_and_bills">घर और बिल</string>
+    <string name="category_icon_group_getting_around">आना-जाना</string>
+    <string name="category_icon_group_health_and_life">सेहत और ज़िंदगी</string>
+    <string name="category_icon_group_money">पैसा</string>
+    <string name="category_icon_restaurant">रेस्टोरेंट</string>
+    <string name="category_icon_shopping_basket">खरीदारी की टोकरी</string>
+    <string name="category_icon_shopping_bag">शॉपिंग बैग</string>
+    <string name="category_icon_storefront">दुकान</string>
+    <string name="category_icon_local_cafe">कॉफ़ी</string>
+    <string name="category_icon_fastfood">फ़ास्ट फ़ूड</string>
+    <string name="category_icon_local_pizza">पिज़्ज़ा</string>
+    <string name="category_icon_local_bar">ड्रिंक्स</string>
+    <string name="category_icon_checkroom">कपड़े</string>
+    <string name="category_icon_devices">इलेक्ट्रॉनिक्स</string>
+    <string name="category_icon_receipt_long">बिल</string>
+    <string name="category_icon_home">घर</string>
+    <string name="category_icon_subscriptions">सब्सक्रिप्शन</string>
+    <string name="category_icon_apartment">अपार्टमेंट</string>
+    <string name="category_icon_bolt">बिजली</string>
+    <string name="category_icon_water_drop">पानी</string>
+    <string name="category_icon_wifi">इंटरनेट</string>
+    <string name="category_icon_phone_android">फ़ोन</string>
+    <string name="category_icon_local_laundry_service">धुलाई</string>
+    <string name="category_icon_build">मरम्मत</string>
+    <string name="category_icon_directions_car">कार</string>
+    <string name="category_icon_local_gas_station">ईंधन</string>
+    <string name="category_icon_flight">हवाई जहाज़</string>
+    <string name="category_icon_directions_bus">बस</string>
+    <string name="category_icon_train">ट्रेन</string>
+    <string name="category_icon_two_wheeler">दोपहिया</string>
+    <string name="category_icon_local_taxi">टैक्सी</string>
+    <string name="category_icon_directions_bike">साइकिल</string>
+    <string name="category_icon_hotel">होटल</string>
+    <string name="category_icon_medical_services">इलाज</string>
+    <string name="category_icon_school">पढ़ाई</string>
+    <string name="category_icon_movie">फ़िल्में</string>
+    <string name="category_icon_spa">पर्सनल केयर</string>
+    <string name="category_icon_card_giftcard">उपहार</string>
+    <string name="category_icon_fitness_center">फ़िटनेस</string>
+    <string name="category_icon_pets">पालतू जानवर</string>
+    <string name="category_icon_child_care">बच्चे</string>
+    <string name="category_icon_menu_book">किताबें</string>
+    <string name="category_icon_sports_esports">गेम</string>
+    <string name="category_icon_volunteer_activism">दान</string>
+    <string name="category_icon_category">अन्य</string>
+    <string name="category_icon_payments">सैलरी</string>
+    <string name="category_icon_laptop">फ्रीलांस</string>
+    <string name="category_icon_trending_up">निवेश</string>
+    <string name="category_icon_savings">बचत</string>
+    <string name="category_icon_currency_exchange">रिफंड</string>
+    <string name="category_icon_redeem">मिला उपहार</string>
+    <string name="category_icon_account_balance_wallet">बटुआ</string>
+    <string name="category_icon_credit_card">कार्ड</string>
+    <string name="category_icon_account_balance">बैंक</string>
+    <string name="category_icon_work">काम</string>
+    <string name="category_icon_shield">बीमा</string>
+    <string name="category_icon_percent">टैक्स</string>
+    <string name="category_icon_currency_rupee">नकद</string>
+    <string name="category_icon_receipt">रसीद</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_insights">इनसाइट्स</string>
+    <string name="nav_transactions">हिस्ट्री</string>
+    <string name="nav_add_transaction">लेन-देन जोड़ें</string>
+    <string name="nav_settings">सेटिंग्स</string>
+
+    <!-- Transactions -->
+    <string name="transactions_title">हिस्ट्री</string>
+    <string name="transactions_search">खोजें</string>
+    <string name="transactions_search_close">खोज बंद करें</string>
+    <string name="transactions_search_placeholder">टाइटल, नोट या कैटेगरी खोजें</string>
+    <string name="transactions_search_all_time">अब तक के सब में खोजें</string>
+    <string name="transactions_no_matches_title">कुछ नहीं मिला</string>
+    <string name="transactions_no_matches_description">इस अवधि में \"%1$s\" से मिलता कुछ नहीं है</string>
+    <string name="transactions_no_matches_all_time_description">\"%1$s\" से मिलता कुछ नहीं है</string>
+    <string name="transactions_clear_category_filter">कैटेगरी फ़िल्टर हटाएं</string>
+    <string name="transactions_transaction_deleted">लेन-देन हटा दिया गया</string>
+    <string name="transactions_undo">वापस लें</string>
+    <string name="transactions_filter_all">सभी</string>
+    <!-- Summary strip -->
+    <string name="transactions_summary_income">आय</string>
+    <string name="transactions_summary_expense">खर्च</string>
+    <string name="transactions_summary_net">नेट</string>
+    <string name="transactions_summary_total">कुल</string>
+    <string name="transactions_summary_entries">एंट्री</string>
+    <string name="transactions_summary_biggest">सबसे बड़ा</string>
+    <string name="transactions_summary_results">नतीजे</string>
+    <string name="transactions_summary_average">औसत</string>
+    <!-- Empty list; the argument is one of the periods below, e.g. "इस महीने कोई आय नहीं" -->
+    <string name="transactions_empty_all">%1$s कोई लेन-देन नहीं</string>
+    <string name="transactions_empty_expense">%1$s कोई खर्च नहीं</string>
+    <string name="transactions_empty_income">%1$s कोई आय नहीं</string>
+    <string name="transactions_empty_this_week">इस हफ़्ते</string>
+    <string name="transactions_empty_this_month">इस महीने</string>
+    <string name="transactions_empty_this_year">इस साल</string>
+    <string name="transactions_empty_in_period">%1$s में</string>
+    <string name="transactions_empty_all_time">अभी तक</string>
+    <string name="transactions_empty_hint">जोड़ने के लिए + दबाएं</string>
+
+    <!-- Add / edit transaction -->
+    <string name="transaction_add_expense">खर्च जोड़ें</string>
+    <string name="transaction_add_income">आय जोड़ें</string>
+    <string name="transaction_edit_expense">खर्च बदलें</string>
+    <string name="transaction_edit_income">आय बदलें</string>
+    <string name="transaction_close">बंद करें</string>
+    <string name="transaction_back">वापस</string>
+    <string name="transaction_delete">हटाएं</string>
+    <string name="transaction_type_expense">खर्च</string>
+    <string name="transaction_type_income">आय</string>
+    <string name="transaction_amount">राशि</string>
+    <string name="transaction_summary_no_category">कोई कैटेगरी नहीं</string>
+    <string name="transaction_summary_edit_amount">राशि बदलें</string>
+    <string name="transaction_category">कैटेगरी</string>
+    <string name="transaction_category_new">नई</string>
+    <string name="transaction_title">टाइटल</string>
+    <string name="transaction_title_placeholder_expense">किस पर खर्च किया?</string>
+    <string name="transaction_title_placeholder_income">यह आय कहाँ से आई?</string>
+    <string name="transaction_title_required">टाइटल लिखें</string>
+    <string name="transaction_date">तारीख</string>
+    <string name="transaction_date_today">आज</string>
+    <string name="transaction_date_yesterday">कल</string>
+    <string name="transaction_date_pick">तारीख चुनें</string>
+    <string name="transaction_date_confirm">ठीक है</string>
+    <string name="transaction_date_cancel">रद्द करें</string>
+    <string name="transaction_note_add">📝 नोट जोड़ें · ज़रूरी नहीं</string>
+    <string name="transaction_note">नोट</string>
+    <string name="transaction_note_remove">नोट हटाएं</string>
+    <string name="transaction_save">सेव करें</string>
+    <string name="transaction_save_amount">%1$s सेव करें</string>
+    <string name="transaction_update">अपडेट करें</string>
+    <string name="transaction_update_amount">%1$s अपडेट करें</string>
+    <string name="bill_scan_title">बिल स्कैन करें</string>
+    <string name="bill_scan_subtitle">फ़ोटो से राशि, टाइटल और तारीख भरें</string>
+    <string name="bill_scan_reading">बिल पढ़ा जा रहा है…</string>
+    <string name="bill_scan_try_again">फिर कोशिश करें</string>
+    <string name="bill_fill_banner_title">आपके बिल से भरा गया</string>
+    <string name="bill_fill_banner_message">सेव करने से पहले जानकारी जाँच लें</string>
+    <string name="bill_fill_clear">हटाएं</string>
+    <string name="bill_fill_tag">✨ बिल से</string>
+    <string name="bill_fill_tag_suggested">✨ सुझाव</string>
+    <string name="bill_fill_other_amounts">बिल पर दूसरी राशियाँ</string>
+    <string name="bill_fill_total_missing">कुल राशि नहीं मिली। नीचे से कोई राशि चुनें या खुद लिखें।</string>
+    <string name="transaction_delete_dialog_title">लेन-देन हटाएं?</string>
+    <string name="transaction_delete_dialog_message">यह आपके लेन-देन और कुल हिसाब से हट जाएगा।</string>
+    <string name="transaction_delete_dialog_cancel">रद्द करें</string>
+    <string name="transaction_delete_dialog_confirm">हटाएं</string>
+
+    <!-- Dashboard recent activity -->
+    <string name="recent_activity_title">हाल के लेन-देन</string>
+    <string name="section_view_all">सभी देखें</string>
+    <string name="home_empty_title">अभी कोई लेन-देन नहीं</string>
+    <string name="home_empty_description">इनसाइट्स देखने के लिए अपना पहला खर्च जोड़ें</string>
+
+    <!-- Dashboard smart insights -->
+    <string name="insights_title">स्मार्ट इनसाइट्स</string>
+    <string name="insight_saved_title">बढ़िया बचत! 🎉</string>
+    <string name="insight_saved_description">इस अवधि में आपने %1$s बचाए</string>
+    <string name="insight_highest_spending_title">सबसे ज़्यादा खर्च</string>
+    <string name="insight_highest_spending_description">%1$s आपकी सबसे बड़ी खर्च कैटेगरी है</string>
+    <string name="insight_spending_improved_title">खर्च घटा 📉</string>
+    <string name="insight_spending_improved_description">आपका खर्च पिछले महीने से कम है</string>
+    <string name="insight_spending_increased_title">खर्च पर नज़र रखें ⚠️</string>
+    <string name="insight_spending_increased_description">आपका खर्च पिछले महीने से बढ़ गया है</string>
+
+    <!-- Add/edit category sheet -->
+    <string name="category_editor_title_new">नई कैटेगरी</string>
+    <string name="category_editor_title_edit">कैटेगरी बदलें</string>
+    <string name="category_editor_create">कैटेगरी बनाएं</string>
+    <string name="category_editor_save">बदलाव सेव करें</string>
+    <string name="category_editor_delete">कैटेगरी हटाएं</string>
+    <string name="category_editor_name_label">नाम</string>
+    <string name="category_editor_name_placeholder">कैटेगरी का नाम</string>
+    <string name="category_editor_name_error_blank">नाम लिखें</string>
+    <plurals name="category_editor_name_error_too_long">
+        <item quantity="one">%1$d या उससे कम अक्षर रखें</item>
+        <item quantity="other">%1$d या उससे कम अक्षर रखें</item>
+    </plurals>
+    <string name="category_editor_name_error_duplicate">इस नाम की कैटेगरी पहले से है</string>
+    <string name="category_editor_type_expense">खर्च की कैटेगरी</string>
+    <string name="category_editor_type_income">आय की कैटेगरी</string>
+    <string name="category_editor_icon_label">आइकन</string>
+
+    <!-- Manage categories -->
+    <string name="manage_categories_title">कैटेगरी</string>
+    <string name="manage_categories_back">वापस</string>
+    <string name="manage_categories_search">कैटेगरी खोजें</string>
+    <string name="manage_categories_search_close">खोज बंद करें</string>
+    <string name="manage_categories_search_placeholder">कैटेगरी खोजें</string>
+    <string name="manage_categories_new">नई कैटेगरी</string>
+    <string name="manage_categories_section_most_used">इस महीने सबसे ज़्यादा इस्तेमाल</string>
+    <string name="manage_categories_section_unused">इस महीने इस्तेमाल नहीं हुईं</string>
+    <string name="manage_categories_built_in">बिल्ट-इन · %1$s</string>
+    <string name="manage_categories_badge_your_name">आपका नाम</string>
+    <string name="manage_categories_badge_custom">कस्टम</string>
+    <plurals name="manage_categories_usage_this_month">
+        <item quantity="one">%1$d लेन-देन · इस महीने %2$s</item>
+        <item quantity="other">%1$d लेन-देन · इस महीने %2$s</item>
+    </plurals>
+    <plurals name="manage_categories_usage_total">
+        <item quantity="one">कुल %1$d लेन-देन</item>
+        <item quantity="other">कुल %1$d लेन-देन</item>
+    </plurals>
+    <string name="manage_categories_usage_none">अभी कोई लेन-देन नहीं</string>
+    <string name="manage_categories_empty">यहाँ अभी कोई कैटेगरी नहीं</string>
+    <string name="manage_categories_no_results">\"%1$s\" से मिलती कोई कैटेगरी नहीं</string>
+    <string name="category_delete_dialog_title">\"%1$s\" हटाएं?</string>
+    <string name="category_delete_dialog_message">इस कैटेगरी में कोई लेन-देन नहीं है। हटाने के बाद इसे वापस नहीं लाया जा सकता।</string>
+    <plurals name="category_delete_move_message">
+        <item quantity="one">इस कैटेगरी में %1$d लेन-देन है। चुनें कि इसे कहाँ ले जाना है:</item>
+        <item quantity="other">इस कैटेगरी में %1$d लेन-देन हैं। चुनें कि इन्हें कहाँ ले जाना है:</item>
+    </plurals>
+    <plurals name="category_delete_no_target">
+        <item quantity="one">इस कैटेगरी में %1$d लेन-देन है और इसे ले जाने के लिए इस तरह की कोई दूसरी कैटेगरी नहीं है। पहले एक बनाएं।</item>
+        <item quantity="other">इस कैटेगरी में %1$d लेन-देन हैं और इन्हें ले जाने के लिए इस तरह की कोई दूसरी कैटेगरी नहीं है। पहले एक बनाएं।</item>
+    </plurals>
+    <string name="category_delete_move_warning">हटाने के बाद कैटेगरी वापस नहीं लाई जा सकती।</string>
+    <string name="category_delete_confirm">हटाएं</string>
+    <string name="category_delete_move_confirm">ले जाएं और हटाएं</string>
+    <string name="category_delete_cancel">रद्द करें</string>
+
+    <!-- Settings -->
+    <string name="settings_title">सेटिंग्स</string>
+    <string name="settings_dialog_cancel">रद्द करें</string>
+    <string name="settings_soon">जल्द</string>
+    <string name="settings_footer">❤️ Jetpack Compose से बना</string>
+
+    <!-- Settings: profile -->
+    <string name="settings_profile_edit">नाम बदलें</string>
+    <string name="settings_profile_no_name">अपना नाम जोड़ें</string>
+    <string name="settings_profile_dialog_title">आपका नाम</string>
+    <string name="settings_profile_name_label">नाम</string>
+    <string name="settings_profile_save">सेव करें</string>
+
+    <!-- Settings: appearance -->
+    <string name="settings_section_appearance">दिखावट</string>
+    <string name="settings_theme">थीम</string>
+    <string name="settings_theme_subtitle">फ़ोन के अनुसार रखें या खुद चुनें</string>
+    <string name="theme_system">सिस्टम</string>
+    <string name="theme_light">लाइट</string>
+    <string name="theme_dark">डार्क</string>
+
+    <!-- Settings: language -->
+    <string name="settings_language">भाषा</string>
+
+    <!-- Language screen -->
+    <string name="language_title">भाषा</string>
+    <string name="language_back">वापस</string>
+    <string name="language_section_suggested">आपके लिए सुझाव</string>
+    <string name="language_section_all">सभी भाषाएँ</string>
+    <string name="language_system_default">सिस्टम डिफ़ॉल्ट</string>
+    <string name="language_system_default_subtitle">%1$s · आपके फ़ोन के अनुसार</string>
+    <string name="language_preview_label">झलक</string>
+    <string name="language_use">%1$s का उपयोग करें</string>
+    <string name="language_changed">भाषा बदली गई</string>
+    <string name="language_feedback_prompt">कोई अनुवाद गलत लगा?</string>
+    <string name="language_feedback_action">हमें बताएं</string>
+    <string name="language_feedback_no_email_app">इस फ़ोन में कोई ईमेल ऐप नहीं मिला</string>
+
+    <!-- Settings: data -->
+    <string name="settings_section_data">डेटा</string>
+    <string name="settings_categories">कैटेगरी</string>
+    <plurals name="settings_categories_count">
+        <item quantity="one">%1$d कैटेगरी</item>
+        <item quantity="other">%1$d कैटेगरी</item>
+    </plurals>
+    <plurals name="settings_categories_custom">
+        <item quantity="one">%1$d कस्टम</item>
+        <item quantity="other">%1$d कस्टम</item>
+    </plurals>
+    <string name="settings_export">एक्सपोर्ट और बैकअप</string>
+    <string name="settings_export_subtitle">अपने डेटा की एक कॉपी सेव करें</string>
+
+    <!-- Settings: about -->
+    <string name="settings_section_about">ऐप के बारे में</string>
+    <string name="settings_version">वर्शन</string>
+
+    <!-- Settings: danger zone -->
+    <string name="settings_section_danger">जोखिम वाले विकल्प</string>
+    <string name="settings_delete_all">सारा डेटा हटाएं</string>
+    <string name="settings_delete_all_subtitle">हर लेन-देन और कस्टम कैटेगरी</string>
+    <string name="settings_delete_all_dialog_title">सारा डेटा हटाएं?</string>
+    <string name="settings_delete_all_dialog_message">हर लेन-देन और आपकी जोड़ी हुई हर कैटेगरी हटा दी जाएगी। बिल्ट-इन कैटेगरी और आपकी सेटिंग्स बनी रहेंगी। इसे वापस नहीं लाया जा सकता।</string>
+    <string name="settings_delete_all_dialog_field">पक्का करने के लिए %1$s टाइप करें</string>
+    <string name="settings_delete_all_confirm">सब कुछ हटाएं</string>
+    <string name="settings_all_data_deleted">सारा डेटा हटा दिया गया</string>
+
+    <!-- Settings: developer section, shown in debug builds only -->
+    <string name="settings_section_developer">डेवलपर</string>
+    <string name="settings_load_sample_data">सैंपल डेटा लोड करें</string>
+    <string name="settings_load_sample_data_subtitle">जाँच के लिए छह महीने के बनावटी लेन-देन</string>
+    <string name="settings_load_sample_data_dialog_title">सैंपल डेटा लोड करें?</string>
+    <string name="settings_load_sample_data_dialog_message">आपके सभी लेन-देन की जगह सैंपल लेन-देन आ जाएंगे। इसे वापस नहीं लाया जा सकता।</string>
+    <string name="settings_load_sample_data_confirm">बदलें</string>
+    <plurals name="settings_sample_data_loaded">
+        <item quantity="one">%1$d सैंपल लेन-देन लोड हुआ</item>
+        <item quantity="other">%1$d सैंपल लेन-देन लोड हुए</item>
+    </plurals>
+
+    <!-- Settings: app lock -->
+    <string name="settings_section_security">सुरक्षा</string>
+    <string name="settings_app_lock">ऐप लॉक</string>
+    <string name="settings_app_lock_biometric">बायोमेट्रिक या स्क्रीन लॉक से खोलें</string>
+    <string name="settings_app_lock_credential">अपने स्क्रीन लॉक से खोलें</string>
+    <string name="settings_app_lock_unavailable">ऐप लॉक के लिए फ़ोन की सेटिंग्स में स्क्रीन लॉक लगाएं</string>
+    <string name="settings_lock_after">इतनी देर बाद लॉक करें</string>
+    <string name="lock_timeout_dialog_title">इतनी देर बाद लॉक करें</string>
+    <string name="lock_timeout_immediately">तुरंत</string>
+    <string name="lock_timeout_30_seconds">30 सेकंड</string>
+    <string name="lock_timeout_1_minute">1 मिनट</string>
+    <string name="lock_timeout_5_minutes">5 मिनट</string>
+    <string name="lock_timeout_dialog_cancel">रद्द करें</string>
+    <string name="app_lock_enable_prompt_title">ऐप लॉक चालू करें</string>
+    <string name="app_lock_enable_prompt_subtitle">ExpenseTracker Pro को लॉक करने के लिए अपनी पहचान की पुष्टि करें</string>
+    <string name="app_lock_enable_lockout">बहुत बार कोशिश हो चुकी है। थोड़ी देर में फिर कोशिश करें।</string>
+    <string name="app_lock_enable_lockout_permanent">बायोमेट्रिक लॉक हो गया है। फ़ोन को उसके स्क्रीन लॉक से खोलें, फिर कोशिश करें।</string>
+    <string name="app_lock_enable_no_credential">पहले फ़ोन की सेटिंग्स में स्क्रीन लॉक लगाएं।</string>
+    <string name="app_lock_enable_error">आपकी पहचान की पुष्टि नहीं हो सकी। ऐप लॉक अभी भी बंद है।</string>
+
+    <!-- Lock screen -->
+    <string name="lock_title">ExpenseTracker Pro लॉक है</string>
+    <string name="lock_unlock">अनलॉक करें</string>
+    <string name="lock_prompt_title">ExpenseTracker Pro अनलॉक करें</string>
+    <string name="lock_prompt_subtitle">आगे बढ़ने के लिए अपनी पहचान की पुष्टि करें</string>
+    <string name="lock_message_canceled">पुष्टि रद्द कर दी गई। फिर कोशिश करने के लिए अनलॉक करें दबाएं।</string>
+    <string name="lock_message_lockout">बहुत बार कोशिश हो चुकी है। थोड़ा रुकें, फिर अनलॉक करें दबाएं।</string>
+    <string name="lock_message_lockout_permanent">बहुत बार कोशिश के बाद बायोमेट्रिक लॉक हो गया है। अनलॉक करें दबाएं और अपना स्क्रीन लॉक इस्तेमाल करें।</string>
+    <string name="lock_message_error">आपकी पहचान की पुष्टि नहीं हो सकी। फिर कोशिश करने के लिए अनलॉक करें दबाएं।</string>
+
+    <!-- What went wrong with a save or delete, shown in a snackbar -->
+    <string name="error_category_not_found">यह कैटेगरी अब मौजूद नहीं है</string>
+    <string name="error_category_in_use">इस कैटेगरी में अभी भी लेन-देन हैं</string>
+    <string name="error_name_too_long">यह नाम बहुत लंबा है</string>
+    <string name="error_incompatible_reassign_target">लेन-देन उस कैटेगरी में नहीं ले जाए जा सकते</string>
+    <string name="error_storage_failure">बदलाव सेव नहीं हो सके। शायद स्टोरेज भर गया है।</string>
+    <string name="error_file_read_failed">फ़ाइल पढ़ी नहीं जा सकी। देखें कि वह अभी भी मौजूद है।</string>
+    <string name="error_backup_invalid">यह फ़ाइल Expense Tracker का बैकअप नहीं है</string>
+    <string name="error_backup_too_new">यह बैकअप ऐप के नए वर्शन से बना है</string>
+    <string name="error_bill_unreadable">यह बिल पढ़ा नहीं जा सका</string>
+    <string name="error_file_write_failed">फ़ाइल सेव नहीं हो सकी। देखें कि वह जगह अभी भी मौजूद है और उसमें जगह बची है।</string>
+
+    <!-- Export & backup -->
+    <string name="export_backup_title">एक्सपोर्ट और बैकअप</string>
+    <string name="export_backup_back">वापस</string>
+    <string name="export_section_title">एक्सपोर्ट</string>
+    <string name="export_csv_title">CSV में एक्सपोर्ट करें</string>
+    <string name="export_csv_subtitle">अपने लेन-देन Excel या Google Sheets में खोलें</string>
+    <string name="export_period_label">अवधि</string>
+    <string name="export_button">CSV एक्सपोर्ट करें</string>
+    <string name="export_share">शेयर करें</string>
+    <string name="backup_section_title">बैकअप</string>
+    <string name="backup_title">बैकअप और रीस्टोर</string>
+    <string name="backup_subtitle">सब कुछ, आपकी कस्टम कैटेगरी समेत, एक फ़ाइल में</string>
+    <!-- %1$s is a time of day, e.g. 4:20 pm -->
+    <string name="backup_last_today">पिछला बैकअप: आज, %1$s</string>
+    <string name="backup_last_yesterday">पिछला बैकअप: कल, %1$s</string>
+    <!-- %1$s is a date and time -->
+    <string name="backup_last_on">पिछला बैकअप: %1$s</string>
+    <string name="backup_create_button">बैकअप बनाएं</string>
+    <string name="backup_restore_button">फ़ाइल से रीस्टोर करें</string>
+    <string name="backup_saved">बैकअप सेव हो गया</string>
+    <string name="backup_privacy_note">फ़ाइलें वहीं सेव होती हैं जहाँ आप चुनते हैं। ऐप कुछ भी अपलोड नहीं करता।</string>
+    <plurals name="restore_success">
+        <item quantity="one">%1$d लेन-देन रीस्टोर हुआ</item>
+        <item quantity="other">%1$d लेन-देन रीस्टोर हुए</item>
+    </plurals>
+    <string name="restore_sheet_title">यह बैकअप रीस्टोर करें?</string>
+    <string name="restore_sheet_created">बनाया गया</string>
+    <string name="restore_sheet_transactions">लेन-देन</string>
+    <string name="restore_sheet_custom_categories">कस्टम कैटेगरी</string>
+    <string name="restore_sheet_period">अवधि</string>
+    <plurals name="restore_sheet_warning">
+        <item quantity="one">इससे ऐप में अभी मौजूद सब कुछ (%1$d लेन-देन) बदल जाएगा। इसे वापस नहीं लाया जा सकता। अभी का डेटा चाहिए तो पहले बैकअप बना लें।</item>
+        <item quantity="other">इससे ऐप में अभी मौजूद सब कुछ (%1$d लेन-देन) बदल जाएगा। इसे वापस नहीं लाया जा सकता। अभी का डेटा चाहिए तो पहले बैकअप बना लें।</item>
+    </plurals>
+    <string name="restore_sheet_confirm">बदलें और रीस्टोर करें</string>
+    <string name="restore_sheet_cancel">रद्द करें</string>
+    <plurals name="export_success">
+        <item quantity="one">%1$d लेन-देन एक्सपोर्ट हुआ</item>
+        <item quantity="other">%1$d लेन-देन एक्सपोर्ट हुए</item>
+    </plurals>
+</resources>

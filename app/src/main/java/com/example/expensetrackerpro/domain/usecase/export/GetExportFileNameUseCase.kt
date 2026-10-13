@@ -10,11 +10,12 @@ import javax.inject.Inject
  * `expensetracker-backup-2026-10-11.json`.
  */
 class GetExportFileNameUseCase @Inject constructor(
-    private val timeProvider: TimeProvider
+    private val timeProvider: TimeProvider,
+    private val dateFormatter: DateFormatter
 ) {
 
     operator fun invoke(file: ExportFile): String {
-        val today = DateFormatter.formatIsoDate(timeProvider.now().timeInMillis)
+        val today = dateFormatter.formatIsoDate(timeProvider.now().timeInMillis)
 
         return when (file) {
             ExportFile.TRANSACTIONS_CSV -> "expenses_$today.csv"

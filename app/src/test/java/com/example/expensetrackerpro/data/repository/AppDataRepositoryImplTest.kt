@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.data.repository
 
+import com.example.expensetrackerpro.fakes.FakeAppLocaleProvider
+import com.example.expensetrackerpro.data.category.ResourceDefaultCategoryNames
 import android.app.Application
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -38,7 +40,7 @@ class AppDataRepositoryImplTest {
         database = Room.inMemoryDatabaseBuilder(
             ApplicationProvider.getApplicationContext(),
             AppDatabase::class.java
-        ).allowMainThreadQueries().addCallback(ExpenseDatabaseCallback()).build()
+        ).allowMainThreadQueries().addCallback(ExpenseDatabaseCallback(ResourceDefaultCategoryNames(ApplicationProvider.getApplicationContext()), FakeAppLocaleProvider())).build()
 
         deleteAllData = DeleteAllDataUseCase(AppDataRepositoryImpl(database.appDataDao()))
     }
@@ -75,7 +77,7 @@ class AppDataRepositoryImplTest {
         assertEquals(Outcome.Success(Unit), deleteAllData())
 
         assertTrue(dao.getAllTransactions().first().isEmpty())
-        assertEquals(DefaultCategories.all.map { it.name }, categories().map { it.name })
+        assertEquals(DefaultCategories.all, categories().map { it.builtInKey })
     }
 
     @Test

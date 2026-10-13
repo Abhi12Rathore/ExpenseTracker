@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.export
 
+import com.example.expensetrackerpro.fakes.dateFormatter
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
@@ -20,7 +21,7 @@ class BuildTransactionsCsvUseCaseTest {
     private val originalLocale = Locale.getDefault()
     private val originalTimeZone = TimeZone.getDefault()
 
-    private val buildCsv = BuildTransactionsCsvUseCase()
+    private val buildCsv = BuildTransactionsCsvUseCase(dateFormatter())
 
     private val header = "Date,Type,Category,Title,Note,Amount"
     private val oct11 = millisAt(2026, Calendar.OCTOBER, 11, hour = 9)

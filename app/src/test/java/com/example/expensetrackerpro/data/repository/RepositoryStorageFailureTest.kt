@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.data.repository
 
+import com.example.expensetrackerpro.fakes.FakeAppLocaleProvider
+import com.example.expensetrackerpro.fakes.FakeDefaultCategoryNames
 import android.app.Application
 import android.database.sqlite.SQLiteDiskIOException
 import android.database.sqlite.SQLiteFullException
@@ -50,7 +52,9 @@ class RepositoryStorageFailureTest {
 
     private fun sampleDataSeeder(error: Exception) = SampleDataSeeder(
         ThrowingSampleDataDao(error),
-        SampleTransactionGenerator(FakeTimeProvider(millisAt(2026, Calendar.OCTOBER, 10, hour = 15)))
+        SampleTransactionGenerator(FakeTimeProvider(millisAt(2026, Calendar.OCTOBER, 10, hour = 15))),
+        FakeDefaultCategoryNames(),
+        FakeAppLocaleProvider()
     )
 
     private suspend fun assertThrowsTheBug(write: suspend () -> Any) {
@@ -109,6 +113,7 @@ class RepositoryStorageFailureTest {
 
         assertEquals(storageFailure, repository.insertCategory(food))
         assertEquals(storageFailure, repository.updateCategory(food))
+        assertEquals(storageFailure, repository.renameBuiltInCategories(mapOf(food.id to "Khana")))
     }
 
     @Test

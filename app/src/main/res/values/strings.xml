@@ -1,5 +1,10 @@
+<!--
+    Every string here needs a translation in each values-<language>/strings.xml: lint
+    (MissingTranslation) and StringResourcesTest fail the build otherwise. What reads the same in
+    every language (the app's name, formats made only of arguments) is marked translatable="false".
+-->
 <resources>
-    <string name="app_name">ExpenseTracker Pro</string>
+    <string name="app_name" translatable="false">ExpenseTracker Pro</string>
 
     <!-- Dashboard header -->
     <string name="greeting_morning">Good morning 👋</string>
@@ -22,6 +27,9 @@
 
     <!-- Dashboard balance card -->
     <string name="balance_label">Balance · %1$s</string>
+    <string name="summary_income">Income</string>
+    <string name="summary_expense">Expense</string>
+    <string name="summary_savings">Savings</string>
 
     <string name="comparison_more_saved">▲ %1$s more saved than %2$s</string>
     <string name="comparison_less_saved">▼ %1$s less saved than %2$s</string>
@@ -38,10 +46,10 @@
     <string name="spending_average_per_day">avg %1$s/day</string>
     <string name="spending_average_per_month">avg %1$s/month</string>
     <!-- Amount · date · transaction count -->
-    <string name="spending_tooltip">%1$s · %2$s · %3$s</string>
+    <string name="spending_tooltip" translatable="false">%1$s · %2$s · %3$s</string>
     <string name="spending_tooltip_open_transactions">Show these in Transactions</string>
     <!-- Read out for each bar: date, then amount -->
-    <string name="spending_bar_description">%1$s: %2$s</string>
+    <string name="spending_bar_description" translatable="false">%1$s: %2$s</string>
     <string name="spending_empty">Nothing spent in this period yet. Expenses you add will show up here.</string>
     <plurals name="transaction_count">
         <item quantity="one">%1$d transaction</item>
@@ -56,9 +64,9 @@
     <string name="pace_legend_current">This period</string>
     <string name="pace_legend_previous">Previous period</string>
     <!-- Date, then what had been spent by then -->
-    <string name="pace_tooltip_value">%1$s %2$s</string>
+    <string name="pace_tooltip_value" translatable="false">%1$s %2$s</string>
     <!-- The selected period's value, then the previous period's -->
-    <string name="pace_tooltip_both">%1$s · %2$s</string>
+    <string name="pace_tooltip_both" translatable="false">%1$s · %2$s</string>
     <string name="pace_empty">Nothing spent in this period or the one before. Your pace will show up here.</string>
 
     <!-- Dashboard net savings by month -->
@@ -80,8 +88,39 @@
     <string name="category_spending_expand_other">Show the other categories</string>
     <string name="category_spending_collapse_other">Hide the other categories</string>
     <string name="category_spending_empty">No expenses to break down yet. Add one to see where your money goes.</string>
-    <string name="percent_value">%1$d%%</string>
-    <string name="percent_below_one" formatted="false">&lt;1%</string>
+    <string name="percent_value" translatable="false">%1$d%%</string>
+    <string name="percent_below_one" formatted="false" translatable="false">&lt;1%</string>
+
+    <!--
+        The built-in categories, one per BuiltInCategory key. A category shows this name until
+        the user renames it. Two of one type (expense: food_dining to other; income: the rest)
+        must never share a name in any language.
+    -->
+    <string name="category_default_food_dining">Food &amp; Dining</string>
+    <string name="category_default_groceries">Groceries</string>
+    <string name="category_default_transport">Transport</string>
+    <string name="category_default_fuel">Fuel</string>
+    <string name="category_default_shopping">Shopping</string>
+    <string name="category_default_bills_utilities">Bills &amp; Utilities</string>
+    <string name="category_default_rent_home">Rent &amp; Home</string>
+    <string name="category_default_health">Health</string>
+    <string name="category_default_education">Education</string>
+    <string name="category_default_entertainment">Entertainment</string>
+    <string name="category_default_travel">Travel</string>
+    <string name="category_default_subscriptions">Subscriptions</string>
+    <string name="category_default_personal_care">Personal Care</string>
+    <string name="category_default_gifts_donations">Gifts &amp; Donations</string>
+    <string name="category_default_emi_loans">EMI &amp; Loans</string>
+    <string name="category_default_other">Other</string>
+    <string name="category_default_salary">Salary</string>
+    <string name="category_default_freelance">Freelance</string>
+    <string name="category_default_business">Business</string>
+    <string name="category_default_investments">Investments</string>
+    <string name="category_default_interest">Interest</string>
+    <string name="category_default_rental_income">Rental Income</string>
+    <string name="category_default_refunds_cashback">Refunds &amp; Cashback</string>
+    <string name="category_default_gifts_received">Gifts Received</string>
+    <string name="category_default_other_income">Other Income</string>
 
     <!-- Category icons: picker sections, then what each icon is read out as -->
     <string name="category_icon_group_food_and_shopping">Food &amp; shopping</string>
@@ -165,7 +204,7 @@
     <string name="transactions_undo">Undo</string>
     <!-- Type chips: name, then how many it lists -->
     <string name="transactions_filter_all">All</string>
-    <string name="transactions_filter_chip">%1$s %2$d</string>
+    <string name="transactions_filter_chip" translatable="false">%1$s %2$d</string>
     <!-- Summary strip -->
     <string name="transactions_summary_income">Income</string>
     <string name="transactions_summary_expense">Expense</string>
@@ -176,9 +215,9 @@
     <string name="transactions_summary_results">Results</string>
     <string name="transactions_summary_average">Average</string>
     <!-- Day header: Today or Yesterday, then the date -->
-    <string name="transactions_day_header_named">%1$s · %2$s</string>
+    <string name="transactions_day_header_named" translatable="false">%1$s · %2$s</string>
     <!-- Under a transaction\'s title: category, then its note -->
-    <string name="transactions_row_meta_with_note">%1$s · 📝 %2$s</string>
+    <string name="transactions_row_meta_with_note" translatable="false">%1$s · 📝 %2$s</string>
     <!-- Empty list; the argument is one of the periods below, e.g. "No income this month" -->
     <string name="transactions_empty_all">No transactions %1$s</string>
     <string name="transactions_empty_expense">No expenses %1$s</string>
@@ -201,9 +240,9 @@
     <string name="transaction_type_expense">Expense</string>
     <string name="transaction_type_income">Income</string>
     <string name="transaction_amount">Amount</string>
-    <string name="transaction_amount_placeholder">0</string>
+    <string name="transaction_amount_placeholder" translatable="false">0</string>
     <!-- Shown in place of the amount while the keyboard is open: amount · category · date -->
-    <string name="transaction_summary">%1$s · %2$s · %3$s</string>
+    <string name="transaction_summary" translatable="false">%1$s · %2$s · %3$s</string>
     <string name="transaction_summary_no_category">No category</string>
     <string name="transaction_summary_edit_amount">Edit amount</string>
     <string name="transaction_category">Category</string>
@@ -222,7 +261,7 @@
     <string name="transaction_note">Note</string>
     <string name="transaction_note_remove">Remove note</string>
     <!-- Characters used, then the limit -->
-    <string name="transaction_note_counter">%1$d/%2$d</string>
+    <string name="transaction_note_counter" translatable="false">%1$d/%2$d</string>
     <string name="transaction_save">Save</string>
     <string name="transaction_save_amount">Save %1$s</string>
     <string name="transaction_update">Update</string>
@@ -243,7 +282,14 @@
     <string name="transaction_delete_dialog_cancel">Cancel</string>
     <string name="transaction_delete_dialog_confirm">Delete</string>
 
+    <!-- Dashboard recent activity -->
+    <string name="recent_activity_title">Recent activity</string>
+    <string name="section_view_all">View all</string>
+    <string name="home_empty_title">No transactions yet</string>
+    <string name="home_empty_description">Add your first expense to see insights</string>
+
     <!-- Dashboard smart insights -->
+    <string name="insights_title">Smart insights</string>
     <string name="insight_saved_title">Great Saving! 🎉</string>
     <string name="insight_saved_description">You saved %1$s in this period</string>
     <string name="insight_highest_spending_title">Highest Spending</string>
@@ -261,7 +307,7 @@
     <string name="category_editor_delete">Delete category</string>
     <string name="category_editor_name_label">Name</string>
     <string name="category_editor_name_placeholder">Category name</string>
-    <string name="category_editor_name_counter">%1$d/%2$d</string>
+    <string name="category_editor_name_counter" translatable="false">%1$d/%2$d</string>
     <string name="category_editor_name_error_blank">Enter a name</string>
     <plurals name="category_editor_name_error_too_long">
         <item quantity="one">Use %1$d character or fewer</item>
@@ -280,10 +326,14 @@
     <string name="manage_categories_search_placeholder">Search categories</string>
     <string name="manage_categories_new">New category</string>
     <!-- A tab: the type, then how many categories it has -->
-    <string name="manage_categories_tab">%1$s · %2$d</string>
+    <string name="manage_categories_tab" translatable="false">%1$s · %2$d</string>
     <string name="manage_categories_section_most_used">Most used this month</string>
     <string name="manage_categories_section_unused">Not used this month</string>
-    <string name="manage_categories_default_badge">DEFAULT</string>
+    <!-- Under a category the app came with, ahead of how much it is used -->
+    <string name="manage_categories_built_in">Built-in · %1$s</string>
+    <!-- Beside a built-in category the user has renamed -->
+    <string name="manage_categories_badge_your_name">Your name</string>
+    <string name="manage_categories_badge_custom">Custom</string>
     <plurals name="manage_categories_usage_this_month">
         <item quantity="one">%1$d transaction · %2$s this month</item>
         <item quantity="other">%1$d transactions · %2$s this month</item>
@@ -319,10 +369,10 @@
     <!-- Settings: profile -->
     <string name="settings_profile_edit">Edit name</string>
     <string name="settings_profile_no_name">Add your name</string>
-    <string name="settings_profile_currency">₹ INR</string>
+    <string name="settings_profile_currency" translatable="false">₹ INR</string>
     <string name="settings_profile_dialog_title">Your name</string>
     <string name="settings_profile_name_label">Name</string>
-    <string name="settings_profile_name_counter">%1$d/%2$d</string>
+    <string name="settings_profile_name_counter" translatable="false">%1$d/%2$d</string>
     <string name="settings_profile_save">Save</string>
 
     <!-- Settings: appearance -->
@@ -333,11 +383,40 @@
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
 
+    <!-- Settings: language. The subtitle is English in every language, so the row can always be found -->
+    <string name="settings_language">Language</string>
+    <string name="settings_language_subtitle" translatable="false">Language</string>
+
+    <!-- Language screen -->
+    <string name="language_title">Language</string>
+    <string name="language_back">Back</string>
+    <string name="language_section_suggested">Suggested for you</string>
+    <string name="language_section_all">All languages</string>
+    <string name="language_system_default">System default</string>
+    <!-- %1$s is the phone's language, e.g. English (India) -->
+    <string name="language_system_default_subtitle">%1$s · follows your phone</string>
+    <string name="language_preview_label">Preview</string>
+    <!-- On the button that applies a language; %1$s is the language's own name for itself -->
+    <string name="language_use">Use %1$s</string>
+    <!-- The same in English, shown under it whatever the language; %1$s is its English name -->
+    <string name="language_use_english" translatable="false">Use %1$s</string>
+    <string name="language_changed">Language changed</string>
+    <string name="language_changed_english" translatable="false">Language changed</string>
+    <!-- "Language changed" in the new language, then in English -->
+    <string name="language_changed_both" translatable="false">%1$s · %2$s</string>
+    <!-- English in every language: it is the way back for someone who can't read the new one -->
+    <string name="language_undo" translatable="false">Undo</string>
+    <string name="language_feedback_prompt">Spotted a wrong translation?</string>
+    <string name="language_feedback_action">Tell us</string>
+    <!-- The subject of the email: the app's version, then the language's tag -->
+    <string name="language_feedback_subject" translatable="false">ExpenseTracker Pro %1$s · translation · %2$s</string>
+    <string name="language_feedback_no_email_app">No email app found on this phone</string>
+
     <!-- Settings: data -->
     <string name="settings_section_data">Data</string>
     <string name="settings_categories">Categories</string>
     <!-- The category count, then how many of them are custom -->
-    <string name="settings_categories_subtitle">%1$s · %2$s</string>
+    <string name="settings_categories_subtitle" translatable="false">%1$s · %2$s</string>
     <plurals name="settings_categories_count">
         <item quantity="one">%1$d category</item>
         <item quantity="other">%1$d categories</item>
@@ -425,7 +504,7 @@
     <string name="export_csv_subtitle">Open your transactions in Excel or Google Sheets</string>
     <string name="export_period_label">Period</string>
     <!-- Transaction count · the dates they cover -->
-    <string name="export_summary">%1$s · %2$s</string>
+    <string name="export_summary" translatable="false">%1$s · %2$s</string>
     <string name="export_button">Export CSV</string>
     <!-- On the snackbar after a file was saved: sends the file to another app -->
     <string name="export_share">Share</string>

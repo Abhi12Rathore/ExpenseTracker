@@ -37,7 +37,9 @@ data class BackupCategoryRecord(
     val name: String,
     val type: String,
     val icon: String,
-    val isCustom: Boolean
+    val isCustom: Boolean,
+    // The BuiltInCategory's key; null for a custom or renamed category, and in files written before it existed
+    val builtInKey: String? = null
 )
 
 data class BackupTransactionRecord(

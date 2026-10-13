@@ -24,7 +24,8 @@ private fun CategoryEntity.toBackupDto(): BackupCategoryDto = BackupCategoryDto(
     type = type.name,
     // The key, as in the database: it stays the same when an icon's entry is renamed
     icon = icon.key,
-    isCustom = isCustom
+    isCustom = isCustom,
+    builtInKey = builtInKey?.key
 )
 
 // A transaction's own id is left out: a restore gives it a new one
@@ -44,7 +45,14 @@ fun BackupDto.toDocument(): BackupDocument = BackupDocument(
     createdAtMillis = createdAt,
     appVersion = appVersion,
     categories = categories.map {
-        BackupCategoryRecord(id = it.id, name = it.name, type = it.type, icon = it.icon, isCustom = it.isCustom)
+        BackupCategoryRecord(
+            id = it.id,
+            name = it.name,
+            type = it.type,
+            icon = it.icon,
+            isCustom = it.isCustom,
+            builtInKey = it.builtInKey
+        )
     },
     transactions = transactions.map {
         BackupTransactionRecord(

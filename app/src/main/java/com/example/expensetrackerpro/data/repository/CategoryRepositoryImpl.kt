@@ -32,6 +32,9 @@ class CategoryRepositoryImpl @Inject constructor(
     override suspend fun updateCategory(category: Category): Outcome<Unit> =
         storageOutcome { categoryDao.update(category.toEntity()) }
 
+    override suspend fun renameBuiltInCategories(namesById: Map<CategoryId, String>): Outcome<Unit> =
+        storageOutcome { categoryDao.renameBuiltIns(namesById.mapKeys { it.key.value }) }
+
     // Transactions that reference the category stop the delete (foreign key RESTRICT)
     override suspend fun deleteCategory(category: Category): Outcome<Unit> =
         storageOutcome { categoryDao.deleteCategory(category.toEntity()) }

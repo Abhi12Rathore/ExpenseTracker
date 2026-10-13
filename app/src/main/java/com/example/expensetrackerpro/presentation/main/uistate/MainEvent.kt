@@ -4,6 +4,9 @@ import com.example.expensetrackerpro.domain.models.AuthResult
 import com.example.expensetrackerpro.domain.models.Transaction
 
 sealed interface MainEvent {
+    // The activity was created: the app has started, or its language has changed
+    data object ActivityCreated : MainEvent
+
     // The whole app left or returned to the foreground (not a rotation or a dialog)
     data object AppBackgrounded : MainEvent
     data object AppForegrounded : MainEvent

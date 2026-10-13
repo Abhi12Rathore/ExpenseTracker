@@ -71,6 +71,23 @@ class FakeCategoryRepository(
         return Outcome.Success(Unit)
     }
 
+    /** How many times built-in categories were renamed. */
+    var renameCount = 0
+        private set
+
+    // Like the database, only a category that still has its key is renamed
+    override suspend fun renameBuiltInCategories(namesById: Map<CategoryId, String>): Outcome<Unit> {
+        saveFailure?.let { return Outcome.Failure(it) }
+        renameCount++
+        categories.update { list ->
+            list.map { category ->
+                val name = namesById[category.id]
+                if (name != null && category.builtInKey != null) category.copy(name = name) else category
+            }
+        }
+        return Outcome.Success(Unit)
+    }
+
     override suspend fun deleteCategory(category: Category): Outcome<Unit> {
         deleteFailure?.let { return Outcome.Failure(it) }
         if (totalCountOf(category.id) > 0) return Outcome.Failure(DomainError.CategoryInUse)

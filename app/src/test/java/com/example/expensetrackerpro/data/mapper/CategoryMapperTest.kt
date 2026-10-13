@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.data.mapper
 
+import com.example.expensetrackerpro.domain.models.BuiltInCategory
 import com.example.expensetrackerpro.data.local.entity.CategoryEntity
 import com.example.expensetrackerpro.domain.models.CategoryIcon
 import com.example.expensetrackerpro.domain.models.Category
@@ -16,7 +17,8 @@ class CategoryMapperTest {
         name = "Salary",
         type = TransactionType.INCOME,
         icon = CategoryIcon.PAYMENTS,
-        isCustom = false
+        isCustom = false,
+        builtInKey = BuiltInCategory.SALARY
     )
 
     private val domain = Category(
@@ -24,7 +26,8 @@ class CategoryMapperTest {
         name = "Salary",
         type = TransactionType.INCOME,
         icon = CategoryIcon.PAYMENTS,
-        isCustom = false
+        isCustom = false,
+        builtInKey = BuiltInCategory.SALARY
     )
 
     @Test

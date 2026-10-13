@@ -1,5 +1,9 @@
 package com.example.expensetrackerpro.data.local.dao
 
+import java.util.Locale
+import com.example.expensetrackerpro.domain.models.Category
+import com.example.expensetrackerpro.fakes.FakeAppLocaleProvider
+import com.example.expensetrackerpro.data.category.ResourceDefaultCategoryNames
 import android.app.Application
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -30,7 +34,7 @@ class DefaultCategoriesSeedTest {
         database = Room.inMemoryDatabaseBuilder(
             ApplicationProvider.getApplicationContext(),
             AppDatabase::class.java
-        ).allowMainThreadQueries().addCallback(ExpenseDatabaseCallback()).build()
+        ).allowMainThreadQueries().addCallback(ExpenseDatabaseCallback(ResourceDefaultCategoryNames(ApplicationProvider.getApplicationContext()), FakeAppLocaleProvider())).build()
     }
 
     @After
@@ -39,11 +43,22 @@ class DefaultCategoriesSeedTest {
     }
 
     @Test
-    fun aNewDatabase_holdsTheDefaults_withTheirIconsAndTypes() = runTest {
+    fun aNewDatabase_holdsTheDefaults_withTheirKeysIconsAndTypes_namedInTheAppsLanguage() = runTest {
         val seeded = database.categoryDao().getAllCategories().first().map { it.toDomain() }
 
         // Ids are assigned in order, starting at 1
-        val expected = DefaultCategories.all.mapIndexed { index, category -> category.copy(id = CategoryId(index + 1)) }
+        val names = ResourceDefaultCategoryNames(ApplicationProvider.getApplicationContext())
+        val expected = DefaultCategories.all.mapIndexed { index, builtIn ->
+            Category(
+                id = CategoryId(index + 1),
+                name = names.nameOf(builtIn, Locale.ENGLISH),
+                type = builtIn.type,
+                icon = builtIn.icon,
+                isCustom = false,
+                builtInKey = builtIn
+            )
+        }
+        assertEquals("Food & Dining", expected.first().name)
         assertEquals(expected, seeded)
     }
 }

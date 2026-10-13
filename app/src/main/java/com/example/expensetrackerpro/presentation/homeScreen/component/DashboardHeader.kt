@@ -26,7 +26,7 @@ import com.example.expensetrackerpro.domain.models.DayPeriod
 import com.example.expensetrackerpro.domain.models.UserProfile
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.presentation.common.profile.ProfileAvatar
-import com.example.expensetrackerpro.utils.DateFormatter
+import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 
 @Composable
 fun DashboardHeader(profile: UserProfile, dayPeriod: DayPeriod?, todayMillis: Long?) {
@@ -85,7 +85,7 @@ private fun DateChip(todayMillis: Long?) {
         modifier = Modifier.alpha(if (todayMillis == null) 0f else 1f)
     ) {
         Text(
-            text = todayMillis?.let(DateFormatter::formatWeekdayDayMonth).orEmpty(),
+            text = todayMillis?.let(LocalDateFormatter.current::formatWeekdayDayMonth).orEmpty(),
             style = MaterialTheme.typography.labelMedium,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
         )

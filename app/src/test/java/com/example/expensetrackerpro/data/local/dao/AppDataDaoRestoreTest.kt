@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.data.local.dao
 
+import com.example.expensetrackerpro.fakes.FakeAppLocaleProvider
+import com.example.expensetrackerpro.data.category.ResourceDefaultCategoryNames
 import android.app.Application
 import android.database.sqlite.SQLiteConstraintException
 import androidx.room.Room
@@ -45,7 +47,7 @@ class AppDataDaoRestoreTest {
         database = Room.inMemoryDatabaseBuilder(
             ApplicationProvider.getApplicationContext(),
             AppDatabase::class.java
-        ).allowMainThreadQueries().addCallback(ExpenseDatabaseCallback()).build()
+        ).allowMainThreadQueries().addCallback(ExpenseDatabaseCallback(ResourceDefaultCategoryNames(ApplicationProvider.getApplicationContext()), FakeAppLocaleProvider())).build()
         dao = database.appDataDao()
     }
 

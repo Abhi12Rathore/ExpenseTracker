@@ -37,27 +37,27 @@ internal fun Money.atFraction(fraction: Float): Money = Money((paise * fraction)
  * A few labels rather than one per bar: every weekday for up to a week (`Mon` … `Sun`), every
  * seventh day beyond that (`1, 8, 15, 22, 29`), and month initials for months (`J` … `D`).
  */
-internal fun xAxisLabels(chart: SpendingChart): List<AxisLabel> {
+internal fun xAxisLabels(chart: SpendingChart, dateFormatter: DateFormatter): List<AxisLabel> {
     val buckets = chart.buckets
 
     return when (chart.bucketSize) {
         BucketSize.DAY ->
             if (buckets.size <= DAYS_PER_LABEL) {
-                buckets.labelEvery(1) { DateFormatter.formatWeekday(it.range.startMillis) }
+                buckets.labelEvery(1) { dateFormatter.formatWeekday(it.range.startMillis) }
             } else {
-                buckets.labelEvery(DAYS_PER_LABEL) { DateFormatter.formatDayOfMonth(it.range.startMillis) }
+                buckets.labelEvery(DAYS_PER_LABEL) { dateFormatter.formatDayOfMonth(it.range.startMillis) }
             }
         BucketSize.MONTH -> {
             val step = ceil(buckets.size / MAX_MONTH_LABELS.toDouble()).toInt().coerceAtLeast(1)
-            buckets.labelEvery(step) { DateFormatter.formatMonthInitial(it.range.startMillis) }
+            buckets.labelEvery(step) { dateFormatter.formatMonthInitial(it.range.startMillis) }
         }
     }
 }
 
 /** How a bucket is named in the tooltip and to screen readers: `Fri, 17 Oct` or `October 2026`. */
-internal fun SpendingBucket.label(bucketSize: BucketSize): String = when (bucketSize) {
-    BucketSize.DAY -> DateFormatter.formatWeekdayDayMonth(range.startMillis)
-    BucketSize.MONTH -> DateFormatter.formatMonthYear(range.startMillis)
+internal fun SpendingBucket.label(bucketSize: BucketSize, dateFormatter: DateFormatter): String = when (bucketSize) {
+    BucketSize.DAY -> dateFormatter.formatWeekdayDayMonth(range.startMillis)
+    BucketSize.MONTH -> dateFormatter.formatMonthYear(range.startMillis)
 }
 
 private fun List<SpendingBucket>.labelEvery(step: Int, text: (SpendingBucket) -> String): List<AxisLabel> =

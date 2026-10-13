@@ -26,7 +26,7 @@ fun InsightSection(
     ){
 
         Text(
-            text = "Smart Insights",
+            text = stringResource(R.string.insights_title),
             style = MaterialTheme.typography.titleMedium
         )
 

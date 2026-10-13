@@ -10,7 +10,9 @@ import javax.inject.Inject
  * Turns transactions into a CSV file (RFC 4180) that Excel and Google Sheets open as they are:
  * ISO dates, amounts as plain positive decimals with the direction in the Type column.
  */
-class BuildTransactionsCsvUseCase @Inject constructor() {
+class BuildTransactionsCsvUseCase @Inject constructor(
+    private val dateFormatter: DateFormatter
+) {
 
     /** A header line, then a line per transaction, newest first. Every line ends in CRLF. */
     operator fun invoke(transactions: List<Transaction>): String = buildString {
@@ -18,7 +20,7 @@ class BuildTransactionsCsvUseCase @Inject constructor() {
         transactions.sortedByDescending { it.dateMillis }.forEach { transaction ->
             appendLine(
                 listOf(
-                    DateFormatter.formatIsoDate(transaction.dateMillis),
+                    dateFormatter.formatIsoDate(transaction.dateMillis),
                     transaction.transactionType.csvName,
                     transaction.categoryName.toTextCell(),
                     transaction.title.toTextCell(),

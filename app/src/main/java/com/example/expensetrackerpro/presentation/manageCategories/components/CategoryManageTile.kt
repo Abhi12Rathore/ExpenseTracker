@@ -61,10 +61,19 @@ fun CategoryManageTile(
                         // Gives way to the badge, which is never cut
                         modifier = Modifier.weight(1f, fill = false)
                     )
-                    if (!category.isCustom) DefaultBadge()
+                    // An untouched built-in says so in the line below instead
+                    when {
+                        category.isCustom -> CategoryBadge(stringResource(R.string.manage_categories_badge_custom))
+                        category.isRenamedBuiltIn ->
+                            CategoryBadge(stringResource(R.string.manage_categories_badge_your_name))
+                    }
                 }
                 Text(
-                    text = usageText(usage),
+                    text = if (category.builtInKey != null) {
+                        stringResource(R.string.manage_categories_built_in, usageText(usage))
+                    } else {
+                        usageText(usage)
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -76,13 +85,13 @@ fun CategoryManageTile(
 }
 
 @Composable
-private fun DefaultBadge() {
+private fun CategoryBadge(text: String) {
     Surface(
         shape = RoundedCornerShape(6.dp),
         color = MaterialTheme.colorScheme.surfaceContainerHighest
     ) {
         Text(
-            text = stringResource(R.string.manage_categories_default_badge),
+            text = text,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)

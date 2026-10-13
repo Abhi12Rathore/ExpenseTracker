@@ -13,6 +13,7 @@ Goal: production-quality portfolio project.
 - Kotlin 2.0.21, Jetpack Compose (Material 3), minSdk 24, targetSdk 36
 - applicationId is `dev.pebblework.expensetracker`. It is permanent once the app is published, so never change it. It is separate from `namespace` and the Kotlin packages, which are still `com.example.expensetrackerpro`.
 - Room 2.6.1 (KSP), Navigation Compose, Hilt 2.56.1
+- Languages: English and Hindi, chosen per app with AppCompat (`AppCompatDelegate.setApplicationLocales`). `MainActivity` is an `AppCompatActivity` and the app theme an AppCompat one for this; `res/xml/locales_config.xml` and `AppLanguage` list the languages; below Android 13 AppCompat stores the choice itself (`autoStoreLocales` in the manifest). Debug builds have the pseudo-locales (en-XA) for finding clipped layouts.
 - App lock: androidx.biometric (`BiometricPrompt` behind `presentation/lock/BiometricAuthenticator`), lock state in `presentation/lock/AppLockController`, settings in DataStore
 - Charts: custom Compose Canvas components (no chart library) in `presentation/homeScreen/component/charts/`; shared drawing helpers in `ChartDrawing.kt`
 - Bill scanning: ML Kit Document Scanner and Text Recognition v2 (Latin), both the Google Play services (unbundled) variants; Tasks are awaited with `kotlinx-coroutines-play-services`. No camera permission.
@@ -27,14 +28,17 @@ Goal: production-quality portfolio project.
 - `data/export/` → `FileExportRepositoryImpl`: writes the exported CSV (UTF-8 with a BOM) through `DocumentFiles`
 - `data/backup/` → the backup file: `BackupDto` (the JSON format, kotlinx.serialization), its mappers, and `BackupRepositoryImpl` (write, read, restore)
 - `data/scan/` → `MlKitBillTextReader` (text recognition, then deletes the photo), `BillLineAssembler` (joins recognized pieces into the bill's lines), `GmsBillScannerAvailability`
+- `data/language/` → `AppLanguageRepositoryImpl` (the one place the app's language is read from and handed to AppCompat), `AndroidDeviceLanguages` (the phone's own languages), `AndroidAppLocaleProvider`; `data/category/` → `ResourceDefaultCategoryNames` (built-in category names from string resources, in any language asked for)
 - `data/preferences/` → DataStore-backed repositories (theme, app lock, user profile); `data/security/` → Android biometric availability
-- `domain/` → `models/` (typed IDs in `Ids.kt`), `error/` (`DomainError`, `Outcome`), `repository/` (interfaces), `security/` (device capability interfaces), `scan/` (`BillTextReader`, `BillScannerAvailability`), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
+- `domain/` → `models/` (typed IDs in `Ids.kt`), `error/` (`DomainError`, `Outcome`), `repository/` (interfaces), `security/` (device capability interfaces), `scan/` (`BillTextReader`, `BillScannerAvailability`), `locale/` (`AppLocaleProvider`, `DeviceLanguages`), `category/` (`DefaultCategoryNames`), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
 - `domain/usecase/scan/` → `ScanBillUseCase` (read, then `ParseBillUseCase`), the parsers it delegates to (one per rule: amount, title, date, note), and `BillKeywords`: every word list and limit the parsers use, en-IN for now
 - `presentation/<feature>/` → Screen, ViewModel, `components/`, `uistate/`
 - `presentation/common/category/editor/` → the add/edit category sheet shared by Manage Categories and Add/Edit Transaction: its state, events and `CategoryEditorReducer`; the host ViewModel keeps the state and wraps the events
 - `presentation/transactions/addEditTransactions/draft/` → `TransactionDraftReducer`: puts a `TransactionDraft` into the form and tracks which fields still hold its values (`DraftFill` in `uistate/`); `scan/` → `rememberBillScanner`, the one place Google's scanner screen is launched
 - `presentation/common/error/` → `DomainError.toMessageRes()`, the one place an error becomes a message
 - `presentation/exportBackup/` → Settings → Export & backup: the period to export and the "Save as" picker; the CSV itself is built in `domain/usecase/export/`. `BackupController` owns creating a backup and restoring from one (the Backup card and the confirmation sheet); the ViewModel shows its state and forwards its events
+- `presentation/language/` → Settings → Language: the list, the Preview card (`LocalizedContent` draws it in another language without switching the app) and the bilingual apply button. The Undo snackbar is on Settings, owned by `presentation/settings/LanguageChangeController`
+- `presentation/common/date/` → `LocalDateFormatter`: how Composables reach the injected `DateFormatter`
 - `presentation/lock/` → lock screen, the biometric prompt wrapper, and `AppLockController` (lock state, prompt flow, background timing); `MainViewModel` shows its state and forwards the lock events
 - `ui/theme/` → colors, typography, theme
 - `utils/` → shared helpers
@@ -64,16 +68,27 @@ Apply these to all new and changed code. Existing violations are tracked under K
 
 ## Conventions
 - Money: format only through the shared en-IN currency formatter, `utils/CurrencyFormatter` (e.g. `-₹1,00,000.00`). Never use string concatenation like `"₹$amount"`.
-- Dates: format via the shared date utility, `utils/DateFormatter`. Never show raw millis.
+- Dates: format via the shared date utility, `utils/DateFormatter` (an injected class that writes in the app's language). Never show raw millis.
 - Colors: no Color literals outside `ui/theme`; use `MaterialTheme.colorScheme` or `MaterialTheme.extendedColors` (income/expense, chart and category palette colors). `Color.Transparent` is fine. Charts take theme colors directly as `Color`.
 - UI strings go in `strings.xml`.
 - Collect screen state with `collectAsStateWithLifecycle()`, never `collectAsState()`.
 - No `!!`. Handle nulls explicitly.
 - Every new ViewModel or use case gets unit tests in `app/src/test`.
 
+## Languages (i18n)
+- Every new string needs a translation in each `values-<language>/strings.xml`. Lint (`MissingTranslation` is an error) and `StringResourcesTest` (same keys, same format arguments, the language's plural quantities) fail otherwise. Translations are everyday words, not literal ones; `values-hi/strings.xml` starts with its glossary.
+- No text in Composables, not even one word: `stringResource` only. Don't build a sentence from pieces in code; give the string positional arguments (`%1$s`) so a translation can reorder them.
+- Mark `translatable="false"` what reads the same everywhere: the app name, formats made only of arguments (`%1$s · %2$s`), and the strings that stay English on purpose (the Language row's subtitle, the English half of the apply button and of the "Language changed" snackbar, its Undo), so that a language someone can't read can always be left.
+- Never translated, because they are file formats or match printed text: CSV headers and Type words, the backup JSON, `BillKeywords`, the `DELETE` confirmation word.
+- Built-in categories carry `builtInKey` (`BuiltInCategory`, stored by its `key`) and no name of their own: `LocalizeDefaultCategoriesUseCase` gives them the name of the app's language (`category_default_<key>`) at start and after every language change. Renaming one clears its key, so the user's name stays. Find a built-in by its key, never by its name.
+- Text follows the app's language, not the phone's: read the locale through `AppLocaleProvider`, never `Locale.getDefault()`. Dates go through the injected `DateFormatter` (`LocalDateFormatter.current` in Composables). Digits stay Western; `formatIsoDate` stays `Locale.US`.
+- To add a language: an `AppLanguage` entry, a line in `locales_config.xml`, its `values-<tag>/strings.xml`, and its plural quantities in `StringResourcesTest`.
+- Check new screens in Hindi and in en-XA (long text): nothing clipped, nothing wrapped into its neighbour.
+
 ## Database
 - Pre-release: every schema change bumps the version; `fallbackToDestructiveMigration` resets the data. From the first public release, write a tested Migration instead.
-- Default categories (`domain/models/DefaultCategories`) are seeded in `AppDatabase` `onCreate`.
+- Current version: 4 (added `categories.builtInKey`).
+- Default categories (`domain/models/DefaultCategories`, one per `BuiltInCategory`) are seeded by `ExpenseDatabaseCallback`, in the app's language, in `onCreate` and again after a destructive migration, which empties the tables without calling `onCreate`.
 - Debug builds have Settings → Developer → "Load sample data" (`data/sample/`), gated by `BuildInfo.isDebug`. "Delete all data" (Settings → Danger zone, `AppDataRepository`) is a user feature in every build.
 
 ## Architecture decisions
@@ -88,6 +103,8 @@ Settled during the LLD refactor. Change one only with a reason that beats the on
 - **A scanned bill becomes a `TransactionDraft`, and only a draft reaches the form.** Reading (`BillTextReader`), parsing (`ParseBillUseCase`, pure Kotlin) and filling the form (`TransactionDraftReducer`) are separate steps, so another source of drafts reuses the last one unchanged. A draft never replaces what the user entered, and nothing is saved without the user tapping Save.
 - **The photo of a bill is never kept.** The reader deletes it once it has been read; only its Uri is held, in `SavedStateHandle`, until then, so a scan survives the process being killed. This is why the banner shows an icon and not the photo.
 - **A doubtful value is left out rather than guessed**: a total next to "Sub Total", a date in the future or over a year old, an amount of ₹10,00,000 or more. Bill words and limits live only in `BillKeywords`; the parsers hold rules, not words.
+- **A built-in category is known by its key, and its name follows the app's language.** The name is still stored, so every query and JOIN reads it as before; `LocalizeDefaultCategoriesUseCase` rewrites it when the language changes. A rename clears the key, which is how the user's name is never replaced; a built-in whose translated name another category of its type already has is left as it is. Backups carry the key as an optional field, so older files still restore.
+- **The language change is applied after the Language screen has closed**, and the previous choice is kept in memory for the Undo. The switch recreates the activity while `MainViewModel` stays, and the app is never reported as backgrounded, so the app lock is not triggered.
 - **IDs are typed in the domain and `Int` in Room.** `TransactionId` and `CategoryId` can't be mixed up; entities keep `Int`, so typing them needed no schema change.
 
 ## Known issues (remove each line once fixed)

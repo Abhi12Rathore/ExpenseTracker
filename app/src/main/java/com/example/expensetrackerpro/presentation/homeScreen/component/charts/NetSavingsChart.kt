@@ -36,7 +36,7 @@ import com.example.expensetrackerpro.domain.models.MonthlyNet
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.ui.theme.extendedColors
 import com.example.expensetrackerpro.utils.CurrencyFormatter
-import com.example.expensetrackerpro.utils.DateFormatter
+import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import kotlin.math.max
 
 private val ChartHeight = 200.dp
@@ -108,10 +108,11 @@ fun NetSavingsChart(
     val lowest = maxOf(Money.ZERO, -months.minOf { it.net })
     val worstIndex = months.indices.filter { months[it].net.isNegative }.minByOrNull { months[it].net }
 
+    val dateFormatter = LocalDateFormatter.current
     val textMeasurer = rememberTextMeasurer()
     val axisStyle = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.extendedColors.chartAxisText)
     val xLabels = remember(periodKey, axisStyle) {
-        months.map { textMeasurer.measure(DateFormatter.formatMonthInitial(it.range.startMillis), axisStyle) }
+        months.map { textMeasurer.measure(dateFormatter.formatMonthInitial(it.range.startMillis), axisStyle) }
     }
     val worstLabel = remember(worstIndex, months, axisStyle, overspentColor) {
         worstIndex?.let {
@@ -203,7 +204,7 @@ fun NetSavingsChart(
             months.forEach { month ->
                 val description = stringResource(
                     if (month.net.isNegative) R.string.net_savings_bar_overspent else R.string.net_savings_bar_saved,
-                    DateFormatter.formatMonthYear(month.range.startMillis),
+                    dateFormatter.formatMonthYear(month.range.startMillis),
                     CurrencyFormatter.format(month.net.abs())
                 )
                 Box(

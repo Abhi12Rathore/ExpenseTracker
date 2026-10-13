@@ -53,6 +53,16 @@ GROUP BY c.id
     @Query("DELETE FROM categories WHERE id = :id")
     abstract suspend fun deleteCategoryById(id: Int)
 
+    // A built-in the user has renamed since it was read is left alone
+    @Query("UPDATE categories SET name = :name WHERE id = :id AND builtInKey IS NOT NULL")
+    abstract suspend fun renameBuiltIn(id: Int, name: String)
+
+    /** Gives each built-in in [namesById] its new name. All or nothing. */
+    @Transaction
+    open suspend fun renameBuiltIns(namesById: Map<Int, String>) {
+        namesById.forEach { (id, name) -> renameBuiltIn(id, name) }
+    }
+
     /**
      * Files every transaction of [fromId] under [toId], then deletes [fromId]. All or nothing.
      * Returns false, changing nothing, unless both exist, differ and share a type.

@@ -22,7 +22,7 @@ import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.presentation.common.category.CategoryIconTile
 import com.example.expensetrackerpro.utils.Utility
 import com.example.expensetrackerpro.utils.CurrencyFormatter
-import com.example.expensetrackerpro.utils.DateFormatter
+import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import java.util.*
 
 @Composable
@@ -110,7 +110,7 @@ fun DeleteConfirmationDialog(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(expense.title, fontWeight = FontWeight.Bold, maxLines = 1)
                                 Text(
-                                    DateFormatter.formatDate(expense.dateMillis),
+                                    LocalDateFormatter.current.formatDate(expense.dateMillis),
                                     style = MaterialTheme.typography.labelSmall
                                 )
                             }

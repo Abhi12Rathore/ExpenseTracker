@@ -43,8 +43,12 @@ class SaveCategoryUseCase @Inject constructor(
 
         val name = draft.name.trim()
         if (stored != null) {
-            // Built-in or custom stays as it was
-            return updateCategory(stored.copy(name = name, icon = draft.icon)).map { stored.id }
+            // Built-in or custom stays as it was. A built-in that is given another name stops
+            // following the app's language, so the user's name is never replaced
+            val builtInKey = stored.builtInKey.takeIf { name == stored.name }
+
+            return updateCategory(stored.copy(name = name, icon = draft.icon, builtInKey = builtInKey))
+                .map { stored.id }
         }
 
         return addCategory(Category(name = name, type = type, icon = draft.icon, isCustom = true))

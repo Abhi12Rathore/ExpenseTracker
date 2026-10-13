@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation.transactions.transactionList.component
 
+import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -82,7 +83,7 @@ private fun periodPhrase(uiState: TransactionListUiState): String {
                 PeriodGranularity.YEAR -> R.string.transactions_empty_this_year
             }
         )
-        else -> stringResource(R.string.transactions_empty_in_period, uiState.filter.shortLabel())
+        else -> stringResource(R.string.transactions_empty_in_period, uiState.filter.shortLabel(LocalDateFormatter.current))
     }
 }
 

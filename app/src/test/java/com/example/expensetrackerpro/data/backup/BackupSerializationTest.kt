@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.data.backup
 
+import org.junit.Assert.assertTrue
+import com.example.expensetrackerpro.domain.models.BuiltInCategory
 import com.example.expensetrackerpro.data.local.entity.CategoryEntity
 import com.example.expensetrackerpro.data.local.entity.TransactionEntity
 import com.example.expensetrackerpro.data.local.model.StoredData
@@ -21,7 +23,7 @@ import org.junit.Test
 
 class BackupSerializationTest {
 
-    private val food = CategoryEntity(id = 1, name = "Food & Dining", type = TransactionType.EXPENSE, icon = CategoryIcon.RESTAURANT, isCustom = false)
+    private val food = CategoryEntity(id = 1, name = "Food & Dining", type = TransactionType.EXPENSE, icon = CategoryIcon.RESTAURANT, isCustom = false, builtInKey = BuiltInCategory.FOOD_DINING)
     private val salary = CategoryEntity(id = 2, name = "Salary", type = TransactionType.INCOME, icon = CategoryIcon.PAYMENTS, isCustom = false)
     private val custom = CategoryEntity(id = 31, name = "किराना \"local\" 😀", type = TransactionType.EXPENSE, icon = CategoryIcon.SHOPPING_BASKET, isCustom = true)
 
@@ -67,10 +69,16 @@ class BackupSerializationTest {
         assertEquals("\"${Backup.FORMAT}\"", file["format"].toString())
         assertEquals(Backup.VERSION.toString(), file["version"].toString())
         assertEquals("1760100000000", file["createdAt"].toString())
+        val categories = file.getValue("categories").jsonArray
+        // A built-in that still has the app's name carries its key
         assertEquals(
-            setOf("id", "name", "type", "icon", "isCustom"),
-            (file.getValue("categories").jsonArray.first() as JsonObject).keys
+            setOf("id", "name", "type", "icon", "isCustom", "builtInKey"),
+            (categories.first() as JsonObject).keys
         )
+        assertEquals("\"food_dining\"", (categories.first() as JsonObject)["builtInKey"].toString())
+        // A renamed built-in and a custom category have none, and the field is left out
+        assertEquals(setOf("id", "name", "type", "icon", "isCustom"), (categories[1] as JsonObject).keys)
+        assertEquals(setOf("id", "name", "type", "icon", "isCustom"), (categories.last() as JsonObject).keys)
         assertEquals(
             setOf("title", "amountPaise", "note", "dateMillis", "categoryId", "type"),
             (file.getValue("transactions").jsonArray.first() as JsonObject).keys
@@ -129,5 +137,24 @@ class BackupSerializationTest {
             .forEach { text ->
                 assertThrows("for <$text>", SerializationException::class.java) { decode(text) }
             }
+    }
+
+    @Test
+    fun aFileWrittenBeforeBuiltInKeys_isStillRead() {
+        val old = """
+            {"format":"${Backup.FORMAT}","version":1,"createdAt":5,"appVersion":"1.0",
+             "categories":[
+               {"id":1,"name":"Food & Dining","type":"EXPENSE","icon":"restaurant","isCustom":false},
+               {"id":2,"name":"Salary","type":"INCOME","icon":"payments","isCustom":false}],
+             "transactions":[
+               {"title":"Lunch","amountPaise":25000,"note":"","dateMillis":7,"categoryId":1,"type":"EXPENSE"}]}
+        """.trimIndent()
+
+        val read = decode(old)
+        assertTrue(read.categories.all { it.builtInKey == null })
+
+        val backup = ValidateBackupUseCase(ValidateCategoryNameUseCase())(read.toDocument()).getOrNull()
+        assertEquals(listOf("Food & Dining", "Salary"), backup?.categories?.map { it.name })
+        assertEquals(1, backup?.transactions?.size)
     }
 }

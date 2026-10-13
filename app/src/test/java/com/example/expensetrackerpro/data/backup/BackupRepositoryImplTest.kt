@@ -1,5 +1,9 @@
 package com.example.expensetrackerpro.data.backup
 
+import com.example.expensetrackerpro.data.repository.CategoryRepositoryImpl
+import com.example.expensetrackerpro.domain.usecase.category.LocalizeDefaultCategoriesUseCase
+import com.example.expensetrackerpro.fakes.FakeAppLocaleProvider
+import com.example.expensetrackerpro.data.category.ResourceDefaultCategoryNames
 import android.app.Application
 import android.net.Uri
 import androidx.room.Room
@@ -55,7 +59,7 @@ class BackupRepositoryImplTest {
     @Before
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
-            .allowMainThreadQueries().addCallback(ExpenseDatabaseCallback()).build()
+            .allowMainThreadQueries().addCallback(ExpenseDatabaseCallback(ResourceDefaultCategoryNames(ApplicationProvider.getApplicationContext()), FakeAppLocaleProvider())).build()
         repository = BackupRepositoryImpl(dao, DocumentFiles(context))
     }
 
@@ -122,7 +126,15 @@ class BackupRepositoryImplTest {
 
         documentHolds(ByteArrayInputStream(bytes))
         val readBackup = ReadBackupUseCase(repository, ValidateBackupUseCase(ValidateCategoryNameUseCase()))
-        assertEquals(Outcome.Success(3), RestoreBackupUseCase(readBackup, repository)(document))
+        assertEquals(Outcome.Success(3), RestoreBackupUseCase(
+                readBackup,
+                repository,
+                LocalizeDefaultCategoriesUseCase(
+                    CategoryRepositoryImpl(database.categoryDao()),
+                    ResourceDefaultCategoryNames(context),
+                    FakeAppLocaleProvider()
+                )
+            )(document))
 
         val after = dao.snapshot()
         assertEquals(before.categories, after.categories)

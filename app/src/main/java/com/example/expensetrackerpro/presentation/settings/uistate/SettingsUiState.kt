@@ -5,6 +5,8 @@ import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.AuthResult
 import com.example.expensetrackerpro.domain.models.BiometricStatus
 import com.example.expensetrackerpro.domain.models.CategoryCounts
+import com.example.expensetrackerpro.domain.models.LanguageChange
+import com.example.expensetrackerpro.domain.models.LanguageChoice
 import com.example.expensetrackerpro.domain.models.ThemeMode
 import com.example.expensetrackerpro.domain.models.UserProfile
 
@@ -13,6 +15,9 @@ data class SettingsUiState(
     // The name as typed in the edit dialog; non-null while that dialog is showing
     val profileNameDraft: String? = null,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val language: LanguageChoice = LanguageChoice.SystemDefault,
+    // A language change that was just applied, until its Undo was taken or has gone
+    val languageChange: LanguageChange? = null,
     val appLock: AppLockSettings = AppLockSettings(),
     val biometricStatus: BiometricStatus = BiometricStatus.AVAILABLE,
     val isLockTimeoutDialogOpen: Boolean = false,

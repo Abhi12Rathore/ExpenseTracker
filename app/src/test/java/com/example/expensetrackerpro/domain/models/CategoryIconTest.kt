@@ -31,14 +31,14 @@ class CategoryIconTest {
     }
 
     @Test
-    fun defaults_areSixteenExpenseAndNineIncome_withUniqueNamesAndIcons() {
+    fun defaults_areSixteenExpenseAndNineIncome_withUniqueKeysAndIcons() {
         assertEquals(16, DefaultCategories.expense.size)
         assertEquals(9, DefaultCategories.income.size)
-        assertTrue(DefaultCategories.expense.all { it.type == TransactionType.EXPENSE && !it.isCustom })
-        assertTrue(DefaultCategories.income.all { it.type == TransactionType.INCOME && !it.isCustom })
+        assertTrue(DefaultCategories.expense.all { it.type == TransactionType.EXPENSE })
+        assertTrue(DefaultCategories.income.all { it.type == TransactionType.INCOME })
 
         val all = DefaultCategories.all
-        assertEquals(all.size, all.map { it.name }.toSet().size)
+        assertEquals(all.size, all.map { it.key }.toSet().size)
         assertEquals(all.size, all.map { it.icon }.toSet().size)
     }
 }
