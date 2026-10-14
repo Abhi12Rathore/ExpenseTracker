@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.presentation.settings
 
 import com.example.expensetrackerpro.domain.currency.AppCurrency
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.CurrencyChange
 import com.example.expensetrackerpro.domain.models.LanguageChange
 import com.example.expensetrackerpro.domain.models.LanguageChoice
@@ -12,11 +13,9 @@ import com.example.expensetrackerpro.domain.usecase.language.ForgetLanguageChang
 import com.example.expensetrackerpro.domain.usecase.language.GetLanguageOptionsUseCase
 import com.example.expensetrackerpro.domain.usecase.language.ObserveLanguageChangeUseCase
 import com.example.expensetrackerpro.domain.usecase.language.UndoLanguageChangeUseCase
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /** What Settings shows about how the app writes things: its language and its currency. */
@@ -64,9 +63,8 @@ class RegionalSettingsController @Inject constructor(
     /** The Undo was offered and not taken. */
     fun onLanguageChangeShown() = forgetLanguageChange()
 
-    fun undoCurrency(scope: CoroutineScope) {
-        scope.launch { undoCurrencyChange() }
-    }
+    /** Fails, keeping the change and its Undo, when going back can't be stored. */
+    suspend fun undoCurrency(): Outcome<Unit> = undoCurrencyChange()
 
     /** The Undo was offered and not taken. */
     fun onCurrencyChangeShown() = forgetCurrencyChange()

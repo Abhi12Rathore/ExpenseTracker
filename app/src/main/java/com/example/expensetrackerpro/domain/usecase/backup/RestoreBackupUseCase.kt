@@ -35,9 +35,10 @@ class RestoreBackupUseCase @Inject constructor(
                     is Outcome.Success -> {
                         // The restore itself has worked; names left in the other language are put right at the next start
                         localizeDefaultCategories()
+                        // A currency that can't be stored leaves amounts as they were: the restore itself has worked
                         val switchedTo = backup.currency
                             ?.takeIf { switchCurrency && it != currencyProvider.current() }
-                            ?.also { setCurrency(it) }
+                            ?.takeIf { setCurrency(it) is Outcome.Success }
                         Outcome.Success(RestoredBackup(backup.transactions.size, switchedTo))
                     }
                 }

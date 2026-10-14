@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation.currency.uistate
 
+import androidx.annotation.StringRes
 import com.example.expensetrackerpro.domain.currency.AppCurrency
 import com.example.expensetrackerpro.domain.models.CurrencyChangeExample
 import com.example.expensetrackerpro.domain.models.CurrencyPreview
@@ -20,7 +21,9 @@ data class CurrencyUiState(
     // The example the change is explained with; non-null while the confirmation is showing
     val confirmation: CurrencyChangeExample? = null,
     // True once the change was made, which closes the screen
-    val isApplied: Boolean = false
+    val isApplied: Boolean = false,
+    // Why the change couldn't be made, until the screen has shown it
+    @StringRes val errorRes: Int? = null
 ) {
     /** The apply button is offered only for a currency other than the current one. */
     val isApplyVisible: Boolean get() = selected != current && !isApplied

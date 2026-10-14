@@ -195,6 +195,21 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun aCurrencyUndoThatCantBeStored_saysSo_andKeepsTheChange() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        ChangeCurrencyUseCase(currencies)(AppCurrency.USD)
+        currencies.failWrites = true
+
+        viewModel.onEvent(SettingsEvent.CurrencyUndoClicked)
+
+        val state = viewModel.uiState.value
+        assertEquals(SettingsMessage.Failed(R.string.error_storage_failure), state.message)
+        assertEquals(AppCurrency.USD, state.currency)
+        assertEquals(CurrencyChange(AppCurrency.INR, AppCurrency.USD), state.currencyChange)
+    }
+
+    @Test
     fun aCurrencyChangeThatWasShown_staysAndIsNoLongerOffered() = runTest {
         val viewModel = viewModel()
         subscribe(viewModel.uiState)

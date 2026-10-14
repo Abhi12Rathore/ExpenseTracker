@@ -10,6 +10,10 @@ import com.example.expensetrackerpro.fakes.FakeRegionCurrency
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import androidx.datastore.preferences.core.emptyPreferences
+import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.error.Outcome
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -114,6 +118,31 @@ class CurrencyRepositoryImplTest {
         repository.load()
 
         assertEquals(AppCurrency.EUR, repository.current())
+    }
+
+    @Test
+    fun aChoiceThatCantBeStored_isAStorageFailure_andLeavesTheCurrencyAsItWas() = runTest {
+        val unwritable = object : DataStore<Preferences> {
+            override val data: Flow<Preferences> = flowOf(emptyPreferences())
+
+            override suspend fun updateData(
+                transform: suspend (t: Preferences) -> Preferences
+            ): Preferences = throw IOException("No space left on device")
+        }
+        val repository = CurrencyRepositoryImpl(unwritable, region)
+        repository.load()
+
+        val result = repository.setCurrency(AppCurrency.USD)
+
+        assertEquals(Outcome.Failure(DomainError.StorageFailure("No space left on device")), result)
+        assertEquals(AppCurrency.INR, repository.current())
+    }
+
+    @Test
+    fun aStoredChoice_isASuccess() = runTest {
+        val repository = CurrencyRepositoryImpl(dataStore(), region)
+
+        assertEquals(Outcome.Success(Unit), repository.setCurrency(AppCurrency.USD))
     }
 
     @Test

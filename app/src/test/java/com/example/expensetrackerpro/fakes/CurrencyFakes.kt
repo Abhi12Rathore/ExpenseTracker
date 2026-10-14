@@ -5,6 +5,8 @@ import com.example.expensetrackerpro.domain.currency.CurrencyNames
 import com.example.expensetrackerpro.domain.currency.CurrencyProvider
 import com.example.expensetrackerpro.domain.currency.NumberSymbols
 import com.example.expensetrackerpro.domain.currency.RegionCurrency
+import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.locale.AppLocaleProvider
 import com.example.expensetrackerpro.domain.locale.NumberSymbolsProvider
 import com.example.expensetrackerpro.domain.models.CurrencyChange
@@ -64,6 +66,9 @@ class FakeCurrencyRepository(
     var loads = 0
         private set
 
+    // A preferences file that can't be written: every change fails and nothing is stored
+    var failWrites = false
+
     override fun current(): AppCurrency = _currency.value
 
     override suspend fun load() {
@@ -71,9 +76,11 @@ class FakeCurrencyRepository(
         _currency.value = stored ?: (region ?: AppCurrency.INR).also { stored = it }
     }
 
-    override suspend fun setCurrency(currency: AppCurrency) {
+    override suspend fun setCurrency(currency: AppCurrency): Outcome<Unit> {
+        if (failWrites) return Outcome.Failure(DomainError.StorageFailure("disk full"))
         stored = currency
         _currency.value = currency
+        return Outcome.Success(Unit)
     }
 
     override fun setPendingChange(change: CurrencyChange?) {

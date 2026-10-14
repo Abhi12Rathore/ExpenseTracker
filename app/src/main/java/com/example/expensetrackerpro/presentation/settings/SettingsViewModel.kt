@@ -3,6 +3,7 @@ package com.example.expensetrackerpro.presentation.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.expensetrackerpro.domain.error.Outcome
+import com.example.expensetrackerpro.domain.error.onFailure
 import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.AuthResult
 import com.example.expensetrackerpro.domain.models.BuildInfo
@@ -98,7 +99,7 @@ class SettingsViewModel @Inject constructor(
                 viewModelScope.launch { setThemeMode(event.mode) }
             SettingsEvent.LanguageUndoClicked -> regionalSettings.undoLanguage()
             SettingsEvent.LanguageChangeShown -> regionalSettings.onLanguageChangeShown()
-            SettingsEvent.CurrencyUndoClicked -> regionalSettings.undoCurrency(viewModelScope)
+            SettingsEvent.CurrencyUndoClicked -> undoCurrencyChange()
             SettingsEvent.CurrencyChangeShown -> regionalSettings.onCurrencyChangeShown()
             SettingsEvent.ScreenResumed -> {
                 screenState.update { it.copy(biometricStatus = getBiometricStatus()) }
@@ -129,6 +130,14 @@ class SettingsViewModel @Inject constructor(
                 screenState.update { it.copy(isLoadSampleDialogOpen = false) }
             SettingsEvent.MessageShown ->
                 screenState.update { it.copy(message = null) }
+        }
+    }
+
+    private fun undoCurrencyChange() {
+        viewModelScope.launch {
+            regionalSettings.undoCurrency().onFailure { error ->
+                screenState.update { it.copy(message = SettingsMessage.Failed(error.toMessageRes())) }
+            }
         }
     }
 

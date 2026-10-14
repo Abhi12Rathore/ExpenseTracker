@@ -130,6 +130,7 @@ Settled during the LLD refactor. Change one only with a reason that beats the on
 ## Known issues (remove each line once fixed)
 - Bill scanning reads rupee words only (₹, Rs, INR in `BillKeywords`). With another currency it still reads bare numbers, but a total written with another symbol may be missed.
 - `AddEditTransactionViewModel` has 14 dependencies. Fold them into facades.
+- `SettingsViewModel` has 12 dependencies. Fold them into facades.
 - The Add/Edit transaction form isn't kept in saved state, so typed values are lost on process death.
 
 ## Workflow

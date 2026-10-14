@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.domain.usecase.currency
 
+import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.currency.AppCurrency
 import com.example.expensetrackerpro.domain.models.CurrencyChange
 import com.example.expensetrackerpro.domain.models.CurrencyChangeExample
@@ -32,6 +34,25 @@ class CurrencyUseCasesTest {
     fun change_setsTheCurrency_andRemembersTheOneBefore() = runTest {
         ChangeCurrencyUseCase(currencies)(AppCurrency.USD)
 
+        assertEquals(AppCurrency.USD, currencies.currency.value)
+        assertEquals(CurrencyChange(AppCurrency.INR, AppCurrency.USD), currencies.pendingChange.value)
+    }
+
+    @Test
+    fun change_thatCantBeStored_failsWithoutAnUndo() = runTest {
+        currencies.failWrites = true
+
+        assertEquals(Outcome.Failure(DomainError.StorageFailure("disk full")), ChangeCurrencyUseCase(currencies)(AppCurrency.USD))
+        assertEquals(AppCurrency.INR, currencies.currency.value)
+        assertNull(currencies.pendingChange.value)
+    }
+
+    @Test
+    fun undo_thatCantBeStored_failsAndKeepsItsUndo() = runTest {
+        ChangeCurrencyUseCase(currencies)(AppCurrency.USD)
+        currencies.failWrites = true
+
+        assertEquals(Outcome.Failure(DomainError.StorageFailure("disk full")), UndoCurrencyChangeUseCase(currencies)())
         assertEquals(AppCurrency.USD, currencies.currency.value)
         assertEquals(CurrencyChange(AppCurrency.INR, AppCurrency.USD), currencies.pendingChange.value)
     }

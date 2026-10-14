@@ -4,11 +4,13 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.expensetrackerpro.domain.currency.AppCurrency
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.usecase.currency.ChangeCurrencyUseCase
 import com.example.expensetrackerpro.domain.usecase.currency.GetCurrencyChangeExampleUseCase
 import com.example.expensetrackerpro.domain.usecase.currency.GetCurrencyOptionsUseCase
 import com.example.expensetrackerpro.domain.usecase.currency.GetCurrencyPreviewUseCase
 import com.example.expensetrackerpro.domain.usecase.currency.SearchCurrenciesUseCase
+import com.example.expensetrackerpro.presentation.common.error.toMessageRes
 import com.example.expensetrackerpro.presentation.currency.uistate.CurrencyEvent
 import com.example.expensetrackerpro.presentation.currency.uistate.CurrencyUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -65,6 +67,7 @@ class CurrencyViewModel @Inject constructor(
             CurrencyEvent.ApplyClicked -> requestApply()
             CurrencyEvent.ConfirmClicked -> if (_uiState.value.confirmation != null) apply()
             CurrencyEvent.ConfirmDismissed -> _uiState.update { it.copy(confirmation = null) }
+            CurrencyEvent.ErrorShown -> _uiState.update { it.copy(errorRes = null) }
         }
     }
 
@@ -100,8 +103,13 @@ class CurrencyViewModel @Inject constructor(
         val state = _uiState.value
         if (state.isApplied) return
 
-        changeCurrency(state.selected)
-        _uiState.update { it.copy(confirmation = null, isApplied = true) }
+        when (val result = changeCurrency(state.selected)) {
+            is Outcome.Success -> _uiState.update { it.copy(confirmation = null, isApplied = true) }
+            // The screen stays open on the selection, so it can be tried again
+            is Outcome.Failure -> _uiState.update {
+                it.copy(confirmation = null, errorRes = result.error.toMessageRes())
+            }
+        }
     }
 
     private companion object {

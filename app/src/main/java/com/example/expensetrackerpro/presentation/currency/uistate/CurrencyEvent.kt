@@ -13,4 +13,6 @@ sealed interface CurrencyEvent {
     data object ConfirmClicked : CurrencyEvent
 
     data object ConfirmDismissed : CurrencyEvent
+
+    data object ErrorShown : CurrencyEvent
 }

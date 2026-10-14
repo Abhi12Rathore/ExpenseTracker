@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.domain.repository
 
 import com.example.expensetrackerpro.domain.currency.AppCurrency
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.CurrencyChange
 import kotlinx.coroutines.flow.StateFlow
 
@@ -16,7 +17,8 @@ interface CurrencyRepository {
      */
     suspend fun load()
 
-    suspend fun setCurrency(currency: AppCurrency)
+    /** Fails with StorageFailure when the choice can't be stored; amounts then stay in the current currency. */
+    suspend fun setCurrency(currency: AppCurrency): Outcome<Unit>
 
     /** The change that was last applied, for as long as it can be undone. Not kept across a restart. */
     val pendingChange: StateFlow<CurrencyChange?>

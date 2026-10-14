@@ -36,6 +36,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -123,6 +125,14 @@ fun CurrencyContent(
     onEvent: (CurrencyEvent) -> Unit,
     onNavigateBack: () -> Unit
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val errorText = state.errorRes?.let { stringResource(it) }
+    LaunchedEffect(errorText) {
+        if (errorText == null) return@LaunchedEffect
+        snackbarHostState.showSnackbar(errorText)
+        onEvent(CurrencyEvent.ErrorShown)
+    }
+
     state.confirmation?.let { example ->
         CurrencyConfirmDialog(
             example = example,
@@ -156,7 +166,8 @@ fun CurrencyContent(
                     containerColor = MaterialTheme.colorScheme.background
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         // Only the top: the list runs on under the gesture bar and the apply bar, and pads its own end
         Box(

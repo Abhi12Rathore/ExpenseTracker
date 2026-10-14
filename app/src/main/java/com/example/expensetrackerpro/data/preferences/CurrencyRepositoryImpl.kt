@@ -8,6 +8,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.example.expensetrackerpro.domain.currency.AppCurrency
 import com.example.expensetrackerpro.domain.currency.CurrencyProvider
 import com.example.expensetrackerpro.domain.currency.RegionCurrency
+import com.example.expensetrackerpro.domain.error.DomainError
+import com.example.expensetrackerpro.domain.error.Outcome
+import com.example.expensetrackerpro.domain.error.onSuccess
 import com.example.expensetrackerpro.domain.models.CurrencyChange
 import com.example.expensetrackerpro.domain.repository.CurrencyRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,18 +56,22 @@ class CurrencyRepositoryImpl @Inject constructor(
         val default = regionCurrency.currency() ?: AppCurrency.INR
         _currency.value = default
         // Stored at once, so the currency stays what it was when the app was first opened. A file
-        // that can't be written only means the default is chosen again at the next start
-        try {
-            dataStore.edit { preferences -> preferences[CURRENCY_CODE] = default.code }
-        } catch (_: IOException) {
-            return
-        }
+        // that can't be written only means the default is chosen again at the next start, so the
+        // failure is left for then: the app starts either way
+        store(default)
     }
 
-    override suspend fun setCurrency(currency: AppCurrency) {
-        dataStore.edit { preferences -> preferences[CURRENCY_CODE] = currency.code }
-        _currency.value = currency
-    }
+    /** Fails with StorageFailure when the preferences file can't be written; the currency is then unchanged. */
+    override suspend fun setCurrency(currency: AppCurrency): Outcome<Unit> =
+        store(currency).onSuccess { _currency.value = currency }
+
+    private suspend fun store(currency: AppCurrency): Outcome<Unit> =
+        try {
+            dataStore.edit { preferences -> preferences[CURRENCY_CODE] = currency.code }
+            Outcome.Success(Unit)
+        } catch (e: IOException) {
+            Outcome.Failure(DomainError.StorageFailure(e.message))
+        }
 
     override fun setPendingChange(change: CurrencyChange?) {
         _pendingChange.value = change

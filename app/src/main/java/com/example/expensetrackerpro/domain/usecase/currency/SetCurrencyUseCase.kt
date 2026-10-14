@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.domain.usecase.currency
 
 import com.example.expensetrackerpro.domain.currency.AppCurrency
+import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.repository.CurrencyRepository
 import javax.inject.Inject
 
@@ -9,5 +10,5 @@ class SetCurrencyUseCase @Inject constructor(
 ) {
 
     /** Shows amounts in [currency] from now on. Nothing stored is converted. */
-    suspend operator fun invoke(currency: AppCurrency) = currencyRepository.setCurrency(currency)
+    suspend operator fun invoke(currency: AppCurrency): Outcome<Unit> = currencyRepository.setCurrency(currency)
 }

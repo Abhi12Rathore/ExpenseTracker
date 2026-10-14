@@ -181,6 +181,15 @@ class BackupUseCasesTest {
     }
 
     @Test
+    fun restoreBackup_whoseCurrencyCantBeStored_stillRestores_withoutSwitching() = runTest {
+        backups.putFile(file.uri, backupDocument(currency = "USD"))
+        currency.failWrites = true
+
+        assertEquals(Outcome.Success(RestoredBackup(3)), restoreBackup(file, switchCurrency = true))
+        assertEquals(AppCurrency.INR, currency.currency.value)
+    }
+
+    @Test
     fun restoreBackup_thatFails_neverSwitchesTheCurrency() = runTest {
         backups.putFile(file.uri, backupDocument(currency = "USD"))
         backups.failRestores = true

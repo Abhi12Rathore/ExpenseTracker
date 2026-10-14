@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation
 
+import com.example.expensetrackerpro.R
 import androidx.lifecycle.SavedStateHandle
 import com.example.expensetrackerpro.domain.currency.AppCurrency
 import com.example.expensetrackerpro.domain.models.CategoryBreakdown
@@ -184,6 +185,46 @@ class CurrencyViewModelTest {
         assertEquals(CurrencyChange(previous = AppCurrency.INR, current = AppCurrency.USD), currencies.pendingChange.value)
         assertTrue(viewModel.uiState.value.isApplied)
         assertNull(viewModel.uiState.value.confirmation)
+    }
+
+    @Test
+    fun aChangeThatCantBeStored_showsWhy_andStaysOpenOnTheSelection() = runTest {
+        currencies.failWrites = true
+        val viewModel = viewModel()
+        viewModel.select(AppCurrency.USD)
+        viewModel.onEvent(CurrencyEvent.ApplyClicked)
+
+        viewModel.onEvent(CurrencyEvent.ConfirmClicked)
+
+        val state = viewModel.uiState.value
+        assertEquals(R.string.error_storage_failure, state.errorRes)
+        assertNull(state.confirmation)
+        assertFalse(state.isApplied)
+        assertEquals(AppCurrency.USD, state.selected)
+        assertTrue(state.isApplyVisible)
+        assertEquals(AppCurrency.INR, currencies.currency.value)
+        assertNull(currencies.pendingChange.value)
+
+        viewModel.onEvent(CurrencyEvent.ErrorShown)
+        assertNull(viewModel.uiState.value.errorRes)
+
+        // Tried again once the file can be written
+        currencies.failWrites = false
+        viewModel.onEvent(CurrencyEvent.ApplyClicked)
+        viewModel.onEvent(CurrencyEvent.ConfirmClicked)
+        assertTrue(viewModel.uiState.value.isApplied)
+    }
+
+    @Test
+    fun aChangeWithoutTransactionsThatCantBeStored_showsWhyToo() = runTest {
+        currencies.failWrites = true
+        val viewModel = viewModel(transactionRepository = FakeTransactionRepository())
+        viewModel.select(AppCurrency.EUR)
+
+        viewModel.onEvent(CurrencyEvent.ApplyClicked)
+
+        assertEquals(R.string.error_storage_failure, viewModel.uiState.value.errorRes)
+        assertFalse(viewModel.uiState.value.isApplied)
     }
 
     @Test
