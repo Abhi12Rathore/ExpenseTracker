@@ -48,7 +48,8 @@ fun MainScreen(
     onNavigateToTransactionForm: (TransactionId?) -> Unit,
     onNavigateToManageCategories: () -> Unit,
     onNavigateToExportBackup: () -> Unit,
-    onNavigateToLanguage: () -> Unit
+    onNavigateToLanguage: () -> Unit,
+    onNavigateToCurrency: () -> Unit
 ) {
     val bottomNavController = rememberNavController()
 
@@ -148,7 +149,8 @@ fun MainScreen(
                     SettingsScreen(
                         onNavigateToCategories = onNavigateToManageCategories,
                         onNavigateToExportBackup = onNavigateToExportBackup,
-                        onNavigateToLanguage = onNavigateToLanguage
+                        onNavigateToLanguage = onNavigateToLanguage,
+                        onNavigateToCurrency = onNavigateToCurrency
                     )
                 }
             }

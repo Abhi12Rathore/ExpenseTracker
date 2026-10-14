@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.domain.usecase.export
 
+import com.example.expensetrackerpro.domain.currency.AppCurrency
+import com.example.expensetrackerpro.fakes.FakeCurrencyProvider
 import com.example.expensetrackerpro.fakes.dateFormatter
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.Transaction
@@ -21,9 +23,10 @@ class BuildTransactionsCsvUseCaseTest {
     private val originalLocale = Locale.getDefault()
     private val originalTimeZone = TimeZone.getDefault()
 
-    private val buildCsv = BuildTransactionsCsvUseCase(dateFormatter())
+    private val currency = FakeCurrencyProvider()
+    private val buildCsv = BuildTransactionsCsvUseCase(dateFormatter(), currency)
 
-    private val header = "Date,Type,Category,Title,Note,Amount"
+    private val header = "Date,Type,Category,Title,Note,Amount,Currency"
     private val oct11 = millisAt(2026, Calendar.OCTOBER, 11, hour = 9)
 
     @Before
@@ -48,13 +51,36 @@ class BuildTransactionsCsvUseCaseTest {
     ): Transaction = transaction(amount = amount, type = type, dateMillis = dateMillis, note = note, title = title)
         .copy(categoryName = category)
 
-    /** The one data line of a file built from [transaction], without its line ending. */
+    /**
+     * The one data line of a file built from [transaction], without its line ending or its last
+     * cell, the currency's code, which is checked here and has tests of its own.
+     */
     private fun lineFor(transaction: Transaction): String {
         val csv = buildCsv(listOf(transaction))
         assertTrue(csv.startsWith("$header\r\n"))
-        assertTrue(csv.endsWith("\r\n"))
+        assertTrue(csv.endsWith(",${currency.currency.code}\r\n"))
 
-        return csv.removePrefix("$header\r\n").removeSuffix("\r\n")
+        return csv.removePrefix("$header\r\n").removeSuffix(",${currency.currency.code}\r\n")
+    }
+
+    @Test
+    fun everyLine_endsWithTheCodeOfTheCurrencyAmountsAreShownIn() {
+        val salary = row(title = "Salary", category = "Salary", amount = rupees(105500), dateMillis = millisAt(2026, Calendar.OCTOBER, 1))
+
+        assertEquals(
+            "$header\r\n2026-10-01,Expense,Salary,Salary,,105500.00,INR\r\n",
+            buildCsv(listOf(salary))
+        )
+
+        currency.currency = AppCurrency.USD
+        assertTrue(buildCsv(listOf(salary)).endsWith(",105500.00,USD\r\n"))
+    }
+
+    @Test
+    fun yen_keepBothDecimals_asTheFileHoldsWhatIsStored() {
+        currency.currency = AppCurrency.JPY
+
+        assertTrue(buildCsv(listOf(row(amount = Money(450_50)))).endsWith(",450.50,JPY\r\n"))
     }
 
     @Test

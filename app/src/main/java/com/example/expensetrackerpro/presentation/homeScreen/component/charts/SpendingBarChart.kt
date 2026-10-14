@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.presentation.homeScreen.component.charts
 
 import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
+import com.example.expensetrackerpro.presentation.common.currency.amountFormatKey
 import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -91,6 +92,8 @@ fun SpendingBarChart(
     modifier: Modifier = Modifier
 ) {
     val currencyFormatter = LocalCurrencyFormatter.current
+    // Labels are kept between frames, so a change of currency has to write them again
+    val formatKey = amountFormatKey()
     val buckets = chart.buckets
     if (buckets.isEmpty()) return
 
@@ -138,7 +141,7 @@ fun SpendingBarChart(
     val xLabels = remember(periodKey, axisStyle) {
         xAxisLabels(chart, dateFormatter).map { it.index to textMeasurer.measure(it.text, axisStyle) }
     }
-    val gridLabels = remember(axisMax, axisStyle) {
+    val gridLabels = remember(axisMax, axisStyle, formatKey) {
         GridlineFractions.map { fraction ->
             fraction to textMeasurer.measure(currencyFormatter.formatShort(axisMax.atFraction(fraction)), axisStyle)
         }

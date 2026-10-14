@@ -15,7 +15,9 @@ data class BackupDto(
     val createdAt: Long,
     val appVersion: String,
     val categories: List<BackupCategoryDto>,
-    val transactions: List<BackupTransactionDto>
+    val transactions: List<BackupTransactionDto>,
+    // The ISO code of the currency the amounts were shown in. Optional: files written before it existed have none
+    val currency: String? = null
 )
 
 /** [type] is the TransactionType's name, [icon] the CategoryIcon's key and [builtInKey] the BuiltInCategory's. */

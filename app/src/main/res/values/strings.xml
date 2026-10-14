@@ -369,7 +369,6 @@
     <!-- Settings: profile -->
     <string name="settings_profile_edit">Edit name</string>
     <string name="settings_profile_no_name">Add your name</string>
-    <string name="settings_profile_currency" translatable="false">₹ INR</string>
     <string name="settings_profile_dialog_title">Your name</string>
     <string name="settings_profile_name_label">Name</string>
     <string name="settings_profile_name_counter" translatable="false">%1$d/%2$d</string>
@@ -539,4 +538,68 @@
         <item quantity="one">Exported %1$d transaction</item>
         <item quantity="other">Exported %1$d transactions</item>
     </plurals>
+
+    <!-- Currency -->
+    <string name="settings_currency">Currency</string>
+    <string name="settings_currency_subtitle">How amounts are shown</string>
+    <!-- The symbol or sign, then the code: "$ USD". Used on Settings and the profile card -->
+    <string name="settings_currency_symbol_code" translatable="false">%1$s %2$s</string>
+    <string name="currency_title">Currency</string>
+    <string name="currency_back">Back</string>
+    <string name="currency_preview_label">Preview</string>
+    <string name="currency_preview_balance">Balance this month</string>
+    <string name="currency_preview_chart_axis">Chart axis</string>
+    <string name="currency_search_hint">Search currency or code</string>
+    <string name="currency_search_clear">Clear search</string>
+    <string name="currency_search_no_match">No currency matches “%1$s”</string>
+    <string name="currency_section_suggested">Suggested</string>
+    <string name="currency_section_all">All currencies</string>
+    <string name="currency_row_current">%1$s · current</string>
+    <string name="currency_use">Use %1$s</string>
+    <string name="currency_confirm_title">Show amounts in %1$s?</string>
+    <string name="currency_confirm_becomes">becomes</string>
+    <string name="currency_confirm_nothing_converted">Nothing is converted.</string>
+    <string name="currency_confirm_explanation">Use this if you track money in another currency. One currency for the whole app.</string>
+    <string name="currency_confirm_change">Change</string>
+    <string name="currency_confirm_cancel">Cancel</string>
+    <string name="currency_changed">Amounts now in %1$s</string>
+    <string name="currency_undo">Undo</string>
+    <string name="restore_sheet_currency_differs">This backup was made in %1$s. Amounts are shown in %2$s now.</string>
+    <string name="restore_sheet_currency_switch">Show amounts in %1$s after restoring</string>
+    <!-- Two chart-axis labels side by side -->
+    <string name="currency_preview_axis_values" translatable="false">%1$s · %2$s</string>
+    <plurals name="currency_confirm_body">
+        <item quantity="one">Your %1$d transaction keeps its number. Only the symbol and number format change:</item>
+        <item quantity="other">Your %1$d transactions keep their numbers. Only the symbol and number format change:</item>
+    </plurals>
+    <plurals name="restore_success_currency">
+        <item quantity="one">Restored %1$d transaction. Amounts now in %2$s</item>
+        <item quantity="other">Restored %1$d transactions. Amounts now in %2$s</item>
+    </plurals>
+
+    <!-- Currency names -->
+    <string name="currency_name_inr">Indian Rupee</string>
+    <string name="currency_name_usd">US Dollar</string>
+    <string name="currency_name_eur">Euro</string>
+    <string name="currency_name_gbp">British Pound</string>
+    <string name="currency_name_aed">UAE Dirham</string>
+    <string name="currency_name_sar">Saudi Riyal</string>
+    <string name="currency_name_qar">Qatari Riyal</string>
+    <string name="currency_name_sgd">Singapore Dollar</string>
+    <string name="currency_name_aud">Australian Dollar</string>
+    <string name="currency_name_cad">Canadian Dollar</string>
+    <string name="currency_name_nzd">New Zealand Dollar</string>
+    <string name="currency_name_jpy">Japanese Yen</string>
+    <string name="currency_name_cny">Chinese Yuan</string>
+    <string name="currency_name_hkd">Hong Kong Dollar</string>
+    <string name="currency_name_myr">Malaysian Ringgit</string>
+    <string name="currency_name_thb">Thai Baht</string>
+    <string name="currency_name_idr">Indonesian Rupiah</string>
+    <string name="currency_name_npr">Nepalese Rupee</string>
+    <string name="currency_name_lkr">Sri Lankan Rupee</string>
+    <string name="currency_name_bdt">Bangladeshi Taka</string>
+    <string name="currency_name_pkr">Pakistani Rupee</string>
+    <string name="currency_name_zar">South African Rand</string>
+    <string name="currency_name_brl">Brazilian Real</string>
+    <string name="currency_name_chf">Swiss Franc</string>
 </resources>

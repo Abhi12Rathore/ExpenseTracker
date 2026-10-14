@@ -64,6 +64,10 @@ class FakeTransactionRepository(
     override suspend fun getTransactionById(id: TransactionId): Transaction? =
         transactions.value.find { it.id == id }
 
+    override suspend fun getLatestTransaction(): Transaction? = transactions.value.maxByOrNull { it.dateMillis }
+
+    override suspend fun countTransactions(): Int = transactions.value.size
+
     override fun getAllTransactions(): Flow<List<Transaction>> =
         transactions.map { list -> list.sortedByDescending { it.dateMillis } }
 

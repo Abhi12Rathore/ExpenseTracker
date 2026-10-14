@@ -58,6 +58,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.utils.nameRes
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.DayLabel
 import com.example.expensetrackerpro.domain.models.LastBackup
@@ -158,11 +159,15 @@ fun ExportBackupContent(
             message.transactionCount
         )
         is ExportBackupMessage.BackupSaved -> stringResource(R.string.backup_saved)
-        is ExportBackupMessage.Restored -> pluralStringResource(
-            R.plurals.restore_success,
-            message.transactionCount,
-            message.transactionCount
-        )
+        is ExportBackupMessage.Restored -> when (val currency = message.switchedTo) {
+            null -> pluralStringResource(R.plurals.restore_success, message.transactionCount, message.transactionCount)
+            else -> pluralStringResource(
+                R.plurals.restore_success_currency,
+                message.transactionCount,
+                message.transactionCount,
+                stringResource(currency.nameRes())
+            )
+        }
         is ExportBackupMessage.Failed -> stringResource(message.messageRes)
         null -> null
     }
@@ -191,6 +196,8 @@ fun ExportBackupContent(
         RestoreBackupSheet(
             preview = preview,
             isRestoring = state.backup.isRestoring,
+            switchCurrency = state.backup.switchCurrency,
+            onSwitchCurrencyChange = { onEvent(ExportBackupEvent.RestoreCurrencySwitchToggled(it)) },
             onConfirm = { onEvent(ExportBackupEvent.RestoreConfirmed) },
             onCancel = { onEvent(ExportBackupEvent.RestoreDismissed) }
         )

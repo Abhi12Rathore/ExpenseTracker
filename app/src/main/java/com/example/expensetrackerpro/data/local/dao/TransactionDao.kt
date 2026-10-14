@@ -30,6 +30,12 @@ interface TransactionDao {
     @Query("SELECT t.*, c.name AS categoryName, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId WHERE t.id = :id")
     suspend fun getTransactionById(id: Int): TransactionWithCategory?
 
+    @Query("SELECT t.*, c.name AS categoryName, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId ORDER BY t.dateMillis DESC, t.id DESC LIMIT 1")
+    suspend fun getLatestTransaction(): TransactionWithCategory?
+
+    @Query("SELECT COUNT(*) FROM transactions")
+    suspend fun countTransactions(): Int
+
     @Query("SELECT t.*, c.name AS categoryName, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId ORDER BY t.dateMillis DESC")
     fun getAllTransactions(): Flow<List<TransactionWithCategory>>
 

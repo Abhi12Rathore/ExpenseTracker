@@ -38,6 +38,10 @@ class TransactionRepositoryImpl @Inject constructor(
     override suspend fun getTransactionById(id: TransactionId): Transaction? =
         transactionDao.getTransactionById(id.value)?.toDomain()
 
+    override suspend fun getLatestTransaction(): Transaction? = transactionDao.getLatestTransaction()?.toDomain()
+
+    override suspend fun countTransactions(): Int = transactionDao.countTransactions()
+
     override fun getAllTransactions(): Flow<List<Transaction>> =
         transactionDao.getAllTransactions().map { list -> list.map { it.toDomain() } }
 

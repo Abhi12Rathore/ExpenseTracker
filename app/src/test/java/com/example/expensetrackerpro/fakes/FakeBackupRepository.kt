@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.fakes
 
+import com.example.expensetrackerpro.domain.currency.AppCurrency
 import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.Backup
@@ -33,7 +34,12 @@ class FakeBackupRepository : BackupRepository {
     /** When set, every write, read or restore waits for it to complete. */
     var gate: CompletableDeferred<Unit>? = null
 
-    data class WrittenBackup(val destination: DocumentUri, val createdAtMillis: Long, val appVersion: String)
+    data class WrittenBackup(
+        val destination: DocumentUri,
+        val createdAtMillis: Long,
+        val appVersion: String,
+        val currency: AppCurrency = AppCurrency.INR
+    )
 
     fun putFile(uri: String, document: BackupDocument, name: String = "backup.json") {
         files[uri] = Outcome.Success(BackupFile(name, document))
@@ -42,11 +48,12 @@ class FakeBackupRepository : BackupRepository {
     override suspend fun writeBackup(
         destination: DocumentUri,
         createdAtMillis: Long,
-        appVersion: String
+        appVersion: String,
+        currency: AppCurrency
     ): Outcome<Unit> {
         gate?.await()
         if (failWrites) return Outcome.Failure(DomainError.FileWriteFailed)
-        written += WrittenBackup(destination, createdAtMillis, appVersion)
+        written += WrittenBackup(destination, createdAtMillis, appVersion, currency)
         return Outcome.Success(Unit)
     }
 

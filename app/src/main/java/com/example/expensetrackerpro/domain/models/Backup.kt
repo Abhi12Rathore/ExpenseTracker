@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.domain.models
 
+import com.example.expensetrackerpro.domain.currency.AppCurrency
+
 /**
  * Everything a backup holds, checked and ready to be restored: the categories with the ids the
  * transactions refer to, and the transactions. Settings such as the app lock are never part of it.
@@ -10,7 +12,9 @@ data class Backup(
     val appVersion: String,
     val categories: List<Category>,
     // Not stored yet, so none has an id of its own
-    val transactions: List<Transaction>
+    val transactions: List<Transaction>,
+    // The currency the amounts were shown in; null in files written before it was noted, or one this app doesn't offer
+    val currency: AppCurrency? = null
 ) {
     companion object {
         /** What every backup file names itself as. */
@@ -28,7 +32,9 @@ data class BackupDocument(
     val createdAtMillis: Long,
     val appVersion: String,
     val categories: List<BackupCategoryRecord>,
-    val transactions: List<BackupTransactionRecord>
+    val transactions: List<BackupTransactionRecord>,
+    // An ISO currency code, as written in the file
+    val currency: String? = null
 )
 
 /** [type] and [icon] are as written in the file, which may not be values this app knows. */
@@ -67,7 +73,16 @@ data class BackupPreview(
     val oldestMillis: Long?,
     val newestMillis: Long?,
     // How many transactions the app holds now, all of which a restore replaces
-    val currentTransactionCount: Int
+    val currentTransactionCount: Int,
+    // The currency the backup's amounts were shown in, when the file says and it isn't the one shown now
+    val differentCurrency: AppCurrency? = null,
+    val currentCurrency: AppCurrency = AppCurrency.INR
+)
+
+/** How a restore went: how many transactions came back, and the currency switched to, if it was. */
+data class RestoredBackup(
+    val transactionCount: Int,
+    val switchedTo: AppCurrency? = null
 )
 
 /** When the last backup was saved, and how that day is named relative to today. */

@@ -1,10 +1,12 @@
 package com.example.expensetrackerpro.presentation.settings.uistate
 
 import androidx.annotation.StringRes
+import com.example.expensetrackerpro.domain.currency.AppCurrency
 import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.AuthResult
 import com.example.expensetrackerpro.domain.models.BiometricStatus
 import com.example.expensetrackerpro.domain.models.CategoryCounts
+import com.example.expensetrackerpro.domain.models.CurrencyChange
 import com.example.expensetrackerpro.domain.models.LanguageChange
 import com.example.expensetrackerpro.domain.models.LanguageChoice
 import com.example.expensetrackerpro.domain.models.ThemeMode
@@ -18,6 +20,9 @@ data class SettingsUiState(
     val language: LanguageChoice = LanguageChoice.SystemDefault,
     // A language change that was just applied, until its Undo was taken or has gone
     val languageChange: LanguageChange? = null,
+    val currency: AppCurrency = AppCurrency.INR,
+    // A currency change that was just applied, until its Undo was taken or has gone
+    val currencyChange: CurrencyChange? = null,
     val appLock: AppLockSettings = AppLockSettings(),
     val biometricStatus: BiometricStatus = BiometricStatus.AVAILABLE,
     val isLockTimeoutDialogOpen: Boolean = false,

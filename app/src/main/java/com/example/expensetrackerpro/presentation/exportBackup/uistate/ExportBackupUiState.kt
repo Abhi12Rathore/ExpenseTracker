@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.presentation.exportBackup.uistate
 
 import androidx.annotation.StringRes
+import com.example.expensetrackerpro.domain.currency.AppCurrency
 import com.example.expensetrackerpro.domain.models.BackupPreview
 import com.example.expensetrackerpro.domain.models.DateRange
 import com.example.expensetrackerpro.domain.models.LastBackup
@@ -44,6 +45,8 @@ data class BackupUiState(
     val isRestoring: Boolean = false,
     // What the picked file holds; non-null while the confirmation sheet is showing
     val restorePreview: BackupPreview? = null,
+    // Whether to show amounts in the backup's currency once restored; offered only when it differs
+    val switchCurrency: Boolean = true,
     // How the last backup or restore ended, until the screen has shown it
     val message: ExportBackupMessage? = null
 ) {
@@ -54,6 +57,7 @@ sealed interface ExportBackupMessage {
     /** [uri] is where the file was saved, for sharing it on. */
     data class Exported(val transactionCount: Int, val uri: String) : ExportBackupMessage
     data class BackupSaved(val uri: String) : ExportBackupMessage
-    data class Restored(val transactionCount: Int) : ExportBackupMessage
+    /** [switchedTo] is the currency amounts are now shown in, when the restore changed it. */
+    data class Restored(val transactionCount: Int, val switchedTo: AppCurrency? = null) : ExportBackupMessage
     data class Failed(@StringRes val messageRes: Int) : ExportBackupMessage
 }

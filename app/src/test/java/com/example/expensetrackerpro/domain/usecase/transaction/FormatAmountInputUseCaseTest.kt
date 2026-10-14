@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.transaction
 
+import com.example.expensetrackerpro.fakes.sanitizeAmountInput
 import com.example.expensetrackerpro.domain.models.AmountValidation
 import com.example.expensetrackerpro.domain.models.Money
 import org.junit.Assert.assertEquals
@@ -26,7 +27,7 @@ class FormatAmountInputUseCaseTest {
 
     @Test
     fun whatItShows_isAValidAmount() {
-        val sanitize = SanitizeAmountInputUseCase()
+        val sanitize = sanitizeAmountInput()
         val validate = ValidateAmountUseCase()
 
         listOf(Money.ofRupees(4201), Money(4201_50), Money(1), Money.ofRupees(10_000_000)).forEach { amount ->

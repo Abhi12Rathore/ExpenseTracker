@@ -4,6 +4,7 @@ import com.example.expensetrackerpro.data.files.DocumentFiles
 import com.example.expensetrackerpro.data.local.dao.AppDataDao
 import com.example.expensetrackerpro.data.mapper.storageOutcome
 import com.example.expensetrackerpro.data.mapper.toEntity
+import com.example.expensetrackerpro.domain.currency.AppCurrency
 import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.Backup
@@ -25,9 +26,10 @@ class BackupRepositoryImpl @Inject constructor(
     override suspend fun writeBackup(
         destination: DocumentUri,
         createdAtMillis: Long,
-        appVersion: String
+        appVersion: String,
+        currency: AppCurrency
     ): Outcome<Unit> = withContext(Dispatchers.IO) {
-        val backup = appDataDao.snapshot().toBackupDto(createdAtMillis, appVersion)
+        val backup = appDataDao.snapshot().toBackupDto(createdAtMillis, appVersion, currency)
 
         try {
             // No byte order mark, unlike the CSV: JSON readers don't expect one
