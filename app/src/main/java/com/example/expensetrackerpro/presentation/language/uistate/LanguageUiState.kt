@@ -15,7 +15,7 @@ data class LanguageUiState(
     // The phone's other languages the app is translated into, then every language left
     val suggested: List<AppLanguage> = emptyList(),
     val others: List<AppLanguage> = emptyList(),
-    // Home in the selected language; null while the selection is what the app is shown in
+    // Home in the selected language, from the moment the screen opens; null only until it has loaded
     val preview: LanguagePreview? = null,
     // True once the selection was confirmed, which closes the screen
     val isApplied: Boolean = false,
