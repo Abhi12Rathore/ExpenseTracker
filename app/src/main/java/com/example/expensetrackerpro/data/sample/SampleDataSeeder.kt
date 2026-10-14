@@ -43,7 +43,7 @@ class SampleDataSeeder @Inject constructor(
                     ?: return@mapNotNull null
                 TransactionEntity(
                     title = sample.title,
-                    amountPaise = sample.amount.paise,
+                    amountPaise = sample.amount.minorUnits,
                     note = sample.note,
                     dateMillis = sample.dateMillis,
                     categoryId = categoryId,

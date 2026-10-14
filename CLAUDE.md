@@ -28,10 +28,10 @@ Goal: production-quality portfolio project.
 - `data/export/` → `FileExportRepositoryImpl`: writes the exported CSV (UTF-8 with a BOM) through `DocumentFiles`
 - `data/backup/` → the backup file: `BackupDto` (the JSON format, kotlinx.serialization), its mappers, and `BackupRepositoryImpl` (write, read, restore)
 - `data/scan/` → `MlKitBillTextReader` (text recognition, then deletes the photo), `BillLineAssembler` (joins recognized pieces into the bill's lines), `GmsBillScannerAvailability`
-- `data/language/` → `AppLanguageRepositoryImpl` (the one place the app's language is read from and handed to AppCompat), `AndroidDeviceLanguages` (the phone's own languages), `AndroidAppLocaleProvider`; `data/category/` → `ResourceDefaultCategoryNames` (built-in category names from string resources, in any language asked for)
+- `data/language/` → `AppLanguageRepositoryImpl` (the one place the app's language is read from and handed to AppCompat), `AndroidDeviceLanguages` (the phone's own languages), `AndroidAppLocaleProvider`; `data/currency/` → `DefaultCurrencyProvider` (INR for now); `data/category/` → `ResourceDefaultCategoryNames` (built-in category names from string resources, in any language asked for)
 - `data/preferences/` → DataStore-backed repositories (theme, app lock, user profile); `data/security/` → Android biometric availability
 - `data/motion/` → `AndroidMotionPreferences`: animations off when the animator duration scale is 0 ("Remove animations")
-- `domain/` → `models/` (typed IDs in `Ids.kt`), `error/` (`DomainError`, `Outcome`), `repository/` (interfaces), `security/` (device capability interfaces), `motion/` (`MotionPreferences`), `scan/` (`BillTextReader`, `BillScannerAvailability`), `locale/` (`AppLocaleProvider`, `DeviceLanguages`), `category/` (`DefaultCategoryNames`), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
+- `domain/` → `models/` (typed IDs in `Ids.kt`), `error/` (`DomainError`, `Outcome`), `repository/` (interfaces), `security/` (device capability interfaces), `motion/` (`MotionPreferences`), `scan/` (`BillTextReader`, `BillScannerAvailability`), `locale/` (`AppLocaleProvider`, `DeviceLanguages`), `currency/` (`AppCurrency`, `CurrencyProvider`), `category/` (`DefaultCategoryNames`), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
 - `domain/usecase/scan/` → `ScanBillUseCase` (read, then `ParseBillUseCase`), the parsers it delegates to (one per rule: amount, title, date, note), and `BillKeywords`: every word list and limit the parsers use, en-IN for now
 - `presentation/<feature>/` → Screen, ViewModel, `components/`, `uistate/`
 - `presentation/common/category/editor/` → the add/edit category sheet shared by Manage Categories and Add/Edit Transaction: its state, events and `CategoryEditorReducer`; the host ViewModel keeps the state and wraps the events
@@ -40,6 +40,7 @@ Goal: production-quality portfolio project.
 - `presentation/exportBackup/` → Settings → Export & backup: the period to export and the "Save as" picker; the CSV itself is built in `domain/usecase/export/`. `BackupController` owns creating a backup and restoring from one (the Backup card and the confirmation sheet); the ViewModel shows its state and forwards its events
 - `presentation/language/` → Settings → Language: the list, the Preview card (`LocalizedContent` draws it in another language without switching the app) and the bilingual apply button. The Undo snackbar is on Settings, owned by `presentation/settings/LanguageChangeController`
 - `presentation/common/date/` → `LocalDateFormatter`: how Composables reach the injected `DateFormatter`
+- `presentation/common/currency/` → `LocalCurrencyFormatter`: how Composables reach the injected `CurrencyFormatter`
 - `presentation/common/motion/` → `AppMotionHost` (the app root: theme reveal, theme cross-fade, the fade after a recreate), `ThemeTransitionController` (the tapped spot, from the theme option to the root), `ScreenSnapshotHolder` (a picture of the screen across a recreate), `LocalAnimationsEnabled`, `rememberCountUp`, `PressTracker`, `phoneDarkTheme()`
 - `presentation/common/haptics/` → `rememberHaptics()`: confirm and toggle feedback through the View (Compose 1.7 has no such `HapticFeedbackType`)
 - `presentation/lock/` → lock screen, the biometric prompt wrapper, and `AppLockController` (lock state, prompt flow, background timing); `MainViewModel` shows its state and forwards the lock events
@@ -61,7 +62,7 @@ Goal: production-quality portfolio project.
 Apply these to all new and changed code. Existing violations are tracked under Known issues; fix them only when the task is about them.
 - **SOLID:** one responsibility per class. Depend on interfaces from `domain/`, never on implementations.
 - **Use cases:** one operation each. When a ViewModel needs more than ~5 dependencies, add a facade use case that combines them (e.g. `GetDashboardUseCase`).
-- **Value types over primitives:** money is `Money` (whole paise as `Long`, never `Double`), IDs are typed (`TransactionId`, `CategoryId`: `@JvmInline value class` over `Int`; wrap in `data/mapper/`, unwrap only for Room, navigation arguments and lazy-list keys), dates go through `DateRange` / `TimeProvider`.
+- **Value types over primitives:** money is `Money` (whole minor units, hundredths of the currency's unit, as `Long`; never `Double`), IDs are typed (`TransactionId`, `CategoryId`: `@JvmInline value class` over `Int`; wrap in `data/mapper/`, unwrap only for Room, navigation arguments and lazy-list keys), dates go through `DateRange` / `TimeProvider`.
 - **No stringly-typed data:** fixed sets are enums or sealed types (e.g. `CategoryIcon` enum stored via a Room `TypeConverter`), not free strings.
 - **Data access:** one DAO per aggregate (`TransactionDao`, `CategoryDao`, `DashboardDao`), and a repository depends only on the DAOs it reads or writes. Don't store the same data twice; get related data through a JOIN or `@Relation`.
 - **Errors:** expected failures are typed. Writes return `Outcome<T>` (`Success(value)` / `Failure(DomainError)`, both in `domain/error/`), not `kotlin.Result`, `Boolean` or a nullable. Repositories wrap database writes in `storageOutcome { }`, which catches `SQLiteException` only; ViewModels turn the error into a `@StringRes` with `toMessageRes()`. No silent `catch {}`, no catch-all of `Throwable`, and no exceptions used for control flow.
@@ -70,7 +71,7 @@ Apply these to all new and changed code. Existing violations are tracked under K
 - **Immutability:** domain models and UI state are immutable `data class`es with `val`s and read-only `List`s.
 
 ## Conventions
-- Money: format only through the shared en-IN currency formatter, `utils/CurrencyFormatter` (e.g. `-₹1,00,000.00`). Never use string concatenation like `"₹$amount"`.
+- Money: format only through the injected `utils/CurrencyFormatter`, which writes the currency `CurrencyProvider` gives (INR for now: `-₹1,00,000.00`). Composables get it from `LocalCurrencyFormatter.current` (provided in `MainActivity`; previews get an INR default) and never format money without it. Never use string concatenation like `"₹$amount"`. Domain code that writes files (the CSV) keeps its plain decimal (`1130.00`) and doesn't use the formatter.
 - Dates: format via the shared date utility, `utils/DateFormatter` (an injected class that writes in the app's language). Never show raw millis.
 - Colors: no Color literals outside `ui/theme`; use `MaterialTheme.colorScheme` or `MaterialTheme.extendedColors` (income/expense, chart and category palette colors). `Color.Transparent` is fine. Charts take theme colors directly as `Color`.
 - UI strings go in `strings.xml`.
@@ -103,7 +104,8 @@ Apply these to all new and changed code. Existing violations are tracked under K
 
 ## Architecture decisions
 Settled during the LLD refactor. Change one only with a reason that beats the one given.
-- **Money is whole paise in a `Long`** (`Money`), in the domain and in the database. `Double` loses paise when amounts are summed.
+- **Money is whole minor units in a `Long`** (`Money.minorUnits`, hundredths of the currency's unit, `MINOR_PER_UNIT = 100` for every currency), in the domain and in the database. `Double` loses the decimals when amounts are summed. The Room column is still named `amountPaise` (and the backup field too), so the schema didn't change.
+- **The currency formatter is an injected class**, not an `object`: it reads the currency from `CurrencyProvider` on every call, so a currency setting needs no change to the screens.
 - **Category name and icon are read through a JOIN**, never copied onto the transaction, so renaming a category can't leave old names behind.
 - **Expected failures are `Outcome<T>` with a `DomainError`**, not `Boolean`, a nullable or `kotlin.Result`: the caller has to handle the failure and can tell why it happened. Only `SQLiteException` is caught (`storageOutcome { }`); anything else is a bug and crashes.
 - **One DAO per aggregate**, and a repository takes only the DAOs it uses, so a change to one table's queries doesn't touch the others.

@@ -46,10 +46,10 @@ import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.PacePoint
 import com.example.expensetrackerpro.domain.models.SpendingPace
+import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
 import com.example.expensetrackerpro.presentation.common.filter.comparedWithLabel
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.ui.theme.extendedColors
-import com.example.expensetrackerpro.utils.CurrencyFormatter
 import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import com.example.expensetrackerpro.utils.DateFormatter
 import kotlin.math.max
@@ -106,12 +106,13 @@ fun SpendingPaceCard(
 /** e.g. `₹2,540 less than this time last month` */
 @Composable
 private fun paceSummary(pace: SpendingPace): String {
+    val currencyFormatter = LocalCurrencyFormatter.current
     val comparedWith = comparedWithLabel(
         granularity = pace.granularity,
         previousStartMillis = pace.previous.firstOrNull()?.dateMillis ?: 0L,
         isPartial = pace.isPartial
     )
-    val amount = CurrencyFormatter.formatWhole(pace.difference.abs())
+    val amount = currencyFormatter.formatWhole(pace.difference.abs())
 
     return when {
         // Less than a rupee apart reads as no difference
@@ -147,6 +148,7 @@ fun SpendingPaceChart(
     description: String,
     modifier: Modifier = Modifier
 ) {
+    val currencyFormatter = LocalCurrencyFormatter.current
     val dayCount = pace.dayCount
     if (dayCount < 2) return
 
@@ -189,7 +191,7 @@ fun SpendingPaceChart(
     val axisMax = remember(currentTotal, previousTotal) { niceAxisMax(maxOf(currentTotal, previousTotal)) }
     val gridLabels = remember(axisMax, axisStyle) {
         GridlineFractions.map { fraction ->
-            fraction to textMeasurer.measure(CurrencyFormatter.formatShort(axisMax.atFraction(fraction)), axisStyle)
+            fraction to textMeasurer.measure(currencyFormatter.formatShort(axisMax.atFraction(fraction)), axisStyle)
         }
     }
     val xLabels = remember(periodKey, axisStyle) {
@@ -197,7 +199,7 @@ fun SpendingPaceChart(
     }
     val endLabel = remember(currentTotal, axisStyle, currentColor) {
         textMeasurer.measure(
-            CurrencyFormatter.formatShort(currentTotal),
+            currencyFormatter.formatShort(currentTotal),
             axisStyle.copy(color = currentColor, fontWeight = FontWeight.SemiBold)
         )
     }
@@ -369,7 +371,7 @@ private fun paceTooltip(pace: SpendingPace, index: Int): String? {
 private fun paceTooltipValue(point: PacePoint): String = stringResource(
     R.string.pace_tooltip_value,
     LocalDateFormatter.current.formatDayMonth(point.dateMillis),
-    CurrencyFormatter.formatWhole(point.total)
+    LocalCurrencyFormatter.current.formatWhole(point.total)
 )
 
 /** Every weekday for a week (`Mon` … `Sun`); every seventh day of the month beyond that. */

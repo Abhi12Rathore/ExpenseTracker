@@ -41,9 +41,9 @@ import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.presentation.common.category.CategoryIconTile
+import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
 import com.example.expensetrackerpro.presentation.common.text.highlighted
 import com.example.expensetrackerpro.ui.theme.extendedColors
-import com.example.expensetrackerpro.utils.CurrencyFormatter
 
 private val CardCorner = 16.dp
 
@@ -151,6 +151,7 @@ fun TransactionRow(
 
 @Composable
 private fun RowContent(transaction: Transaction, searchQuery: String) {
+    val currencyFormatter = LocalCurrencyFormatter.current
     val isIncome = transaction.transactionType == TransactionType.INCOME
     val meta = if (transaction.note.isEmpty()) {
         transaction.categoryName
@@ -194,7 +195,7 @@ private fun RowContent(transaction: Transaction, searchQuery: String) {
         Spacer(modifier = Modifier.width(12.dp))
 
         Text(
-            text = CurrencyFormatter.formatSigned(transaction.amount, isIncome),
+            text = currencyFormatter.formatSigned(transaction.amount, isIncome),
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold,
             color = if (isIncome) MaterialTheme.extendedColors.income else MaterialTheme.extendedColors.expense,

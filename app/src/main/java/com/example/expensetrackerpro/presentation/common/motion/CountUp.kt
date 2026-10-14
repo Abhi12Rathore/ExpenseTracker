@@ -21,7 +21,7 @@ private const val COUNT_UP_MILLIS = 600
 /**
  * [target], counted up from zero the first time [start] is true, and [target] as it is after
  * that: a later change (another period picked) shows at once. Saved with the screen, so coming
- * back to it doesn't count again. The value is whole paise at every frame, to be formatted as
+ * back to it doesn't count again. The value is whole minor units at every frame, to be formatted as
  * any other amount.
  */
 @Composable
@@ -41,5 +41,5 @@ fun rememberCountUp(target: Money, start: Boolean): Money {
     }
 
     // In a Double, which holds every paisa of any amount; a Float would round the last digits off
-    return Money((target.paise * progress.value.toDouble()).roundToLong())
+    return Money((target.minorUnits * progress.value.toDouble()).roundToLong())
 }

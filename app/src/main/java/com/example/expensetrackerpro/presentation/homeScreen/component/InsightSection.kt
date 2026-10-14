@@ -14,7 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.SmartInsight
-import com.example.expensetrackerpro.utils.CurrencyFormatter
+import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
 
 @Composable
 fun InsightSection(
@@ -79,7 +79,7 @@ private fun SmartInsight.title(): String = when (this) {
 @Composable
 private fun SmartInsight.description(): String = when (this) {
     is SmartInsight.Saved ->
-        stringResource(R.string.insight_saved_description, CurrencyFormatter.format(amount))
+        stringResource(R.string.insight_saved_description, LocalCurrencyFormatter.current.format(amount))
     is SmartInsight.HighestSpending ->
         stringResource(R.string.insight_highest_spending_description, categoryName)
     SmartInsight.SpendingImproved ->

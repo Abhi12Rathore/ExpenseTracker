@@ -16,13 +16,14 @@ import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.DayLabel
 import com.example.expensetrackerpro.domain.models.TransactionDayGroup
+import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
 import com.example.expensetrackerpro.ui.theme.extendedColors
-import com.example.expensetrackerpro.utils.CurrencyFormatter
 import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 
 /** `TODAY · FRI 9 OCT` on the left, the day's net on the right. Opaque, so rows pass under it. */
 @Composable
 fun DayHeader(day: TransactionDayGroup, modifier: Modifier = Modifier) {
+    val currencyFormatter = LocalCurrencyFormatter.current
     val date = LocalDateFormatter.current.formatDayHeader(day.dayStartMillis)
     val title = when (day.label) {
         DayLabel.TODAY -> stringResource(
@@ -54,8 +55,8 @@ fun DayHeader(day: TransactionDayGroup, modifier: Modifier = Modifier) {
         )
         Text(
             text = when {
-                day.net.isZero -> CurrencyFormatter.format(day.net)
-                else -> CurrencyFormatter.formatSigned(day.net, isIncome = day.net.isPositive)
+                day.net.isZero -> currencyFormatter.format(day.net)
+                else -> currencyFormatter.formatSigned(day.net, isIncome = day.net.isPositive)
             },
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,

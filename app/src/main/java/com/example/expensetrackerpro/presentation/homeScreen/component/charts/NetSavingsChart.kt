@@ -32,9 +32,9 @@ import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.MonthlyNet
+import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.ui.theme.extendedColors
-import com.example.expensetrackerpro.utils.CurrencyFormatter
 import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import kotlin.math.max
 
@@ -84,6 +84,8 @@ fun NetSavingsChart(
     onMonthClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val currencyFormatter = LocalCurrencyFormatter.current
+
     if (months.isEmpty()) return
 
     // Names the year on show, not its amounts: saving a transaction must not replay the animation
@@ -116,7 +118,7 @@ fun NetSavingsChart(
     val worstLabel = remember(worstIndex, months, axisStyle, overspentColor) {
         worstIndex?.let {
             textMeasurer.measure(
-                CurrencyFormatter.formatShort(months[it].net),
+                currencyFormatter.formatShort(months[it].net),
                 axisStyle.copy(color = overspentColor, fontWeight = FontWeight.SemiBold)
             )
         }
@@ -204,7 +206,7 @@ fun NetSavingsChart(
                 val description = stringResource(
                     if (month.net.isNegative) R.string.net_savings_bar_overspent else R.string.net_savings_bar_saved,
                     dateFormatter.formatMonthYear(month.range.startMillis),
-                    CurrencyFormatter.format(month.net.abs())
+                    currencyFormatter.format(month.net.abs())
                 )
                 Box(
                     modifier = Modifier

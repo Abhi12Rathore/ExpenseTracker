@@ -44,10 +44,10 @@ class BuildTransactionsCsvUseCase @Inject constructor(
 
     /** `1130.00`: no symbol, no grouping and no sign, so a spreadsheet reads it as a number. */
     private fun Money.toPlainDecimal(): String {
-        val paise = abs().paise
-        val decimals = (paise % Money.PAISE_PER_RUPEE).toString().padStart(2, '0')
+        val minor = abs().minorUnits
+        val decimals = (minor % Money.MINOR_PER_UNIT).toString().padStart(2, '0')
 
-        return "${paise / Money.PAISE_PER_RUPEE}.$decimals"
+        return "${minor / Money.MINOR_PER_UNIT}.$decimals"
     }
 
     private fun String.toTextCell(): String = guardedAgainstFormulas().quotedIfNeeded()

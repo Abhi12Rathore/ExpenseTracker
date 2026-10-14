@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.Money
-import com.example.expensetrackerpro.utils.CurrencyFormatter
+import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
 
 /** The amounts found on the bill, to put the right one into the form in one tap. */
 @OptIn(ExperimentalLayoutApi::class)
@@ -29,6 +29,8 @@ fun BillAmountChips(
     onAmountSelected: (Money) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val currencyFormatter = LocalCurrencyFormatter.current
+
     Column(modifier = modifier.fillMaxWidth()) {
         SectionLabel(text = stringResource(R.string.bill_fill_other_amounts))
 
@@ -37,7 +39,7 @@ fun BillAmountChips(
                 FilterChip(
                     selected = amount == selected,
                     onClick = { onAmountSelected(amount) },
-                    label = { Text(CurrencyFormatter.format(amount)) }
+                    label = { Text(currencyFormatter.format(amount)) }
                 )
             }
         }

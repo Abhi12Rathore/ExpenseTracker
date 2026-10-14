@@ -8,7 +8,7 @@ import javax.inject.Inject
 class FormatAmountInputUseCase @Inject constructor() {
 
     operator fun invoke(amount: Money): String =
-        BigDecimal.valueOf(amount.paise, ValidateAmountUseCase.MAX_DECIMALS)
+        BigDecimal.valueOf(amount.minorUnits, ValidateAmountUseCase.MAX_DECIMALS)
             .stripTrailingZeros()
             .toPlainString()
 }

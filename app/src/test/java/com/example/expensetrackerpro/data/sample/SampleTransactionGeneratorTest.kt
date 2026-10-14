@@ -171,7 +171,7 @@ class SampleTransactionGeneratorTest {
         assertTrue(inCategory("Refunds & Cashback").all { it.amount in rupees(150)..rupees(1_800) })
         assertEquals(setOf(rupees(649), rupees(119)), inCategory("Subscriptions").map { it.amount }.toSet())
         // Whole rupees throughout
-        assertTrue(samples.all { it.amount.isPositive && it.amount.paise % Money.PAISE_PER_RUPEE == 0L })
+        assertTrue(samples.all { it.amount.isPositive && it.amount.minorUnits % Money.MINOR_PER_UNIT == 0L })
     }
 
     @Test

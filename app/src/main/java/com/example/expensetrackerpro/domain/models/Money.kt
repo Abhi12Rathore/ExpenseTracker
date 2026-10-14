@@ -4,49 +4,50 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 
 /**
- * An amount of rupees held as whole paise, so sums and differences are exact. May be negative:
- * a balance or a difference can be.
+ * An amount held as whole minor units: hundredths of the currency's unit (paise for rupees), for
+ * every currency, so sums and differences are exact. May be negative: a balance or a difference can be.
  */
 @JvmInline
-value class Money(val paise: Long) : Comparable<Money> {
+value class Money(val minorUnits: Long) : Comparable<Money> {
 
-    val isPositive: Boolean get() = paise > 0
-    val isNegative: Boolean get() = paise < 0
-    val isZero: Boolean get() = paise == 0L
+    val isPositive: Boolean get() = minorUnits > 0
+    val isNegative: Boolean get() = minorUnits < 0
+    val isZero: Boolean get() = minorUnits == 0L
 
-    operator fun plus(other: Money): Money = Money(paise + other.paise)
+    operator fun plus(other: Money): Money = Money(minorUnits + other.minorUnits)
 
-    operator fun minus(other: Money): Money = Money(paise - other.paise)
+    operator fun minus(other: Money): Money = Money(minorUnits - other.minorUnits)
 
-    operator fun unaryMinus(): Money = Money(-paise)
+    operator fun unaryMinus(): Money = Money(-minorUnits)
 
-    operator fun times(factor: Int): Money = Money(paise * factor)
+    operator fun times(factor: Int): Money = Money(minorUnits * factor)
 
-    /** An equal share of this amount, to the nearest paisa with halves rounded away from zero. */
-    operator fun div(parts: Int): Money = Money(divideRounding(paise, parts.toLong()))
+    /** An equal share of this amount, to the nearest minor unit with halves rounded away from zero. */
+    operator fun div(parts: Int): Money = Money(divideRounding(minorUnits, parts.toLong()))
 
-    override fun compareTo(other: Money): Int = paise.compareTo(other.paise)
+    override fun compareTo(other: Money): Int = minorUnits.compareTo(other.minorUnits)
 
     fun abs(): Money = if (isNegative) -this else this
 
-    /** To the nearest whole rupee, halves rounded away from zero. */
-    fun roundedToRupees(): Money = Money(divideRounding(paise, PAISE_PER_RUPEE) * PAISE_PER_RUPEE)
+    /** To the nearest whole unit (rupee), halves rounded away from zero. */
+    fun roundedToRupees(): Money = Money(divideRounding(minorUnits, MINOR_PER_UNIT) * MINOR_PER_UNIT)
 
     /**
      * This amount as a fraction of [whole]: 0.25 for ₹25 of ₹100. 0 when [whole] is zero. For
      * percentages and chart geometry only; the result is never turned back into an amount.
      */
     fun ratioTo(whole: Money): Float =
-        if (whole.isZero) 0f else (paise.toDouble() / whole.paise.toDouble()).toFloat()
+        if (whole.isZero) 0f else (minorUnits.toDouble() / whole.minorUnits.toDouble()).toFloat()
 
     companion object {
-        const val PAISE_PER_RUPEE = 100L
+        // Minor units in one unit of the currency, the same for every currency
+        const val MINOR_PER_UNIT = 100L
 
         val ZERO = Money(0)
 
-        fun ofRupees(rupees: Long): Money = Money(rupees * PAISE_PER_RUPEE)
+        fun ofRupees(rupees: Long): Money = Money(rupees * MINOR_PER_UNIT)
 
-        /** [rupees] to the nearest paisa, halves rounded up. */
+        /** [rupees] to the nearest minor unit (paisa), halves rounded up. */
         fun fromRupees(rupees: BigDecimal): Money =
             Money(rupees.setScale(DECIMALS, RoundingMode.HALF_UP).movePointRight(DECIMALS).longValueExact())
 
@@ -59,7 +60,7 @@ value class Money(val paise: Long) : Comparable<Money> {
     }
 }
 
-fun Iterable<Money>.sum(): Money = Money(sumOf { it.paise })
+fun Iterable<Money>.sum(): Money = Money(sumOf { it.minorUnits })
 
 /** The total of what [selector] gives for each element. */
-inline fun <T> Iterable<T>.sumOfMoney(selector: (T) -> Money): Money = Money(sumOf { selector(it).paise })
+inline fun <T> Iterable<T>.sumOfMoney(selector: (T) -> Money): Money = Money(sumOf { selector(it).minorUnits })

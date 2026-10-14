@@ -156,7 +156,7 @@ class SampleTransactionGenerator @Inject constructor(
         val income = entries.filter { it.type == TransactionType.INCOME }.sumOfMoney { it.amount }
         val expense = entries.filter { it.type == TransactionType.EXPENSE }.sumOfMoney { it.amount }
         // Every sample amount is a whole number of rupees
-        val surplus = ((income - expense).paise / Money.PAISE_PER_RUPEE).toInt()
+        val surplus = ((income - expense).minorUnits / Money.MINOR_PER_UNIT).toInt()
         val shortfall = amount(4_000, 9_000, 500)
         val fee = maxOf(15_000, roundUpTo(surplus + shortfall, 500))
 

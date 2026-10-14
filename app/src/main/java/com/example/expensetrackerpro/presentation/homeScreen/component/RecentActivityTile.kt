@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.presentation.common.category.CategoryIconTile
-import com.example.expensetrackerpro.utils.CurrencyFormatter
+import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
 import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import com.example.expensetrackerpro.ui.theme.extendedColors
 
@@ -29,6 +29,8 @@ fun RecentActivityTile(
     transaction: Transaction,
     onClick: () -> Unit
 ) {
+    val currencyFormatter = LocalCurrencyFormatter.current
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -59,7 +61,7 @@ fun RecentActivityTile(
         // 3. Amount & Date
         Column(horizontalAlignment = Alignment.End) {
             Text(
-                text = CurrencyFormatter.formatSigned(
+                text = currencyFormatter.formatSigned(
                     amount = transaction.amount,
                     isIncome = transaction.transactionType == TransactionType.INCOME
                 ),
