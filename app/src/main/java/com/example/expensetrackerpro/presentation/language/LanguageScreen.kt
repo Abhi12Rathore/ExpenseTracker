@@ -37,7 +37,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -65,8 +64,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -87,6 +84,8 @@ import com.example.expensetrackerpro.domain.models.FinancialSummary
 import com.example.expensetrackerpro.domain.models.LanguageChoice
 import com.example.expensetrackerpro.domain.models.LanguagePreview
 import com.example.expensetrackerpro.presentation.common.haptics.rememberHaptics
+import com.example.expensetrackerpro.presentation.common.list.GroupedRow
+import com.example.expensetrackerpro.presentation.common.list.SectionTitle
 import com.example.expensetrackerpro.presentation.common.motion.LocalAnimationsEnabled
 import com.example.expensetrackerpro.presentation.common.motion.LocalScreenSnapshot
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
@@ -103,7 +102,6 @@ private const val TRANSLATION_FEEDBACK_EMAIL = "arathore.abhishek457@gmail.com"
 // What stands for "whatever the phone uses" where a language has its script badge
 private const val SYSTEM_DEFAULT_BADGE = "Aa"
 
-private val CardCorner = 20.dp
 private val SECTION_GAP = 20.dp
 
 // Below this the preview shows only the balance and its row, leaving room for the list
@@ -360,55 +358,6 @@ private fun LanguageChoiceRow(
         subtitle = language.englishName,
         selected = state.selected == choice,
         onClick = { onEvent(LanguageEvent.LanguageSelected(choice)) }
-    )
-}
-
-@Composable
-private fun SectionTitle(title: String, modifier: Modifier = Modifier) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = modifier
-            .padding(horizontal = 16.dp)
-            .semantics { heading() }
-    )
-}
-
-/**
- * One row of a section's card. Each row is its own list item, so the card is drawn in pieces:
- * the first rounds the top, the last the bottom, and every row after the first starts with a divider.
- */
-@Composable
-private fun GroupedRow(index: Int, count: Int, content: @Composable () -> Unit) {
-    val first = index == 0
-    val last = index == count - 1
-    val shape = RoundedCornerShape(
-        topStart = if (first) CardCorner else 0.dp,
-        topEnd = if (first) CardCorner else 0.dp,
-        bottomStart = if (last) CardCorner else 0.dp,
-        bottomEnd = if (last) CardCorner else 0.dp
-    )
-
-    Surface(
-        shape = shape,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column {
-            if (!first) RowDivider()
-            content()
-        }
-    }
-}
-
-/** Starts under the text, past the badge. */
-@Composable
-private fun RowDivider() {
-    HorizontalDivider(
-        modifier = Modifier.padding(start = 72.dp, end = 16.dp),
-        thickness = 0.5.dp,
-        color = MaterialTheme.colorScheme.outlineVariant
     )
 }
 

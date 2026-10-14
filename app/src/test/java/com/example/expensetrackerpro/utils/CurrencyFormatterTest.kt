@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.utils
 
+import com.example.expensetrackerpro.domain.currency.NumberSymbols
 import com.example.expensetrackerpro.domain.currency.AppCurrency
 import com.example.expensetrackerpro.domain.models.Money
 import org.junit.Assert.assertEquals
@@ -8,7 +9,11 @@ import java.util.Locale
 
 class CurrencyFormatterTest {
 
-    private val formatter = CurrencyFormatter(currencyProvider = { AppCurrency.INR }, localeProvider = { Locale.ENGLISH })
+    private val formatter = CurrencyFormatter(
+        currencyProvider = { AppCurrency.INR },
+        localeProvider = { Locale.ENGLISH },
+        numberSymbolsProvider = { NumberSymbols.ENGLISH }
+    )
 
     @Test
     fun zero() {

@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.domain.models
 
+import com.example.expensetrackerpro.domain.currency.SymbolPlacement
+
 /**
  * The languages the app is translated into. [nativeName] and [badge] are written in the
  * language itself and are the same whatever the app is shown in, so its speakers can find it.
@@ -10,16 +12,26 @@ enum class AppLanguage(
     val nativeName: String,
     val englishName: String,
     /** Two letters of its script, shown where a flag would be: flags are countries, not languages. */
-    val badge: String
+    val badge: String,
+    /** Where amounts in this language put the currency's symbol: `$5.00` or `5,00 $`. */
+    val symbolPlacement: SymbolPlacement = SymbolPlacement.BEFORE,
+    /** Whether a symbol written before the amount is followed by a space even when it is a sign: `R$ 5,00`. */
+    val spaceAfterSymbol: Boolean = false
 ) {
     ENGLISH(tag = "en", nativeName = "English", englishName = "English", badge = "En"),
     HINDI(tag = "hi", nativeName = "हिन्दी", englishName = "Hindi", badge = "हि"),
-    SPANISH(tag = "es", nativeName = "Español", englishName = "Spanish", badge = "Es"),
-    FRENCH(tag = "fr", nativeName = "Français", englishName = "French", badge = "Fr"),
-    GERMAN(tag = "de", nativeName = "Deutsch", englishName = "German", badge = "De"),
+    SPANISH(tag = "es", nativeName = "Español", englishName = "Spanish", badge = "Es", symbolPlacement = SymbolPlacement.AFTER),
+    FRENCH(tag = "fr", nativeName = "Français", englishName = "French", badge = "Fr", symbolPlacement = SymbolPlacement.AFTER),
+    GERMAN(tag = "de", nativeName = "Deutsch", englishName = "German", badge = "De", symbolPlacement = SymbolPlacement.AFTER),
 
     // Written for Brazil, and the only Portuguese the app has, so it serves every Portuguese phone
-    PORTUGUESE_BRAZIL(tag = "pt-BR", nativeName = "Português (Brasil)", englishName = "Portuguese", badge = "Pt");
+    PORTUGUESE_BRAZIL(
+        tag = "pt-BR",
+        nativeName = "Português (Brasil)",
+        englishName = "Portuguese",
+        badge = "Pt",
+        spaceAfterSymbol = true
+    );
 
     /** The language without its region, e.g. `pt`. No two entries share one. */
     val languageCode: String get() = tag.languageCode()

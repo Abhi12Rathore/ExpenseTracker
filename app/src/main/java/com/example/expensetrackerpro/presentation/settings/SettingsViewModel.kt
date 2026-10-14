@@ -45,7 +45,7 @@ class SettingsViewModel @Inject constructor(
     getCategoryCounts: GetCategoryCountsUseCase,
     private val loadSampleData: LoadSampleDataUseCase,
     private val deleteAllData: DeleteAllDataUseCase,
-    private val languageChangeController: LanguageChangeController,
+    private val regionalSettings: RegionalSettingsController,
     private val buildInfo: BuildInfo
 ) : ViewModel() {
 
@@ -64,9 +64,14 @@ class SettingsViewModel @Inject constructor(
             getAppLockSettings(),
             getUserProfile(),
             getCategoryCounts(),
-            // The language is merged in first: combine takes five flows at most
-            combine(screenState, languageChangeController.state) { state, language ->
-                state.copy(language = language.choice, languageChange = language.change)
+            // Language and currency are merged in first: combine takes five flows at most
+            combine(screenState, regionalSettings.state) { state, regional ->
+                state.copy(
+                    language = regional.language,
+                    languageChange = regional.languageChange,
+                    currency = regional.currency,
+                    currencyChange = regional.currencyChange
+                )
             }
         ) { themeMode, appLock, profile, categoryCounts, state ->
             state.copy(
@@ -91,11 +96,13 @@ class SettingsViewModel @Inject constructor(
                 screenState.update { it.copy(profileNameDraft = null) }
             is SettingsEvent.ThemeModeSelected ->
                 viewModelScope.launch { setThemeMode(event.mode) }
-            SettingsEvent.LanguageUndoClicked -> languageChangeController.undo()
-            SettingsEvent.LanguageChangeShown -> languageChangeController.onChangeShown()
+            SettingsEvent.LanguageUndoClicked -> regionalSettings.undoLanguage()
+            SettingsEvent.LanguageChangeShown -> regionalSettings.onLanguageChangeShown()
+            SettingsEvent.CurrencyUndoClicked -> regionalSettings.undoCurrency(viewModelScope)
+            SettingsEvent.CurrencyChangeShown -> regionalSettings.onCurrencyChangeShown()
             SettingsEvent.ScreenResumed -> {
                 screenState.update { it.copy(biometricStatus = getBiometricStatus()) }
-                languageChangeController.refresh()
+                regionalSettings.refresh()
             }
             is SettingsEvent.AppLockToggled -> toggleAppLock(event.enabled)
             SettingsEvent.AppLockPromptLaunched ->

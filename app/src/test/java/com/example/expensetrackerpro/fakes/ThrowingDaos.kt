@@ -24,6 +24,10 @@ class ThrowingTransactionDao(private val error: Exception) : TransactionDao {
 
     override suspend fun getTransactionById(id: Int): TransactionWithCategory? = null
 
+    override suspend fun getLatestTransaction(): TransactionWithCategory? = null
+
+    override suspend fun countTransactions(): Int = 0
+
     override fun getAllTransactions(): Flow<List<TransactionWithCategory>> = emptyFlow()
 
     override fun getTransactionsByType(type: TransactionType): Flow<List<TransactionWithCategory>> = emptyFlow()

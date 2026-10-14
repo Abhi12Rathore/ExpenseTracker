@@ -17,6 +17,10 @@ sealed interface SettingsEvent {
     data object LanguageUndoClicked : SettingsEvent
     data object LanguageChangeShown : SettingsEvent
 
+    // The snackbar shown after the currency amounts are shown in was changed
+    data object CurrencyUndoClicked : SettingsEvent
+    data object CurrencyChangeShown : SettingsEvent
+
     // The user may have changed their screen lock or the app's language in system settings while away
     data object ScreenResumed : SettingsEvent
     data class AppLockToggled(val enabled: Boolean) : SettingsEvent

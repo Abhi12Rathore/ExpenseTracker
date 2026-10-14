@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -22,6 +23,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -32,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -40,7 +43,9 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.domain.currency.AppCurrency
 import com.example.expensetrackerpro.domain.models.BackupPreview
+import com.example.expensetrackerpro.utils.nameRes
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 
@@ -52,6 +57,8 @@ private val CardShape = RoundedCornerShape(20.dp)
 fun RestoreBackupSheet(
     preview: BackupPreview,
     isRestoring: Boolean,
+    switchCurrency: Boolean,
+    onSwitchCurrencyChange: (Boolean) -> Unit,
     onConfirm: () -> Unit,
     onCancel: () -> Unit
 ) {
@@ -66,6 +73,8 @@ fun RestoreBackupSheet(
         RestoreBackupSheetContent(
             preview = preview,
             isRestoring = isRestoring,
+            switchCurrency = switchCurrency,
+            onSwitchCurrencyChange = onSwitchCurrencyChange,
             onConfirm = onConfirm,
             onCancel = onCancel
         )
@@ -76,6 +85,8 @@ fun RestoreBackupSheet(
 fun RestoreBackupSheetContent(
     preview: BackupPreview,
     isRestoring: Boolean,
+    switchCurrency: Boolean,
+    onSwitchCurrencyChange: (Boolean) -> Unit,
     onConfirm: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier
@@ -139,6 +150,16 @@ fun RestoreBackupSheetContent(
             }
         }
 
+        preview.differentCurrency?.let { backupCurrency ->
+            CurrencySwitchCard(
+                backupCurrency = backupCurrency,
+                currentCurrency = preview.currentCurrency,
+                switchCurrency = switchCurrency,
+                enabled = !isRestoring,
+                onSwitchCurrencyChange = onSwitchCurrencyChange
+            )
+        }
+
         Surface(
             shape = CardShape,
             color = MaterialTheme.colorScheme.errorContainer,
@@ -198,6 +219,60 @@ fun RestoreBackupSheetContent(
     }
 }
 
+/** The backup was made in another currency: says so, and offers to show amounts in it. Nothing is converted. */
+@Composable
+private fun CurrencySwitchCard(
+    backupCurrency: AppCurrency,
+    currentCurrency: AppCurrency,
+    switchCurrency: Boolean,
+    enabled: Boolean,
+    onSwitchCurrencyChange: (Boolean) -> Unit
+) {
+    val backupName = stringResource(backupCurrency.nameRes())
+
+    Surface(
+        shape = CardShape,
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = stringResource(
+                    R.string.restore_sheet_currency_differs,
+                    backupName,
+                    stringResource(currentCurrency.nameRes())
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .toggleable(
+                        value = switchCurrency,
+                        enabled = enabled,
+                        role = Role.Switch,
+                        onValueChange = onSwitchCurrencyChange
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.restore_sheet_currency_switch, backupName),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                // The row takes the tap, so the switch itself is only drawn
+                Switch(checked = switchCurrency, onCheckedChange = null, enabled = enabled)
+            }
+        }
+    }
+}
+
 @Composable
 private fun DetailRow(label: String, value: String) {
     Row(
@@ -228,7 +303,8 @@ private val previewBackup = BackupPreview(
     customCategoryCount = 3,
     oldestMillis = PreviewData.DATE_MILLIS - 281 * PREVIEW_DAY_MILLIS,
     newestMillis = PreviewData.DATE_MILLIS,
-    currentTransactionCount = 87
+    currentTransactionCount = 87,
+    differentCurrency = AppCurrency.USD
 )
 
 @PreviewLightDark
@@ -239,6 +315,8 @@ private fun RestoreBackupSheetContentPreview() {
             RestoreBackupSheetContent(
                 preview = previewBackup,
                 isRestoring = false,
+                switchCurrency = true,
+                onSwitchCurrencyChange = {},
                 onConfirm = {},
                 onCancel = {},
                 modifier = Modifier.padding(top = 24.dp)
@@ -258,9 +336,12 @@ private fun RestoreBackupSheetContentRestoringPreview() {
                     transactionCount = 0,
                     oldestMillis = null,
                     newestMillis = null,
-                    currentTransactionCount = 1
+                    currentTransactionCount = 1,
+                    differentCurrency = null
                 ),
                 isRestoring = true,
+                switchCurrency = true,
+                onSwitchCurrencyChange = {},
                 onConfirm = {},
                 onCancel = {},
                 modifier = Modifier.padding(top = 24.dp)

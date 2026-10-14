@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.expensetrackerpro.domain.error.onFailure
 import com.example.expensetrackerpro.domain.models.Transaction
-import com.example.expensetrackerpro.domain.usecase.category.LocalizeDefaultCategoriesUseCase
-import com.example.expensetrackerpro.domain.usecase.theme.GetThemeModeUseCase
+import com.example.expensetrackerpro.domain.usecase.app.ObserveDisplaySettingsUseCase
+import com.example.expensetrackerpro.domain.usecase.app.PrepareAppUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.ObserveDeletedTransactionsUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.RestoreTransactionUseCase
 import com.example.expensetrackerpro.presentation.common.error.toMessageRes
@@ -25,8 +25,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val localizeDefaultCategories: LocalizeDefaultCategoriesUseCase,
-    getThemeMode: GetThemeModeUseCase,
+    private val prepareApp: PrepareAppUseCase,
+    observeDisplaySettings: ObserveDisplaySettingsUseCase,
     observeDeletedTransactions: ObserveDeletedTransactionsUseCase,
     private val restoreTransaction: RestoreTransactionUseCase,
     private val appLockController: AppLockController
@@ -40,9 +40,11 @@ class MainViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            // Keeps collecting so a change made in Settings re-themes the app immediately
-            getThemeMode().collect { mode ->
-                _uiState.update { it.copy(themeMode = mode, isThemeLoaded = true) }
+            // Keeps collecting so a change made in Settings re-themes the app, or rewrites its amounts, immediately
+            observeDisplaySettings().collect { settings ->
+                _uiState.update {
+                    it.copy(themeMode = settings.themeMode, currency = settings.currency, isThemeLoaded = true)
+                }
             }
         }
         viewModelScope.launch {
@@ -80,14 +82,15 @@ class MainViewModel @Inject constructor(
     }
 
     /**
-     * Puts the built-in categories into the app's language. The first run is also what opens the
-     * database, creating and seeding it on first launch, and the splash stays up until it is done.
+     * Reads the currency and puts the built-in categories into the app's language. The first run
+     * is also what opens the database, creating and seeding it on first launch, and the splash
+     * stays up until it is done.
      */
     private fun prepareData() {
         viewModelScope.launch {
             try {
                 // A failure leaves the names in the previous language, which the next start puts right
-                localizeDefaultCategories()
+                prepareApp()
             } finally {
                 // Released even if it throws, so the splash can never get stuck
                 _uiState.update { it.copy(isDataLoaded = true) }

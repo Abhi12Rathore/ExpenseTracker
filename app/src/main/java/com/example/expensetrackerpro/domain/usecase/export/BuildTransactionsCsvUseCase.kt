@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.export
 
+import com.example.expensetrackerpro.domain.currency.CurrencyProvider
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.domain.models.TransactionType
@@ -8,14 +9,18 @@ import javax.inject.Inject
 
 /**
  * Turns transactions into a CSV file (RFC 4180) that Excel and Google Sheets open as they are:
- * ISO dates, amounts as plain positive decimals with the direction in the Type column.
+ * ISO dates, amounts as plain positive decimals with the direction in the Type column, and the
+ * ISO code of the currency they are shown in. Amounts keep both decimals in every currency,
+ * yen too: the file holds what is stored, not what is shown.
  */
 class BuildTransactionsCsvUseCase @Inject constructor(
-    private val dateFormatter: DateFormatter
+    private val dateFormatter: DateFormatter,
+    private val currencyProvider: CurrencyProvider
 ) {
 
     /** A header line, then a line per transaction, newest first. Every line ends in CRLF. */
     operator fun invoke(transactions: List<Transaction>): String = buildString {
+        val currencyCode = currencyProvider.current().code
         appendLine(HEADER)
         transactions.sortedByDescending { it.dateMillis }.forEach { transaction ->
             appendLine(
@@ -25,7 +30,8 @@ class BuildTransactionsCsvUseCase @Inject constructor(
                     transaction.categoryName.toTextCell(),
                     transaction.title.toTextCell(),
                     transaction.note.toTextCell(),
-                    transaction.amount.toPlainDecimal()
+                    transaction.amount.toPlainDecimal(),
+                    currencyCode
                 )
             )
         }
@@ -60,7 +66,7 @@ class BuildTransactionsCsvUseCase @Inject constructor(
         if (any { it in NEEDS_QUOTING }) "\"${replace("\"", "\"\"")}\"" else this
 
     private companion object {
-        val HEADER = listOf("Date", "Type", "Category", "Title", "Note", "Amount")
+        val HEADER = listOf("Date", "Type", "Category", "Title", "Note", "Amount", "Currency")
         const val SEPARATOR = ","
         const val LINE_END = "\r\n"
         val FORMULA_STARTS = setOf('=', '+', '-', '@', '\t', '\r')

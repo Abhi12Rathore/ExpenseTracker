@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.repository
 
+import com.example.expensetrackerpro.domain.currency.AppCurrency
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.Backup
 import com.example.expensetrackerpro.domain.models.BackupFile
@@ -8,10 +9,15 @@ import com.example.expensetrackerpro.domain.models.DocumentUri
 interface BackupRepository {
 
     /**
-     * Writes every category and transaction to [destination] as a backup file. Fails with
-     * FileWriteFailed when the file can't be written.
+     * Writes every category and transaction to [destination] as a backup file, noting the
+     * [currency] they are shown in. Fails with FileWriteFailed when the file can't be written.
      */
-    suspend fun writeBackup(destination: DocumentUri, createdAtMillis: Long, appVersion: String): Outcome<Unit>
+    suspend fun writeBackup(
+        destination: DocumentUri,
+        createdAtMillis: Long,
+        appVersion: String,
+        currency: AppCurrency
+    ): Outcome<Unit>
 
     /**
      * Reads the backup file at [source] without checking what it says. Fails with FileReadFailed

@@ -1,9 +1,17 @@
 package com.example.expensetrackerpro.presentation
 
+import com.example.expensetrackerpro.domain.usecase.currency.ChangeCurrencyUseCase
+import com.example.expensetrackerpro.domain.models.CurrencyChange
+import com.example.expensetrackerpro.domain.currency.AppCurrency
+import com.example.expensetrackerpro.domain.usecase.currency.ForgetCurrencyChangeUseCase
+import com.example.expensetrackerpro.domain.usecase.currency.UndoCurrencyChangeUseCase
+import com.example.expensetrackerpro.domain.usecase.currency.ObserveCurrencyChangeUseCase
+import com.example.expensetrackerpro.domain.usecase.currency.ObserveCurrencyUseCase
+import com.example.expensetrackerpro.fakes.FakeCurrencyRepository
 import com.example.expensetrackerpro.domain.models.LanguageChange
 import com.example.expensetrackerpro.domain.models.LanguageChoice
 import com.example.expensetrackerpro.domain.models.AppLanguage
-import com.example.expensetrackerpro.presentation.settings.LanguageChangeController
+import com.example.expensetrackerpro.presentation.settings.RegionalSettingsController
 import com.example.expensetrackerpro.domain.usecase.language.SetAppLanguageUseCase
 import com.example.expensetrackerpro.domain.usecase.language.ResolveAppLocaleUseCase
 import com.example.expensetrackerpro.domain.usecase.language.ForgetLanguageChangeUseCase
@@ -75,6 +83,7 @@ class SettingsViewModelTest {
     )
 
     private val languages = FakeAppLanguageRepository()
+    private val currencies = FakeCurrencyRepository()
     private val deviceLanguages = FakeDeviceLanguages()
 
     private fun viewModel(
@@ -91,11 +100,15 @@ class SettingsViewModelTest {
         GetCategoryCountsUseCase(categories),
         LoadSampleDataUseCase(sampleData),
         DeleteAllDataUseCase(appData),
-        LanguageChangeController(
+        RegionalSettingsController(
             GetLanguageOptionsUseCase(languages, deviceLanguages, ResolveAppLocaleUseCase()),
             ObserveLanguageChangeUseCase(languages),
             UndoLanguageChangeUseCase(languages),
-            ForgetLanguageChangeUseCase(languages)
+            ForgetLanguageChangeUseCase(languages),
+            ObserveCurrencyUseCase(currencies),
+            ObserveCurrencyChangeUseCase(currencies),
+            UndoCurrencyChangeUseCase(currencies),
+            ForgetCurrencyChangeUseCase(currencies)
         ),
         BuildInfo(isDebug = isDebug, versionName = "1.0")
     )
@@ -154,6 +167,44 @@ class SettingsViewModelTest {
         // With nothing left to undo, a late Undo changes nothing
         viewModel.onEvent(SettingsEvent.LanguageUndoClicked)
         assertEquals(hindi, languages.stored)
+    }
+
+    @Test
+    fun showsTheCurrency_andFollowsAChangeMadeElsewhere() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        assertEquals(AppCurrency.INR, viewModel.uiState.value.currency)
+
+        ChangeCurrencyUseCase(currencies)(AppCurrency.USD)
+
+        assertEquals(AppCurrency.USD, viewModel.uiState.value.currency)
+    }
+
+    @Test
+    fun aCurrencyChange_isOfferedAnUndo_whichPutsThePreviousCurrencyBack() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        ChangeCurrencyUseCase(currencies)(AppCurrency.USD)
+
+        assertEquals(CurrencyChange(AppCurrency.INR, AppCurrency.USD), viewModel.uiState.value.currencyChange)
+
+        viewModel.onEvent(SettingsEvent.CurrencyUndoClicked)
+
+        assertEquals(AppCurrency.INR, viewModel.uiState.value.currency)
+        assertNull(viewModel.uiState.value.currencyChange)
+    }
+
+    @Test
+    fun aCurrencyChangeThatWasShown_staysAndIsNoLongerOffered() = runTest {
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        ChangeCurrencyUseCase(currencies)(AppCurrency.USD)
+
+        viewModel.onEvent(SettingsEvent.CurrencyChangeShown)
+        viewModel.onEvent(SettingsEvent.CurrencyUndoClicked)
+
+        assertEquals(AppCurrency.USD, viewModel.uiState.value.currency)
+        assertNull(viewModel.uiState.value.currencyChange)
     }
 
     @Test

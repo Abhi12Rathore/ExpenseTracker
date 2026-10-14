@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.domain.currency.AppCurrency
 import com.example.expensetrackerpro.domain.models.UserProfile
 import com.example.expensetrackerpro.domain.usecase.profile.SetUserNameUseCase
 import com.example.expensetrackerpro.presentation.common.profile.ProfileAvatar
@@ -39,6 +40,7 @@ import com.example.expensetrackerpro.ExpenseTrackerProTheme
 @Composable
 fun ProfileCard(
     profile: UserProfile,
+    currency: AppCurrency,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -64,7 +66,7 @@ fun ProfileCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = stringResource(R.string.settings_profile_currency),
+                    text = stringResource(R.string.settings_currency_symbol_code, currency.badge, currency.code),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
@@ -131,8 +133,8 @@ private fun ProfileCardPreview() {
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                ProfileCard(profile = UserProfile(name = "Abhishek"), onClick = {})
-                ProfileCard(profile = UserProfile(), onClick = {})
+                ProfileCard(profile = UserProfile(name = "Abhishek"), currency = AppCurrency.INR, onClick = {})
+                ProfileCard(profile = UserProfile(), currency = AppCurrency.USD, onClick = {})
             }
         }
     }

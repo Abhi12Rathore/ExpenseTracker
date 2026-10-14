@@ -3,19 +3,21 @@ package com.example.expensetrackerpro.data.backup
 import com.example.expensetrackerpro.data.local.entity.CategoryEntity
 import com.example.expensetrackerpro.data.local.entity.TransactionEntity
 import com.example.expensetrackerpro.data.local.model.StoredData
+import com.example.expensetrackerpro.domain.currency.AppCurrency
 import com.example.expensetrackerpro.domain.models.Backup
 import com.example.expensetrackerpro.domain.models.BackupCategoryRecord
 import com.example.expensetrackerpro.domain.models.BackupDocument
 import com.example.expensetrackerpro.domain.models.BackupTransactionRecord
 
 /** What is stored, as the current version of the backup file. */
-fun StoredData.toBackupDto(createdAtMillis: Long, appVersion: String): BackupDto = BackupDto(
+fun StoredData.toBackupDto(createdAtMillis: Long, appVersion: String, currency: AppCurrency): BackupDto = BackupDto(
     format = Backup.FORMAT,
     version = Backup.VERSION,
     createdAt = createdAtMillis,
     appVersion = appVersion,
     categories = categories.map { it.toBackupDto() },
-    transactions = transactions.map { it.toBackupDto() }
+    transactions = transactions.map { it.toBackupDto() },
+    currency = currency.code
 )
 
 private fun CategoryEntity.toBackupDto(): BackupCategoryDto = BackupCategoryDto(
@@ -63,5 +65,6 @@ fun BackupDto.toDocument(): BackupDocument = BackupDocument(
             categoryId = it.categoryId,
             type = it.type
         )
-    }
+    },
+    currency = currency
 )

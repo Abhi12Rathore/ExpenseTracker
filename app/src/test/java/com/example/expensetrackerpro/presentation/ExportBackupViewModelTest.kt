@@ -1,5 +1,9 @@
 package com.example.expensetrackerpro.presentation
 
+import com.example.expensetrackerpro.domain.currency.AppCurrency
+import com.example.expensetrackerpro.fakes.FakeCurrencyProvider
+import com.example.expensetrackerpro.domain.usecase.currency.SetCurrencyUseCase
+import com.example.expensetrackerpro.fakes.FakeCurrencyRepository
 import com.example.expensetrackerpro.fakes.dateFormatter
 import com.example.expensetrackerpro.fakes.FakeCategoryRepository
 import com.example.expensetrackerpro.fakes.localizeDefaultCategories
@@ -77,7 +81,7 @@ class ExportBackupViewModelTest {
 
     private val transactions = FakeTransactionRepository(listOf(march, october10, lastYear, october1))
     private val files = FakeFileExportRepository()
-    private val buildCsv = BuildTransactionsCsvUseCase(dateFormatter())
+    private val buildCsv = BuildTransactionsCsvUseCase(dateFormatter(), FakeCurrencyProvider())
 
     private val october = DateRange(millisAt(2026, Calendar.OCTOBER, 1), millisAt(2026, Calendar.NOVEMBER, 1))
     private val year2026 = DateRange(millisAt(2026, Calendar.JANUARY, 1), millisAt(2027, Calendar.JANUARY, 1))
@@ -85,6 +89,7 @@ class ExportBackupViewModelTest {
     private val uri = "content://documents/expenses.csv"
 
     private val backups = FakeBackupRepository()
+    private val currency = FakeCurrencyRepository()
     private val backupInfo = FakeBackupInfoRepository()
     private val backupUri = "content://documents/expensetracker-backup.json"
 
@@ -118,9 +123,15 @@ class ExportBackupViewModelTest {
         val readBackup = ReadBackupUseCase(backups, ValidateBackupUseCase(ValidateCategoryNameUseCase()))
 
         return BackupController(
-            CreateBackupUseCase(backups, backupInfo, time, BuildInfo(isDebug = false, versionName = "1.0")),
-            PreviewBackupUseCase(readBackup, getTransactions),
-            RestoreBackupUseCase(readBackup, backups, localizeDefaultCategories(FakeCategoryRepository())),
+            CreateBackupUseCase(backups, backupInfo, time, BuildInfo(isDebug = false, versionName = "1.0"), currency),
+            PreviewBackupUseCase(readBackup, getTransactions, currency),
+            RestoreBackupUseCase(
+                readBackup,
+                backups,
+                localizeDefaultCategories(FakeCategoryRepository()),
+                currency,
+                SetCurrencyUseCase(currency)
+            ),
             ObserveLastBackupUseCase(backupInfo, ObserveTodayUseCase(time), time)
         )
     }
@@ -817,4 +828,55 @@ class ExportBackupViewModelTest {
         assertNull(done.uiState.value.backup.restorePreview)
         assertEquals(1, backups.restored.size)
     }
+
+    // --- Restore in another currency ---
+
+    @Test
+    fun aBackupInAnotherCurrency_isOfferedTheSwitch_onByDefault_andSwitchesAfterRestoring() = runTest {
+        backups.putFile(backupUri, backupDocument(currency = "USD"))
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        viewModel.onEvent(ExportBackupEvent.RestoreFilePicked(backupUri))
+
+        assertEquals(AppCurrency.USD, viewModel.uiState.value.backup.restorePreview?.differentCurrency)
+        assertTrue(viewModel.uiState.value.backup.switchCurrency)
+
+        viewModel.onEvent(ExportBackupEvent.RestoreConfirmed)
+
+        assertEquals(ExportBackupMessage.Restored(3, switchedTo = AppCurrency.USD), viewModel.uiState.value.pendingMessage)
+        assertEquals(AppCurrency.USD, currency.currency.value)
+    }
+
+    @Test
+    fun withTheSwitchOff_theCurrencyStays() = runTest {
+        backups.putFile(backupUri, backupDocument(currency = "USD"))
+        val viewModel = viewModel()
+        subscribe(viewModel.uiState)
+        viewModel.onEvent(ExportBackupEvent.RestoreFilePicked(backupUri))
+
+        viewModel.onEvent(ExportBackupEvent.RestoreCurrencySwitchToggled(false))
+        viewModel.onEvent(ExportBackupEvent.RestoreConfirmed)
+
+        assertEquals(ExportBackupMessage.Restored(3), viewModel.uiState.value.pendingMessage)
+        assertEquals(AppCurrency.INR, currency.currency.value)
+    }
+
+    @Test
+    fun theSwitch_survivesTheProcessBeingKilled_andIsOnAgainForTheNextFile() = runTest {
+        backups.putFile(backupUri, backupDocument(currency = "USD"))
+        val savedState = SavedStateHandle()
+        val first = viewModel(savedState)
+        subscribe(first.uiState)
+        first.onEvent(ExportBackupEvent.RestoreFilePicked(backupUri))
+        first.onEvent(ExportBackupEvent.RestoreCurrencySwitchToggled(false))
+
+        val restored = viewModel(savedState)
+        subscribe(restored.uiState)
+
+        assertFalse(restored.uiState.value.backup.switchCurrency)
+        restored.onEvent(ExportBackupEvent.RestoreDismissed)
+        restored.onEvent(ExportBackupEvent.RestoreFilePicked(backupUri))
+        assertTrue(restored.uiState.value.backup.switchCurrency)
+    }
 }
+

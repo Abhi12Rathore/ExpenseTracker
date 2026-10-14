@@ -36,6 +36,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.navigation.compose.rememberNavController
 import com.example.expensetrackerpro.domain.models.ThemeMode
+import com.example.expensetrackerpro.presentation.common.currency.LocalAppCurrency
 import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
 import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import com.example.expensetrackerpro.domain.motion.MotionPreferences
@@ -189,7 +190,9 @@ class MainActivity : AppCompatActivity() {
                                     appContentState.SaveableStateProvider(APP_CONTENT_KEY) {
                                         CompositionLocalProvider(
                                             LocalDateFormatter provides dateFormatter,
-                                            LocalCurrencyFormatter provides currencyFormatter
+                                            LocalCurrencyFormatter provides currencyFormatter,
+                                            // The formatter reads the currency itself; this redraws every amount when it changes
+                                            LocalAppCurrency provides uiState.currency
                                         ) {
                                             AppNavHost(
                                                 navController = navController,

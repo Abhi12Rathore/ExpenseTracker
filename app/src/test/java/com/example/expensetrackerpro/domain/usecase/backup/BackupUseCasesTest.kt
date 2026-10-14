@@ -1,5 +1,9 @@
 package com.example.expensetrackerpro.domain.usecase.backup
 
+import com.example.expensetrackerpro.domain.currency.AppCurrency
+import com.example.expensetrackerpro.domain.models.RestoredBackup
+import com.example.expensetrackerpro.domain.usecase.currency.SetCurrencyUseCase
+import com.example.expensetrackerpro.fakes.FakeCurrencyRepository
 import com.example.expensetrackerpro.fakes.FakeCategoryRepository
 import com.example.expensetrackerpro.fakes.localizeDefaultCategories
 import com.example.expensetrackerpro.domain.error.DomainError
@@ -39,10 +43,13 @@ class BackupUseCasesTest {
 
     private val file = DocumentUri("content://documents/backup.json")
 
-    private val createBackup = CreateBackupUseCase(backups, backupInfo, time, BuildInfo(isDebug = false, versionName = "1.4"))
+    private val currency = FakeCurrencyRepository()
+    private val createBackup =
+        CreateBackupUseCase(backups, backupInfo, time, BuildInfo(isDebug = false, versionName = "1.4"), currency)
     private val readBackup = ReadBackupUseCase(backups, ValidateBackupUseCase(ValidateCategoryNameUseCase()))
-    private val previewBackup = PreviewBackupUseCase(readBackup, GetTransactionsUseCase(transactions))
-    private val restoreBackup = RestoreBackupUseCase(readBackup, backups, localizeDefaultCategories(categories))
+    private val previewBackup = PreviewBackupUseCase(readBackup, GetTransactionsUseCase(transactions), currency)
+    private val restoreBackup =
+        RestoreBackupUseCase(readBackup, backups, localizeDefaultCategories(categories), currency, SetCurrencyUseCase(currency))
 
     @Test
     fun createBackup_writesItStampedWithNowAndTheAppVersion_andRemembersWhen() = runTest {
@@ -107,7 +114,7 @@ class BackupUseCasesTest {
     fun restoreBackup_readsTheFileAgain_andRestoresWhatItHolds() = runTest {
         backups.putFile(file.uri, backupDocument())
 
-        assertEquals(Outcome.Success(3), restoreBackup(file))
+        assertEquals(Outcome.Success(RestoredBackup(3)), restoreBackup(file, switchCurrency = true))
 
         assertEquals(1, backups.readCalls)
         assertEquals(ValidateBackupUseCase(ValidateCategoryNameUseCase())(backupDocument()).getOrNull(), backups.restored.single())
@@ -117,13 +124,13 @@ class BackupUseCasesTest {
     fun restoreBackup_ofAFileThatIsNoLongerValid_restoresNothing() = runTest {
         backups.putFile(file.uri, backupDocument(transactions = listOf(transactionRecord(categoryId = 99))))
 
-        assertEquals(Outcome.Failure(DomainError.BackupInvalid), restoreBackup(file))
+        assertEquals(Outcome.Failure(DomainError.BackupInvalid), restoreBackup(file, switchCurrency = true))
         assertTrue(backups.restored.isEmpty())
     }
 
     @Test
     fun restoreBackup_ofAFileThatCantBeRead_restoresNothing() = runTest {
-        assertEquals(Outcome.Failure(DomainError.FileReadFailed), restoreBackup(file))
+        assertEquals(Outcome.Failure(DomainError.FileReadFailed), restoreBackup(file, switchCurrency = true))
         assertTrue(backups.restored.isEmpty())
     }
 
@@ -132,6 +139,62 @@ class BackupUseCasesTest {
         backups.putFile(file.uri, backupDocument())
         backups.failRestores = true
 
-        assertEquals(Outcome.Failure(DomainError.StorageFailure()), restoreBackup(file))
+        assertEquals(Outcome.Failure(DomainError.StorageFailure()), restoreBackup(file, switchCurrency = true))
+    }
+
+    @Test
+    fun createBackup_notesTheCurrencyAmountsAreShownIn() = runTest {
+        currency.setCurrency(AppCurrency.EUR)
+
+        createBackup(file)
+
+        assertEquals(AppCurrency.EUR, backups.written.single().currency)
+    }
+
+    @Test
+    fun previewBackup_saysWhenTheBackupWasMadeInAnotherCurrency() = runTest {
+        backups.putFile(file.uri, backupDocument(currency = "USD"))
+        assertEquals(AppCurrency.USD, previewBackup(file).getOrNull()?.differentCurrency)
+        assertEquals(AppCurrency.INR, previewBackup(file).getOrNull()?.currentCurrency)
+
+        // The same currency, none at all, or one this app doesn't offer: nothing to say
+        for (code in listOf("INR", null, "KWD")) {
+            backups.putFile(file.uri, backupDocument(currency = code))
+            assertNull("for $code", previewBackup(file).getOrNull()?.differentCurrency)
+        }
+    }
+
+    @Test
+    fun restoreBackup_inAnotherCurrency_switchesToIt_whenAsked() = runTest {
+        backups.putFile(file.uri, backupDocument(currency = "USD"))
+
+        assertEquals(Outcome.Success(RestoredBackup(3, switchedTo = AppCurrency.USD)), restoreBackup(file, switchCurrency = true))
+        assertEquals(AppCurrency.USD, currency.currency.value)
+    }
+
+    @Test
+    fun restoreBackup_inAnotherCurrency_keepsTheCurrentOne_whenNotAsked() = runTest {
+        backups.putFile(file.uri, backupDocument(currency = "USD"))
+
+        assertEquals(Outcome.Success(RestoredBackup(3)), restoreBackup(file, switchCurrency = false))
+        assertEquals(AppCurrency.INR, currency.currency.value)
+    }
+
+    @Test
+    fun restoreBackup_thatFails_neverSwitchesTheCurrency() = runTest {
+        backups.putFile(file.uri, backupDocument(currency = "USD"))
+        backups.failRestores = true
+
+        restoreBackup(file, switchCurrency = true)
+
+        assertEquals(AppCurrency.INR, currency.currency.value)
+    }
+
+    @Test
+    fun restoreBackup_ofAnOlderFileWithoutACurrency_keepsTheCurrentOne() = runTest {
+        backups.putFile(file.uri, backupDocument(currency = null))
+
+        assertEquals(Outcome.Success(RestoredBackup(3)), restoreBackup(file, switchCurrency = true))
+        assertEquals(AppCurrency.INR, currency.currency.value)
     }
 }

@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.backup
 
+import com.example.expensetrackerpro.domain.currency.CurrencyProvider
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.error.map
 import com.example.expensetrackerpro.domain.models.BackupPreview
@@ -12,12 +13,14 @@ import javax.inject.Inject
 /** What restoring a picked file would bring back, and what it would replace. */
 class PreviewBackupUseCase @Inject constructor(
     private val readBackup: ReadBackupUseCase,
-    private val getTransactions: GetTransactionsUseCase
+    private val getTransactions: GetTransactionsUseCase,
+    private val currencyProvider: CurrencyProvider
 ) {
 
     /** Fails, as reading the file does, unless it is a backup that can be restored. */
     suspend operator fun invoke(source: DocumentUri): Outcome<BackupPreview> =
         readBackup(source).map { (fileName, backup) ->
+            val currentCurrency = currencyProvider.current()
             BackupPreview(
                 fileName = fileName,
                 createdAtMillis = backup.createdAtMillis,
@@ -25,7 +28,9 @@ class PreviewBackupUseCase @Inject constructor(
                 customCategoryCount = backup.categories.count { it.isCustom },
                 oldestMillis = backup.transactions.minOfOrNull { it.dateMillis },
                 newestMillis = backup.transactions.maxOfOrNull { it.dateMillis },
-                currentTransactionCount = getTransactions(DateRange.ALL).first().size
+                currentTransactionCount = getTransactions(DateRange.ALL).first().size,
+                differentCurrency = backup.currency?.takeIf { it != currentCurrency },
+                currentCurrency = currentCurrency
             )
         }
 }
