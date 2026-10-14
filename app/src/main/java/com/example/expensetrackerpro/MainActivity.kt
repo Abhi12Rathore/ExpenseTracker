@@ -10,7 +10,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -36,6 +35,9 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.navigation.compose.rememberNavController
 import com.example.expensetrackerpro.domain.models.ThemeMode
 import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
+import com.example.expensetrackerpro.presentation.common.motion.AppMotionHost
+import com.example.expensetrackerpro.presentation.common.motion.ThemeTransitionController
+import com.example.expensetrackerpro.presentation.common.motion.phoneInDarkTheme
 import com.example.expensetrackerpro.presentation.lock.LockScreen
 import com.example.expensetrackerpro.presentation.main.MainViewModel
 import com.example.expensetrackerpro.presentation.main.uistate.MainEffect
@@ -53,6 +55,9 @@ class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var dateFormatter: DateFormatter
+
+    @Inject
+    lateinit var themeTransition: ThemeTransitionController
 
     // Follows the whole app rather than this activity, so rotation and dialogs never count as
     // leaving. Registering replays ON_START, which is harmless: nothing has been backgrounded yet.
@@ -85,11 +90,8 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-            val darkTheme = when (uiState.themeMode) {
-                ThemeMode.SYSTEM -> isSystemInDarkTheme()
-                ThemeMode.LIGHT -> false
-                ThemeMode.DARK -> true
-            }
+            // The phone's own dark mode: the app's configuration reports the app's override for a moment
+            val darkTheme = themeTransition.effectiveDark(uiState.themeMode, phoneInDarkTheme())
 
             LaunchedEffect(uiState.themeMode, uiState.isThemeLoaded) {
                 if (uiState.isThemeLoaded) applyNightMode(uiState.themeMode)
@@ -128,38 +130,46 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            ExpenseTrackerProTheme(darkTheme = darkTheme) {
-                // Both outlive the lock screen, so unlocking returns to the same screen and state
-                val navController = rememberNavController()
-                val appContentState = rememberSaveableStateHolder()
+            AppMotionHost(
+                themeMode = uiState.themeMode,
+                darkTheme = darkTheme,
+                // Anything before that happens under the splash
+                animate = uiState.isReady,
+                controller = themeTransition
+            ) { shownDark, systemBarsDark ->
+                ExpenseTrackerProTheme(darkTheme = shownDark, lightSystemBars = !systemBarsDark) {
+                    // Both outlive the lock screen, so unlocking returns to the same screen and state
+                    val navController = rememberNavController()
+                    val appContentState = rememberSaveableStateHolder()
 
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    contentWindowInsets = WindowInsets.systemBars.only(
-                        WindowInsetsSides.Top + WindowInsetsSides.Horizontal
-                    )
-                ) { innerPadding ->
-                    // The top and side insets are applied here once; consuming them stops the
-                    // Scaffolds and bars nested inside from adding them again. The bottom one is
-                    // left to each screen, so the bottom bar can draw behind the gesture bar
-                    Box(
-                        modifier = Modifier
-                            .padding(innerPadding)
-                            .consumeWindowInsets(innerPadding)
-                    ) {
-                        if (uiState.isLocked) {
-                            LockScreen(
-                                isPromptRequested = uiState.isPromptRequested,
-                                message = uiState.lockMessage,
-                                onEvent = viewModel::onEvent
-                            )
-                        } else {
-                            appContentState.SaveableStateProvider(APP_CONTENT_KEY) {
-                                CompositionLocalProvider(LocalDateFormatter provides dateFormatter) {
-                                    AppNavHost(
-                                        navController = navController,
-                                        snackbarHostState = snackbarHostState
-                                    )
+                    Scaffold(
+                        modifier = Modifier.fillMaxSize(),
+                        contentWindowInsets = WindowInsets.systemBars.only(
+                            WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+                        )
+                    ) { innerPadding ->
+                        // The top and side insets are applied here once; consuming them stops the
+                        // Scaffolds and bars nested inside from adding them again. The bottom one is
+                        // left to each screen, so the bottom bar can draw behind the gesture bar
+                        Box(
+                            modifier = Modifier
+                                .padding(innerPadding)
+                                .consumeWindowInsets(innerPadding)
+                        ) {
+                            if (uiState.isLocked) {
+                                LockScreen(
+                                    isPromptRequested = uiState.isPromptRequested,
+                                    message = uiState.lockMessage,
+                                    onEvent = viewModel::onEvent
+                                )
+                            } else {
+                                appContentState.SaveableStateProvider(APP_CONTENT_KEY) {
+                                    CompositionLocalProvider(LocalDateFormatter provides dateFormatter) {
+                                        AppNavHost(
+                                            navController = navController,
+                                            snackbarHostState = snackbarHostState
+                                        )
+                                    }
                                 }
                             }
                         }

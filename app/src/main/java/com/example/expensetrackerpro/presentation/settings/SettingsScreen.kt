@@ -35,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -68,6 +69,10 @@ import com.example.expensetrackerpro.presentation.settings.uistate.SettingsEvent
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsMessage
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsUiState
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
+import com.example.expensetrackerpro.presentation.common.motion.LocalThemeTransition
+import com.example.expensetrackerpro.presentation.common.motion.phoneDarkTheme
+import com.example.expensetrackerpro.presentation.common.motion.rememberPressTracker
+import com.example.expensetrackerpro.presentation.common.motion.trackPresses
 import com.example.expensetrackerpro.ui.theme.extendedColors
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -171,6 +176,9 @@ fun SettingsContent(
 
             SettingsSectionCard(title = stringResource(R.string.settings_section_appearance)) {
                 val themeLabels = ThemeMode.entries.associateWith { stringResource(it.labelRes()) }
+                val themeTransition = LocalThemeTransition.current
+                val context = LocalContext.current
+                val themePresses = rememberPressTracker()
                 SettingsItem(
                     icon = Icons.Default.DarkMode,
                     iconTint = palette.amber,
@@ -181,8 +189,19 @@ fun SettingsContent(
                             options = ThemeMode.entries,
                             selected = state.themeMode,
                             label = { themeLabels.getValue(it) },
-                            onSelect = { onEvent(SettingsEvent.ThemeModeSelected(it)) },
-                            modifier = Modifier.fillMaxWidth()
+                            onSelect = { mode ->
+                                // Before the change is saved, so the root knows where to reveal it from
+                                themeTransition?.onOptionTapped(
+                                    from = state.themeMode,
+                                    to = mode,
+                                    phoneDark = context.phoneDarkTheme(),
+                                    center = themePresses.take()
+                                )
+                                onEvent(SettingsEvent.ThemeModeSelected(mode))
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .trackPresses(themePresses)
                         )
                     }
                 )
