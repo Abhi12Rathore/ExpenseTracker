@@ -54,6 +54,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -207,7 +208,8 @@ fun LanguageContent(
                 .fillMaxSize()
                 .padding(top = padding.calculateTopPadding())
         ) {
-            var applyBarHeight by remember { mutableIntStateOf(0) }
+            // Saved, so a list restored near its end has its full padding before the bar is measured again
+            var applyBarHeight by rememberSaveable { mutableIntStateOf(0) }
             val density = LocalDensity.current
             val animationsEnabled = LocalAnimationsEnabled.current
             val listBottomPadding by animateDpAsState(
@@ -267,7 +269,8 @@ private fun PinnedPreview(state: LanguageUiState) {
         categories = emptyList()
     )
     // The tallest it has been: a script drawn taller than the others can't push the list down and up
-    var tallest by remember { mutableIntStateOf(0) }
+    // Measured again when the screen turns short or tall, as the compact card is a different size
+    var tallest by remember(compact) { mutableIntStateOf(0) }
     val density = LocalDensity.current
 
     LanguagePreviewCard(
