@@ -20,14 +20,15 @@ import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.TransactionListSummary
 import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
 import com.example.expensetrackerpro.ui.theme.extendedColors
-import com.example.expensetrackerpro.utils.CurrencyFormatter
 
 private data class SummaryCell(val label: String, val value: String, val color: Color)
 
 /** The three figures for what the list is showing. Amounts are whole rupees to fit three across. */
 @Composable
 fun TransactionSummaryStrip(summary: TransactionListSummary, modifier: Modifier = Modifier) {
+    val currencyFormatter = LocalCurrencyFormatter.current
     val neutral = MaterialTheme.colorScheme.onSurface
     val income = MaterialTheme.extendedColors.income
     val expense = MaterialTheme.extendedColors.expense
@@ -38,30 +39,30 @@ fun TransactionSummaryStrip(summary: TransactionListSummary, modifier: Modifier 
         is TransactionListSummary.Overview -> listOf(
             SummaryCell(
                 stringResource(R.string.transactions_summary_income),
-                CurrencyFormatter.formatWhole(summary.income),
+                currencyFormatter.formatWhole(summary.income),
                 income
             ),
             SummaryCell(
                 stringResource(R.string.transactions_summary_expense),
-                CurrencyFormatter.formatWhole(summary.expense),
+                currencyFormatter.formatWhole(summary.expense),
                 expense
             ),
             SummaryCell(
                 stringResource(R.string.transactions_summary_net),
-                CurrencyFormatter.formatWhole(summary.net),
+                currencyFormatter.formatWhole(summary.net),
                 netColor(summary.net)
             )
         )
         is TransactionListSummary.SingleType -> listOf(
             SummaryCell(
                 stringResource(R.string.transactions_summary_total),
-                CurrencyFormatter.formatWhole(summary.total),
+                currencyFormatter.formatWhole(summary.total),
                 if (summary.type == TransactionType.INCOME) income else expense
             ),
             SummaryCell(stringResource(R.string.transactions_summary_entries), summary.count.toString(), neutral),
             SummaryCell(
                 stringResource(R.string.transactions_summary_biggest),
-                CurrencyFormatter.formatWhole(summary.biggest),
+                currencyFormatter.formatWhole(summary.biggest),
                 neutral
             )
         )
@@ -69,12 +70,12 @@ fun TransactionSummaryStrip(summary: TransactionListSummary, modifier: Modifier 
             SummaryCell(stringResource(R.string.transactions_summary_results), summary.count.toString(), neutral),
             SummaryCell(
                 stringResource(R.string.transactions_summary_total),
-                CurrencyFormatter.formatWhole(summary.total),
+                currencyFormatter.formatWhole(summary.total),
                 netColor(summary.total)
             ),
             SummaryCell(
                 stringResource(R.string.transactions_summary_average),
-                CurrencyFormatter.formatWhole(summary.average),
+                currencyFormatter.formatWhole(summary.average),
                 netColor(summary.average)
             )
         )

@@ -85,7 +85,7 @@ class DashboardDaoTest {
         TransactionEntity(
             id = id,
             title = "Transaction $id",
-            amountPaise = amount.paise,
+            amountPaise = amount.minorUnits,
             note = "",
             dateMillis = dateMillis,
             categoryId = category.id,

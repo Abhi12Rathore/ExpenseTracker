@@ -36,6 +36,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.navigation.compose.rememberNavController
 import com.example.expensetrackerpro.domain.models.ThemeMode
+import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
 import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import com.example.expensetrackerpro.domain.motion.MotionPreferences
 import com.example.expensetrackerpro.presentation.common.motion.AppMotionHost
@@ -47,6 +48,7 @@ import com.example.expensetrackerpro.presentation.lock.LockScreen
 import com.example.expensetrackerpro.presentation.main.MainViewModel
 import com.example.expensetrackerpro.presentation.main.uistate.MainEffect
 import com.example.expensetrackerpro.presentation.main.uistate.MainEvent
+import com.example.expensetrackerpro.utils.CurrencyFormatter
 import com.example.expensetrackerpro.utils.DateFormatter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -60,6 +62,9 @@ class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var dateFormatter: DateFormatter
+
+    @Inject
+    lateinit var currencyFormatter: CurrencyFormatter
 
     @Inject
     lateinit var themeTransition: ThemeTransitionController
@@ -182,7 +187,10 @@ class MainActivity : AppCompatActivity() {
                                     )
                                 } else {
                                     appContentState.SaveableStateProvider(APP_CONTENT_KEY) {
-                                        CompositionLocalProvider(LocalDateFormatter provides dateFormatter) {
+                                        CompositionLocalProvider(
+                                            LocalDateFormatter provides dateFormatter,
+                                            LocalCurrencyFormatter provides currencyFormatter
+                                        ) {
                                             AppNavHost(
                                                 navController = navController,
                                                 snackbarHostState = snackbarHostState

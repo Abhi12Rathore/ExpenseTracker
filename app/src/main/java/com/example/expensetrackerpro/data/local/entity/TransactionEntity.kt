@@ -21,6 +21,10 @@ import com.example.expensetrackerpro.domain.models.TransactionType
 data class TransactionEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val title: String,
+    /**
+     * The amount in whole minor units: hundredths of the currency's unit. The column kept the name
+     * it had when the app only knew rupees, so the schema didn't change.
+     */
     val amountPaise: Long,
     val note: String,
     val dateMillis: Long,

@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
 import com.example.expensetrackerpro.presentation.common.haptics.rememberHaptics
 import com.example.expensetrackerpro.domain.models.DateChoice
 import com.example.expensetrackerpro.domain.models.Money
@@ -66,7 +67,6 @@ import com.example.expensetrackerpro.presentation.transactions.addEditTransactio
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionUiState
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.DraftField
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.DraftFill
-import com.example.expensetrackerpro.utils.CurrencyFormatter
 import kotlinx.coroutines.launch
 
 @Composable
@@ -315,7 +315,8 @@ private fun BillScanSection(
 /** "Save ₹1,234.50" once there is a valid amount, plain "Save" until then. */
 @Composable
 private fun saveLabel(state: AddEditTransactionUiState): String {
-    val amount = state.validAmount?.let { CurrencyFormatter.format(it) }
+    val currencyFormatter = LocalCurrencyFormatter.current
+    val amount = state.validAmount?.let { currencyFormatter.format(it) }
 
     return when {
         state.isEditMode && amount != null -> stringResource(R.string.transaction_update_amount, amount)

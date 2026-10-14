@@ -33,9 +33,9 @@ import com.example.expensetrackerpro.domain.models.DayPeriod
 import com.example.expensetrackerpro.domain.models.FinancialSummary
 import com.example.expensetrackerpro.domain.models.LanguagePreview
 import com.example.expensetrackerpro.presentation.common.category.CategoryIconTile
+import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
 import com.example.expensetrackerpro.presentation.common.motion.LocalAnimationsEnabled
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
-import com.example.expensetrackerpro.utils.CurrencyFormatter
 
 // How long one language's preview takes to fade into the next
 private const val CROSS_FADE_MILLIS = 200
@@ -113,6 +113,7 @@ private fun PreviewFrame(preview: LanguagePreview, compact: Boolean) {
 
 @Composable
 private fun SummaryPreview(preview: LanguagePreview, compact: Boolean) {
+    val currencyFormatter = LocalCurrencyFormatter.current
     val summary = preview.summary
 
     Surface(
@@ -138,7 +139,7 @@ private fun SummaryPreview(preview: LanguagePreview, compact: Boolean) {
                 )
             }
             Text(
-                text = CurrencyFormatter.format(summary.totalBalance),
+                text = currencyFormatter.format(summary.totalBalance),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Black,
                 maxLines = 1,
@@ -148,12 +149,12 @@ private fun SummaryPreview(preview: LanguagePreview, compact: Boolean) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SummaryValue(
                     label = stringResource(R.string.summary_income),
-                    value = CurrencyFormatter.formatWhole(summary.totalIncome),
+                    value = currencyFormatter.formatWhole(summary.totalIncome),
                     modifier = Modifier.weight(1f)
                 )
                 SummaryValue(
                     label = stringResource(R.string.summary_expense),
-                    value = CurrencyFormatter.formatWhole(summary.totalExpense),
+                    value = currencyFormatter.formatWhole(summary.totalExpense),
                     modifier = Modifier.weight(1f)
                 )
                 SummaryValue(
@@ -181,6 +182,8 @@ private fun SummaryValue(label: String, value: String, modifier: Modifier = Modi
 
 @Composable
 private fun CategoryPreview(category: CategoryBreakdown, modifier: Modifier = Modifier) {
+    val currencyFormatter = LocalCurrencyFormatter.current
+
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
@@ -202,7 +205,7 @@ private fun CategoryPreview(category: CategoryBreakdown, modifier: Modifier = Mo
                 )
                 Text(
                     // Spending, so shown as money going out
-                    text = CurrencyFormatter.formatWhole(-category.amount),
+                    text = currencyFormatter.formatWhole(-category.amount),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1

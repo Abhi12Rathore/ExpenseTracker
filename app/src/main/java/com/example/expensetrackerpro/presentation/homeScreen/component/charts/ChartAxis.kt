@@ -23,15 +23,15 @@ internal fun niceAxisMax(value: Money): Money {
 
     // The largest power of ten that fits in the value
     var magnitude = 1L
-    while (magnitude * 10 <= value.paise) magnitude *= 10
-    val step = NICE_STEPS.first { it * magnitude >= value.paise * 10 }
+    while (magnitude * 10 <= value.minorUnits) magnitude *= 10
+    val step = NICE_STEPS.first { it * magnitude >= value.minorUnits * 10 }
 
-    // Only a maximum of 1.5 paise is not whole, and it rounds up
+    // Only a maximum of 1.5 minor units is not whole, and it rounds up
     return Money((step * magnitude + 9) / 10)
 }
 
 /** The amount a gridline [fraction] of the way up an axis ending at this one stands for. */
-internal fun Money.atFraction(fraction: Float): Money = Money((paise * fraction).roundToLong())
+internal fun Money.atFraction(fraction: Float): Money = Money((minorUnits * fraction).roundToLong())
 
 /**
  * A few labels rather than one per bar: every weekday for up to a week (`Mon` … `Sun`), every

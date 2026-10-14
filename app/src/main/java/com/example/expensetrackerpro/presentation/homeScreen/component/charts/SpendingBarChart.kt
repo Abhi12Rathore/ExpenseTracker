@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation.homeScreen.component.charts
 
+import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
 import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -43,7 +44,6 @@ import com.example.expensetrackerpro.domain.models.SpendingBucket
 import com.example.expensetrackerpro.domain.models.SpendingChart
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.ui.theme.extendedColors
-import com.example.expensetrackerpro.utils.CurrencyFormatter
 import kotlin.math.max
 
 private val ChartHeight = 236.dp
@@ -90,6 +90,7 @@ fun SpendingBarChart(
     onBucketClick: (SpendingBucket) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val currencyFormatter = LocalCurrencyFormatter.current
     val buckets = chart.buckets
     if (buckets.isEmpty()) return
 
@@ -139,7 +140,7 @@ fun SpendingBarChart(
     }
     val gridLabels = remember(axisMax, axisStyle) {
         GridlineFractions.map { fraction ->
-            fraction to textMeasurer.measure(CurrencyFormatter.formatShort(axisMax.atFraction(fraction)), axisStyle)
+            fraction to textMeasurer.measure(currencyFormatter.formatShort(axisMax.atFraction(fraction)), axisStyle)
         }
     }
     val averageText = stringResource(
@@ -147,7 +148,7 @@ fun SpendingBarChart(
             BucketSize.DAY -> R.string.spending_average_per_day
             BucketSize.MONTH -> R.string.spending_average_per_month
         },
-        CurrencyFormatter.formatWhole(chart.average)
+        currencyFormatter.formatWhole(chart.average)
     )
     val averageLabel = remember(averageText, axisStyle, averageColor) {
         textMeasurer.measure(
@@ -265,7 +266,7 @@ fun SpendingBarChart(
                 val description = stringResource(
                     R.string.spending_bar_description,
                     bucket.label(chart.bucketSize, dateFormatter),
-                    CurrencyFormatter.format(bucket.amount)
+                    currencyFormatter.format(bucket.amount)
                 )
                 Box(
                     modifier = Modifier
@@ -289,7 +290,7 @@ fun SpendingBarChart(
                 ChartTooltip(
                     text = stringResource(
                         R.string.spending_tooltip,
-                        CurrencyFormatter.format(bucket.amount),
+                        currencyFormatter.format(bucket.amount),
                         bucket.label(chart.bucketSize, dateFormatter),
                         pluralStringResource(
                             R.plurals.transaction_count,

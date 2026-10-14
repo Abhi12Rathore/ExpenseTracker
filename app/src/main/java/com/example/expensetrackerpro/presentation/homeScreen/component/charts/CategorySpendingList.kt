@@ -51,8 +51,8 @@ import com.example.expensetrackerpro.domain.models.CategoryRanking
 import com.example.expensetrackerpro.domain.models.CategoryShare
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.presentation.common.category.CategoryIconTile
+import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
-import com.example.expensetrackerpro.utils.CurrencyFormatter
 import kotlin.math.roundToInt
 
 private val RowShape = RoundedCornerShape(12.dp)
@@ -68,12 +68,13 @@ fun CategorySpendingCard(
     onCategoryClick: (CategoryBreakdown) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val currencyFormatter = LocalCurrencyFormatter.current
     val hasCategories = ranking.categoryCount > 0
     val subtitle = if (!isLoading && hasCategories) {
         pluralStringResource(
             R.plurals.category_spending_subtitle,
             ranking.categoryCount,
-            CurrencyFormatter.formatWhole(ranking.total),
+            currencyFormatter.formatWhole(ranking.total),
             ranking.categoryCount
         )
     } else {
@@ -178,6 +179,8 @@ private fun RankedRow(
     onClickLabel: String? = null,
     trailingIcon: ImageVector? = null
 ) {
+    val currencyFormatter = LocalCurrencyFormatter.current
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -202,7 +205,7 @@ private fun RankedRow(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = CurrencyFormatter.format(amount),
+                    text = currencyFormatter.format(amount),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold
                 )

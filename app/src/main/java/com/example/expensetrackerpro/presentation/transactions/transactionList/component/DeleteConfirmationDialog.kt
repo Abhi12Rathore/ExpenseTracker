@@ -20,8 +20,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.presentation.common.category.CategoryIconTile
+import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
 import com.example.expensetrackerpro.utils.Utility
-import com.example.expensetrackerpro.utils.CurrencyFormatter
 import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import java.util.*
 
@@ -31,6 +31,7 @@ fun DeleteConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val currencyFormatter = LocalCurrencyFormatter.current
 
     // Use base Dialog for 100% control over the background/scrim
     Dialog(
@@ -115,7 +116,7 @@ fun DeleteConfirmationDialog(
                                 )
                             }
                             Text(
-                                CurrencyFormatter.format(expense.amount),
+                                currencyFormatter.format(expense.amount),
                                 fontWeight = FontWeight.ExtraBold
                             )
                         }

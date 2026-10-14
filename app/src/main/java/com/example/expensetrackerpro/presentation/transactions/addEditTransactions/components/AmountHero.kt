@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -35,8 +36,8 @@ import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
 import com.example.expensetrackerpro.ui.theme.extendedColors
-import com.example.expensetrackerpro.utils.CurrencyFormatter
 
 /** Income green or expense red, from the theme. */
 @Composable
@@ -79,6 +80,9 @@ private fun AmountField(
     color: Color,
     description: String
 ) {
+    val currencyFormatter = LocalCurrencyFormatter.current
+    val groupingTransformation = remember(currencyFormatter) { AmountGroupingTransformation(currencyFormatter) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -86,7 +90,7 @@ private fun AmountField(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = CurrencyFormatter.SYMBOL, style = textStyle)
+        Text(text = currencyFormatter.symbol, style = textStyle)
         BasicTextField(
             value = amount,
             onValueChange = onAmountChange,
@@ -98,7 +102,7 @@ private fun AmountField(
             textStyle = textStyle,
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            visualTransformation = IndianGroupingTransformation,
+            visualTransformation = groupingTransformation,
             cursorBrush = SolidColor(color),
             decorationBox = { innerTextField ->
                 Box {
@@ -126,7 +130,8 @@ fun AmountSummary(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val amountText = CurrencyFormatter.format(amount ?: Money.ZERO)
+    val currencyFormatter = LocalCurrencyFormatter.current
+    val amountText = currencyFormatter.format(amount ?: Money.ZERO)
     val summary = stringResource(
         R.string.transaction_summary,
         amountText,

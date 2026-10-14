@@ -21,9 +21,9 @@ import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.CategoryUsage
 import com.example.expensetrackerpro.presentation.common.category.CategoryIconTile
+import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
-import com.example.expensetrackerpro.utils.CurrencyFormatter
 
 /** A category with how much it is used. Tapping anywhere on it opens it for editing. */
 @Composable
@@ -105,7 +105,7 @@ private fun usageText(usage: CategoryUsage): String = when {
         R.plurals.manage_categories_usage_this_month,
         usage.periodCount,
         usage.periodCount,
-        CurrencyFormatter.formatWhole(usage.periodAmount)
+        LocalCurrencyFormatter.current.formatWhole(usage.periodAmount)
     )
     usage.totalCount > 0 -> pluralStringResource(
         R.plurals.manage_categories_usage_total,

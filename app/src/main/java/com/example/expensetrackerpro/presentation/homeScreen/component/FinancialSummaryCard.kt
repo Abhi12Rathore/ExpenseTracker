@@ -39,10 +39,10 @@ import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.domain.models.FinancialSummary
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.PeriodComparison
+import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
 import com.example.expensetrackerpro.presentation.common.filter.comparedWithLabel
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.presentation.homeScreen.component.charts.BalanceSparkline
-import com.example.expensetrackerpro.utils.CurrencyFormatter
 import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import com.example.expensetrackerpro.presentation.common.motion.rememberCountUp
 
@@ -58,6 +58,7 @@ fun FinancialSummaryCard(
     // The amounts count up from zero the first time this is true, as when the screen's data arrives
     countUpWhen: Boolean = true
 ) {
+    val currencyFormatter = LocalCurrencyFormatter.current
     val balance = rememberCountUp(data.totalBalance, countUpWhen)
     val income = rememberCountUp(data.totalIncome, countUpWhen)
     val expense = rememberCountUp(data.totalExpense, countUpWhen)
@@ -72,7 +73,7 @@ fun FinancialSummaryCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(stringResource(R.string.balance_label, periodLabel), style = MaterialTheme.typography.labelMedium)
                     ShrinkToFitText(
-                        text = CurrencyFormatter.format(balance),
+                        text = currencyFormatter.format(balance),
                         style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Black)
                     )
                 }
@@ -97,13 +98,13 @@ fun FinancialSummaryCard(
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 SummaryItem(
                     stringResource(R.string.summary_income),
-                    CurrencyFormatter.format(income),
+                    currencyFormatter.format(income),
                     Icons.Rounded.TrendingUp,
                     Modifier.weight(1f)
                 )
                 SummaryItem(
                     stringResource(R.string.summary_expense),
-                    CurrencyFormatter.format(expense),
+                    currencyFormatter.format(expense),
                     Icons.Rounded.TrendingDown,
                     Modifier.weight(1f)
                 )
@@ -122,13 +123,14 @@ fun FinancialSummaryCard(
 /** e.g. `▲ ₹3,200 more saved than this time last month`, against the period before the selected one. */
 @Composable
 private fun ComparisonChip(comparison: PeriodComparison) {
+    val currencyFormatter = LocalCurrencyFormatter.current
     val previousPeriod = comparedWithLabel(
         granularity = comparison.granularity,
         previousStartMillis = comparison.previousRange.startMillis,
         isPartial = comparison.isPartial
     )
     val difference = comparison.balanceDifference
-    val amount = CurrencyFormatter.formatWhole(difference.abs())
+    val amount = currencyFormatter.formatWhole(difference.abs())
     val text = when {
         // Less than a rupee apart reads as no difference
         difference.roundedToRupees().isZero -> stringResource(R.string.comparison_same_saved, previousPeriod)
