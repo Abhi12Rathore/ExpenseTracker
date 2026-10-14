@@ -4,7 +4,10 @@ import androidx.annotation.StringRes
 
 /** Things the screen does once, as opposed to state it keeps showing. */
 sealed interface AddEditTransactionEffect {
-    /** The transaction was saved or deleted, so the form is done. */
+    /** The transaction was saved, so the form is done. Confirmed with a tap of the phone. */
+    data object Saved : AddEditTransactionEffect
+
+    /** The transaction was deleted, so the form is done. */
     data object NavigateBack : AddEditTransactionEffect
     data class ShowError(@StringRes val messageRes: Int) : AddEditTransactionEffect
 

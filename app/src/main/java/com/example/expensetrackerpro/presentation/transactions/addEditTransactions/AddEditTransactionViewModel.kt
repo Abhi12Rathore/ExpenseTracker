@@ -313,7 +313,7 @@ class AddEditTransactionViewModel @Inject constructor(
             )
 
             result
-                .onSuccess { _effects.send(AddEditTransactionEffect.NavigateBack) }
+                .onSuccess { _effects.send(AddEditTransactionEffect.Saved) }
                 .onFailure { error ->
                     updateForm { it.copy(isSaving = false) }
                     _effects.send(AddEditTransactionEffect.ShowError(error.toMessageRes()))

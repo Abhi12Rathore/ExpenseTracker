@@ -44,6 +44,7 @@ import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.presentation.homeScreen.component.charts.BalanceSparkline
 import com.example.expensetrackerpro.utils.CurrencyFormatter
 import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
+import com.example.expensetrackerpro.presentation.common.motion.rememberCountUp
 
 private const val CHIP_BACKGROUND_ALPHA = 0.08f
 private const val MIN_AMOUNT_FONT_SCALE = 0.6f
@@ -53,8 +54,14 @@ fun FinancialSummaryCard(
     data: FinancialSummary,
     periodLabel: String,
     comparison: PeriodComparison? = null,
-    balanceTrend: List<Money> = emptyList()
+    balanceTrend: List<Money> = emptyList(),
+    // The amounts count up from zero the first time this is true, as when the screen's data arrives
+    countUpWhen: Boolean = true
 ) {
+    val balance = rememberCountUp(data.totalBalance, countUpWhen)
+    val income = rememberCountUp(data.totalIncome, countUpWhen)
+    val expense = rememberCountUp(data.totalExpense, countUpWhen)
+
     Surface(
         shape = RoundedCornerShape(28.dp),
         color = MaterialTheme.colorScheme.primaryContainer,
@@ -65,7 +72,7 @@ fun FinancialSummaryCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(stringResource(R.string.balance_label, periodLabel), style = MaterialTheme.typography.labelMedium)
                     ShrinkToFitText(
-                        text = CurrencyFormatter.format(data.totalBalance),
+                        text = CurrencyFormatter.format(balance),
                         style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Black)
                     )
                 }
@@ -90,13 +97,13 @@ fun FinancialSummaryCard(
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 SummaryItem(
                     stringResource(R.string.summary_income),
-                    CurrencyFormatter.format(data.totalIncome),
+                    CurrencyFormatter.format(income),
                     Icons.Rounded.TrendingUp,
                     Modifier.weight(1f)
                 )
                 SummaryItem(
                     stringResource(R.string.summary_expense),
-                    CurrencyFormatter.format(data.totalExpense),
+                    CurrencyFormatter.format(expense),
                     Icons.Rounded.TrendingDown,
                     Modifier.weight(1f)
                 )

@@ -69,6 +69,7 @@ import com.example.expensetrackerpro.presentation.settings.uistate.SettingsEvent
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsMessage
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsUiState
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
+import com.example.expensetrackerpro.presentation.common.haptics.rememberHaptics
 import com.example.expensetrackerpro.presentation.common.motion.LocalScreenSnapshot
 import com.example.expensetrackerpro.presentation.common.motion.LocalThemeTransition
 import com.example.expensetrackerpro.presentation.common.motion.phoneDarkTheme
@@ -121,6 +122,7 @@ fun SettingsContent(
     onNavigateToLanguage: () -> Unit
 ) {
     SettingsDialogs(state = state, onEvent = onEvent)
+    val haptics = rememberHaptics()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val appLockErrorText = state.appLockError?.enableErrorRes()?.let { stringResource(it) }
@@ -198,6 +200,7 @@ fun SettingsContent(
                                     phoneDark = context.phoneDarkTheme(),
                                     center = themePresses.take()
                                 )
+                                if (mode != state.themeMode) haptics.confirm()
                                 onEvent(SettingsEvent.ThemeModeSelected(mode))
                             },
                             modifier = Modifier
@@ -230,7 +233,10 @@ fun SettingsContent(
                     title = stringResource(R.string.settings_app_lock),
                     subtitle = stringResource(state.biometricStatus.appLockSubtitleRes()),
                     checked = state.appLock.enabled,
-                    onCheckedChange = { onEvent(SettingsEvent.AppLockToggled(it)) },
+                    onCheckedChange = {
+                        haptics.toggle(it)
+                        onEvent(SettingsEvent.AppLockToggled(it))
+                    },
                     iconTint = palette.teal,
                     // Stays switchable while on, so it can always be turned off
                     enabled = state.isAppLockAvailable || state.appLock.enabled

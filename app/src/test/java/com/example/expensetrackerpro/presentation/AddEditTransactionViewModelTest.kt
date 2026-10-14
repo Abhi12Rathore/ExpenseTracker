@@ -474,7 +474,7 @@ class AddEditTransactionViewModelTest {
         assertEquals("Food", saved.categoryName)
         assertEquals(TransactionType.EXPENSE, saved.transactionType)
         assertEquals(millisAt(2026, Calendar.OCTOBER, 7, hour = 12), saved.dateMillis)
-        assertEquals(listOf<AddEditTransactionEffect>(AddEditTransactionEffect.NavigateBack), effects)
+        assertEquals(listOf<AddEditTransactionEffect>(AddEditTransactionEffect.Saved), effects)
     }
 
     @Test
@@ -540,7 +540,7 @@ class AddEditTransactionViewModelTest {
         viewModel.onEvent(AddEditTransactionEvent.SaveClicked)
 
         assertEquals(1, transactions.current.size)
-        assertEquals(AddEditTransactionEffect.NavigateBack, effects.last())
+        assertEquals(AddEditTransactionEffect.Saved, effects.last())
     }
 
     @Test
@@ -549,7 +549,7 @@ class AddEditTransactionViewModelTest {
         viewModel.fillValidExpense()
         viewModel.onEvent(AddEditTransactionEvent.SaveClicked)
 
-        assertEquals(listOf<AddEditTransactionEffect>(AddEditTransactionEffect.NavigateBack), effectsOf(viewModel))
+        assertEquals(listOf<AddEditTransactionEffect>(AddEditTransactionEffect.Saved), effectsOf(viewModel))
     }
 
     // --- Edit mode
@@ -613,7 +613,7 @@ class AddEditTransactionViewModelTest {
         assertEquals("", updated.note)
         assertEquals("Bills", updated.categoryName)
         assertEquals(42L, updated.dateMillis)
-        assertEquals(listOf<AddEditTransactionEffect>(AddEditTransactionEffect.NavigateBack), effects)
+        assertEquals(listOf<AddEditTransactionEffect>(AddEditTransactionEffect.Saved), effects)
     }
 
     @Test

@@ -81,6 +81,7 @@ import com.example.expensetrackerpro.domain.models.DayPeriod
 import com.example.expensetrackerpro.domain.models.FinancialSummary
 import com.example.expensetrackerpro.domain.models.LanguageChoice
 import com.example.expensetrackerpro.domain.models.LanguagePreview
+import com.example.expensetrackerpro.presentation.common.haptics.rememberHaptics
 import com.example.expensetrackerpro.presentation.common.motion.LocalScreenSnapshot
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.presentation.language.components.LanguagePreviewCard
@@ -407,11 +408,15 @@ private fun RowDivider() {
  */
 @Composable
 private fun ApplyLanguageButton(language: AppLanguage, onClick: () -> Unit) {
+    val haptics = rememberHaptics()
     val inLanguage = rememberLocalizedContext(language).getString(R.string.language_use, language.nativeName)
     val inEnglish = stringResource(R.string.language_use_english, language.englishName)
 
     Button(
-        onClick = onClick,
+        onClick = {
+            haptics.confirm()
+            onClick()
+        },
         shape = RoundedCornerShape(28.dp),
         modifier = Modifier
             .fillMaxWidth()

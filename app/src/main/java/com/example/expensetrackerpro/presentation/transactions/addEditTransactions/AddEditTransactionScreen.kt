@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.presentation.common.haptics.rememberHaptics
 import com.example.expensetrackerpro.domain.models.DateChoice
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.TransactionType
@@ -77,6 +78,7 @@ fun AddEditTransactionScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
+    val haptics = rememberHaptics()
     val launchBillScanner = rememberBillScanner(
         onScanned = { viewModel.onEvent(AddEditTransactionEvent.BillScanned(it)) },
         onUnavailable = { viewModel.onEvent(AddEditTransactionEvent.BillScannerFailed) }
@@ -86,6 +88,10 @@ fun AddEditTransactionScreen(
         viewModel.effects.collect { effect ->
             when (effect) {
                 // Sent only once the save or delete has succeeded
+                AddEditTransactionEffect.Saved -> {
+                    haptics.confirm()
+                    currentOnNavigateBack()
+                }
                 AddEditTransactionEffect.NavigateBack -> currentOnNavigateBack()
                 is AddEditTransactionEffect.ShowError -> launch {
                     snackbarHostState.showSnackbar(context.getString(effect.messageRes))
