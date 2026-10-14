@@ -1,6 +1,12 @@
 package com.example.expensetrackerpro.presentation.homeScreen.component.charts
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.LocalContentColor
@@ -24,6 +30,7 @@ import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 private val LineWidth = 2.dp
 private val EndDotRadius = 3.dp
 private const val FILL_ALPHA = 0.25f
+private const val SPARKLINE_DRAW_MILLIS = 500
 
 /** A small unlabelled line of [values], oldest first, scaled to fill its own height. */
 @Composable
@@ -32,6 +39,13 @@ fun BalanceSparkline(
     modifier: Modifier = Modifier,
     color: Color = LocalContentColor.current
 ) {
+    val startsDrawn = chartStartsDrawn()
+    // Drawn left to right once, when it first appears
+    val reveal = remember { Animatable(if (startsDrawn) 1f else 0f) }
+    LaunchedEffect(Unit) {
+        reveal.animateTo(1f, tween(SPARKLINE_DRAW_MILLIS, easing = FastOutSlowInEasing))
+    }
+
     Canvas(modifier = modifier) {
         if (values.size < 2) return@Canvas
 
@@ -62,16 +76,19 @@ fun BalanceSparkline(
             close()
         }
 
-        drawPath(
-            path = fill,
-            brush = Brush.verticalGradient(listOf(color.copy(alpha = FILL_ALPHA), Color.Transparent))
-        )
-        drawPath(
-            path = line,
-            color = color,
-            style = Stroke(width = LineWidth.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
-        )
-        drawCircle(color = color, radius = dotRadius, center = points.last())
+        clipRect(right = size.width * reveal.value) {
+            drawPath(
+                path = fill,
+                brush = Brush.verticalGradient(listOf(color.copy(alpha = FILL_ALPHA), Color.Transparent))
+            )
+            drawPath(
+                path = line,
+                color = color,
+                style = Stroke(width = LineWidth.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+            )
+        }
+        // The end of the line, once it has been reached
+        drawCircle(color = color, radius = dotRadius, center = points.last(), alpha = reveal.value * reveal.value)
     }
 }
 

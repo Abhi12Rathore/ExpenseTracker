@@ -95,6 +95,8 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun ExpenseTrackerProTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    // Dark icons on the status and navigation bars. Apart from the theme while it is being revealed
+    lightSystemBars: Boolean = !darkTheme,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -108,8 +110,8 @@ fun ExpenseTrackerProTheme(
             val window = (view.context as Activity).window
             // Edge-to-edge: the bars are transparent, so only their icon contrast is set here
             WindowCompat.getInsetsController(window, view).apply {
-                isAppearanceLightStatusBars = !darkTheme
-                isAppearanceLightNavigationBars = !darkTheme
+                isAppearanceLightStatusBars = lightSystemBars
+                isAppearanceLightNavigationBars = lightSystemBars
             }
         }
     }

@@ -2,6 +2,9 @@ package com.example.expensetrackerpro.presentation.common.filter.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateDpAsState
+import com.example.expensetrackerpro.presentation.common.motion.LocalAnimationsEnabled
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -145,13 +148,15 @@ fun <T> PillSegmentedControl(
             .padding(3.dp),
     ) {
         val segmentWidth = maxWidth / options.size
+        val animationsEnabled = LocalAnimationsEnabled.current
         val indicatorOffset by animateDpAsState(
             targetValue = segmentWidth * selectedIndex.coerceAtLeast(0),
-            animationSpec = tween(250),
+            animationSpec = if (animationsEnabled) tween(250) else snap(),
             label = "indicatorOffset",
         )
         val indicatorAlpha by animateFloatAsState(
             targetValue = if (selectedIndex >= 0) 1f else 0f,
+            animationSpec = if (animationsEnabled) spring() else snap(),
             label = "indicatorAlpha",
         )
 

@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation
 
+import androidx.lifecycle.SavedStateHandle
 import com.example.expensetrackerpro.domain.models.AppLanguage
 import com.example.expensetrackerpro.domain.models.BuildInfo
 import com.example.expensetrackerpro.domain.models.BuiltInCategory
@@ -83,7 +84,7 @@ class LanguageViewModelTest {
 
     private val resolveAppLocale = ResolveAppLocaleUseCase()
 
-    private fun viewModel() = LanguageViewModel(
+    private fun viewModel(savedState: SavedStateHandle = SavedStateHandle()) = LanguageViewModel(
         GetLanguageOptionsUseCase(languages, deviceLanguages, resolveAppLocale),
         GetLanguagePreviewUseCase(
             getDashboardUseCase(transactions, dashboard, timeProvider, FakeUserProfileRepository("Abhishek")),
@@ -94,7 +95,8 @@ class LanguageViewModelTest {
             resolveAppLocale
         ),
         SetAppLanguageUseCase(languages, deviceLanguages, resolveAppLocale),
-        BuildInfo(isDebug = false, versionName = "1.4")
+        BuildInfo(isDebug = false, versionName = "1.4"),
+        savedState
     )
 
     private fun LanguageViewModel.select(choice: LanguageChoice) = onEvent(LanguageEvent.LanguageSelected(choice))
@@ -109,10 +111,67 @@ class LanguageViewModelTest {
         assertEquals(listOf(AppLanguage.HINDI), state.suggested)
         assertEquals(AppLanguage.entries - AppLanguage.HINDI, state.others)
         assertEquals("1.4", state.versionName)
-        // Nothing to apply or preview until another language is picked
+        // Nothing to apply until another language is picked
         assertFalse(state.isApplyVisible)
-        assertNull(state.preview)
         assertFalse(state.isApplied)
+    }
+
+    @Test
+    fun opensWithAPreviewOfTheCurrentLanguage() {
+        languages.stored = hindi
+
+        val preview = requireNotNull(viewModel().uiState.value.preview)
+
+        assertEquals(AppLanguage.HINDI, preview.language)
+        assertEquals(rupees(750), preview.summary.totalBalance)
+    }
+
+    @Test
+    fun selectingALanguage_changesOnlyTheSelectionAndThePreview_neverTheList() = runTest {
+        val viewModel = viewModel()
+        val before = viewModel.uiState.value
+
+        viewModel.select(LanguageChoice.Specific(AppLanguage.PORTUGUESE_BRAZIL))
+
+        val after = viewModel.uiState.value
+        // The rows, and their order, are what the scroll position stands on
+        assertEquals(before.suggested, after.suggested)
+        assertEquals(before.others, after.others)
+        assertEquals(before.current, after.current)
+        assertEquals(AppLanguage.PORTUGUESE_BRAZIL, after.preview?.language)
+    }
+
+    @Test
+    fun anUnappliedSelection_isRestoredFromSavedState() {
+        val savedState = SavedStateHandle()
+        viewModel(savedState).select(hindi)
+
+        // As after rotation or the process being stopped
+        val state = viewModel(savedState).uiState.value
+
+        assertEquals(hindi, state.selected)
+        assertEquals(LanguageChoice.SystemDefault, state.current)
+        assertEquals(AppLanguage.HINDI, state.preview?.language)
+        assertTrue(state.isApplyVisible)
+    }
+
+    @Test
+    fun goingBackAndOpeningTheScreenAgain_discardsTheSelection() {
+        viewModel().select(hindi)
+
+        // Leaving clears the ViewModel and its saved state; the next visit starts fresh
+        val state = viewModel().uiState.value
+
+        assertEquals(LanguageChoice.SystemDefault, state.selected)
+        assertFalse(state.isApplyVisible)
+        assertEquals(LanguageChoice.SystemDefault, languages.stored)
+    }
+
+    @Test
+    fun aSavedLanguageTheAppNoLongerHas_opensOnTheCurrentOne() {
+        val state = viewModel(SavedStateHandle(mapOf("selected_language" to "xx"))).uiState.value
+
+        assertEquals(LanguageChoice.SystemDefault, state.selected)
     }
 
     @Test
@@ -152,7 +211,7 @@ class LanguageViewModelTest {
     }
 
     @Test
-    fun selectingTheCurrentLanguageAgain_hidesTheButtonAndThePreview() = runTest {
+    fun selectingTheCurrentLanguageAgain_hidesTheButton_andPreviewsItAgain() = runTest {
         val viewModel = viewModel()
         viewModel.select(hindi)
 
@@ -160,7 +219,7 @@ class LanguageViewModelTest {
 
         val state = viewModel.uiState.value
         assertFalse(state.isApplyVisible)
-        assertNull(state.preview)
+        assertEquals(AppLanguage.ENGLISH, state.preview?.language)
     }
 
     @Test

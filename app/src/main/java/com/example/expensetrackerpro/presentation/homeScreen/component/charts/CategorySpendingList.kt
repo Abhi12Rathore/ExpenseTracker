@@ -38,7 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -236,8 +235,8 @@ private fun RankedRow(
 /** A thin bar filled to [fraction], growing from empty when it first appears. */
 @Composable
 private fun ShareBar(fraction: Float, modifier: Modifier = Modifier) {
-    val isPreview = LocalInspectionMode.current
-    var appeared by remember { mutableStateOf(isPreview) }
+    val startsDrawn = chartStartsDrawn()
+    var appeared by remember { mutableStateOf(startsDrawn) }
     LaunchedEffect(Unit) { appeared = true }
 
     val filled by animateFloatAsState(

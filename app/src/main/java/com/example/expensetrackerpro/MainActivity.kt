@@ -10,7 +10,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -26,6 +25,8 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
@@ -36,6 +37,12 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.navigation.compose.rememberNavController
 import com.example.expensetrackerpro.domain.models.ThemeMode
 import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
+import com.example.expensetrackerpro.domain.motion.MotionPreferences
+import com.example.expensetrackerpro.presentation.common.motion.AppMotionHost
+import com.example.expensetrackerpro.presentation.common.motion.LocalAnimationsEnabled
+import com.example.expensetrackerpro.presentation.common.motion.ScreenSnapshotHolder
+import com.example.expensetrackerpro.presentation.common.motion.ThemeTransitionController
+import com.example.expensetrackerpro.presentation.common.motion.phoneInDarkTheme
 import com.example.expensetrackerpro.presentation.lock.LockScreen
 import com.example.expensetrackerpro.presentation.main.MainViewModel
 import com.example.expensetrackerpro.presentation.main.uistate.MainEffect
@@ -53,6 +60,19 @@ class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var dateFormatter: DateFormatter
+
+    @Inject
+    lateinit var themeTransition: ThemeTransitionController
+
+    // Kept across the activity being recreated, which a change of language does
+    @Inject
+    lateinit var screenSnapshots: ScreenSnapshotHolder
+
+    @Inject
+    lateinit var motionPreferences: MotionPreferences
+
+    // Read again on every return, as "Remove animations" may have been changed meanwhile
+    private var animationsEnabled by mutableStateOf(true)
 
     // Follows the whole app rather than this activity, so rotation and dialogs never count as
     // leaving. Registering replays ON_START, which is harmless: nothing has been backgrounded yet.
@@ -83,13 +103,11 @@ class MainActivity : AppCompatActivity() {
         viewModel.onEvent(MainEvent.ActivityCreated)
         ProcessLifecycleOwner.get().lifecycle.addObserver(appVisibilityObserver)
 
+        animationsEnabled = motionPreferences.areAnimationsEnabled()
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-            val darkTheme = when (uiState.themeMode) {
-                ThemeMode.SYSTEM -> isSystemInDarkTheme()
-                ThemeMode.LIGHT -> false
-                ThemeMode.DARK -> true
-            }
+            // The phone's own dark mode: the app's configuration reports the app's override for a moment
+            val darkTheme = themeTransition.effectiveDark(uiState.themeMode, phoneInDarkTheme())
 
             LaunchedEffect(uiState.themeMode, uiState.isThemeLoaded) {
                 if (uiState.isThemeLoaded) applyNightMode(uiState.themeMode)
@@ -128,38 +146,49 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            ExpenseTrackerProTheme(darkTheme = darkTheme) {
-                // Both outlive the lock screen, so unlocking returns to the same screen and state
-                val navController = rememberNavController()
-                val appContentState = rememberSaveableStateHolder()
+            CompositionLocalProvider(LocalAnimationsEnabled provides animationsEnabled) {
+                AppMotionHost(
+                    themeMode = uiState.themeMode,
+                    darkTheme = darkTheme,
+                    // Anything before that happens under the splash
+                    animate = uiState.isReady,
+                    controller = themeTransition,
+                    snapshots = screenSnapshots
+                ) { shownDark, systemBarsDark ->
+                    ExpenseTrackerProTheme(darkTheme = shownDark, lightSystemBars = !systemBarsDark) {
+                        // Both outlive the lock screen, so unlocking returns to the same screen and state
+                        val navController = rememberNavController()
+                        val appContentState = rememberSaveableStateHolder()
 
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    contentWindowInsets = WindowInsets.systemBars.only(
-                        WindowInsetsSides.Top + WindowInsetsSides.Horizontal
-                    )
-                ) { innerPadding ->
-                    // The top and side insets are applied here once; consuming them stops the
-                    // Scaffolds and bars nested inside from adding them again. The bottom one is
-                    // left to each screen, so the bottom bar can draw behind the gesture bar
-                    Box(
-                        modifier = Modifier
-                            .padding(innerPadding)
-                            .consumeWindowInsets(innerPadding)
-                    ) {
-                        if (uiState.isLocked) {
-                            LockScreen(
-                                isPromptRequested = uiState.isPromptRequested,
-                                message = uiState.lockMessage,
-                                onEvent = viewModel::onEvent
+                        Scaffold(
+                            modifier = Modifier.fillMaxSize(),
+                            contentWindowInsets = WindowInsets.systemBars.only(
+                                WindowInsetsSides.Top + WindowInsetsSides.Horizontal
                             )
-                        } else {
-                            appContentState.SaveableStateProvider(APP_CONTENT_KEY) {
-                                CompositionLocalProvider(LocalDateFormatter provides dateFormatter) {
-                                    AppNavHost(
-                                        navController = navController,
-                                        snackbarHostState = snackbarHostState
+                        ) { innerPadding ->
+                            // The top and side insets are applied here once; consuming them stops the
+                            // Scaffolds and bars nested inside from adding them again. The bottom one is
+                            // left to each screen, so the bottom bar can draw behind the gesture bar
+                            Box(
+                                modifier = Modifier
+                                    .padding(innerPadding)
+                                    .consumeWindowInsets(innerPadding)
+                            ) {
+                                if (uiState.isLocked) {
+                                    LockScreen(
+                                        isPromptRequested = uiState.isPromptRequested,
+                                        message = uiState.lockMessage,
+                                        onEvent = viewModel::onEvent
                                     )
+                                } else {
+                                    appContentState.SaveableStateProvider(APP_CONTENT_KEY) {
+                                        CompositionLocalProvider(LocalDateFormatter provides dateFormatter) {
+                                            AppNavHost(
+                                                navController = navController,
+                                                snackbarHostState = snackbarHostState
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -167,6 +196,11 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        animationsEnabled = motionPreferences.areAnimationsEnabled()
     }
 
     override fun onDestroy() {

@@ -115,7 +115,8 @@ fun HomeContent(
                     data = dashboard.summary,
                     periodLabel = uiState.filter.shortLabel(LocalDateFormatter.current),
                     comparison = dashboard.comparison,
-                    balanceTrend = dashboard.balanceTrend
+                    balanceTrend = dashboard.balanceTrend,
+                    countUpWhen = !uiState.isLoading
                 )
             }
 

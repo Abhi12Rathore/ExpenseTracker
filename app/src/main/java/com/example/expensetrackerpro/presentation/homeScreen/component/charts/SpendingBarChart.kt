@@ -26,7 +26,6 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -116,8 +115,8 @@ fun SpendingBarChart(
         }
     }
 
-    val isPreview = LocalInspectionMode.current
-    val growth = remember(periodKey) { Animatable(if (isPreview) 1f else 0f) }
+    val startsDrawn = chartStartsDrawn()
+    val growth = remember(periodKey) { Animatable(if (startsDrawn) 1f else 0f) }
     LaunchedEffect(periodKey) {
         growth.animateTo(1f, tween(STAGGERED_GROW_MILLIS, easing = LinearEasing))
     }

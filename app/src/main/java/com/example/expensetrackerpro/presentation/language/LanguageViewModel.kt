@@ -1,7 +1,9 @@
 package com.example.expensetrackerpro.presentation.language
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.expensetrackerpro.domain.models.AppLanguage
 import com.example.expensetrackerpro.domain.models.BuildInfo
 import com.example.expensetrackerpro.domain.models.LanguageChoice
 import com.example.expensetrackerpro.domain.usecase.language.GetLanguageOptionsUseCase
@@ -23,14 +25,16 @@ class LanguageViewModel @Inject constructor(
     getLanguageOptions: GetLanguageOptionsUseCase,
     private val getLanguagePreview: GetLanguagePreviewUseCase,
     private val setAppLanguage: SetAppLanguageUseCase,
-    buildInfo: BuildInfo
+    buildInfo: BuildInfo,
+    // Keeps an unapplied selection through rotation and process death; leaving the screen drops it
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
         getLanguageOptions().let { options ->
             LanguageUiState(
                 current = options.current,
-                selected = options.current,
+                selected = savedStateHandle.get<String>(KEY_SELECTED)?.toChoice() ?: options.current,
                 systemLanguage = options.systemLanguage,
                 systemLanguageName = options.systemLanguageName,
                 suggested = options.suggested,
@@ -44,6 +48,10 @@ class LanguageViewModel @Inject constructor(
     // Only the latest selection's preview is wanted
     private var previewJob: Job? = null
 
+    init {
+        loadPreview(_uiState.value.selected)
+    }
+
     fun onEvent(event: LanguageEvent) {
         when (event) {
             is LanguageEvent.LanguageSelected -> select(event.choice)
@@ -55,11 +63,15 @@ class LanguageViewModel @Inject constructor(
     }
 
     private fun select(choice: LanguageChoice) {
-        previewJob?.cancel()
-        // The old preview is dropped at once, so it is never shown beside another language's row
-        _uiState.update { it.copy(selected = choice, preview = null) }
-        if (choice == _uiState.value.current) return
+        // Only the selection changes: the lists stay as they are, so the screen's scroll never moves
+        _uiState.update { it.copy(selected = choice) }
+        savedStateHandle[KEY_SELECTED] = choice.toSaved()
+        loadPreview(choice)
+    }
 
+    // The previous preview stays until this one is ready, so the card cross-fades rather than empties
+    private fun loadPreview(choice: LanguageChoice) {
+        previewJob?.cancel()
         previewJob = viewModelScope.launch {
             val preview = getLanguagePreview(choice)
             _uiState.update { it.copy(preview = preview) }
@@ -69,5 +81,23 @@ class LanguageViewModel @Inject constructor(
     private fun applySelection() {
         val state = _uiState.value
         if (state.isApplied) setAppLanguage(state.selected)
+    }
+
+    private fun LanguageChoice.toSaved(): String = when (this) {
+        LanguageChoice.SystemDefault -> SYSTEM_DEFAULT_SAVED
+        is LanguageChoice.Specific -> language.tag
+    }
+
+    // A tag the app no longer has is ignored, and the screen opens on the current language
+    private fun String.toChoice(): LanguageChoice? =
+        if (this == SYSTEM_DEFAULT_SAVED) {
+            LanguageChoice.SystemDefault
+        } else {
+            AppLanguage.entries.find { it.tag == this }?.let(LanguageChoice::Specific)
+        }
+
+    private companion object {
+        const val KEY_SELECTED = "selected_language"
+        const val SYSTEM_DEFAULT_SAVED = ""
     }
 }

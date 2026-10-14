@@ -35,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -68,6 +69,12 @@ import com.example.expensetrackerpro.presentation.settings.uistate.SettingsEvent
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsMessage
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsUiState
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
+import com.example.expensetrackerpro.presentation.common.haptics.rememberHaptics
+import com.example.expensetrackerpro.presentation.common.motion.LocalScreenSnapshot
+import com.example.expensetrackerpro.presentation.common.motion.LocalThemeTransition
+import com.example.expensetrackerpro.presentation.common.motion.phoneDarkTheme
+import com.example.expensetrackerpro.presentation.common.motion.rememberPressTracker
+import com.example.expensetrackerpro.presentation.common.motion.trackPresses
 import com.example.expensetrackerpro.ui.theme.extendedColors
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -115,6 +122,7 @@ fun SettingsContent(
     onNavigateToLanguage: () -> Unit
 ) {
     SettingsDialogs(state = state, onEvent = onEvent)
+    val haptics = rememberHaptics()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val appLockErrorText = state.appLockError?.enableErrorRes()?.let { stringResource(it) }
@@ -171,6 +179,9 @@ fun SettingsContent(
 
             SettingsSectionCard(title = stringResource(R.string.settings_section_appearance)) {
                 val themeLabels = ThemeMode.entries.associateWith { stringResource(it.labelRes()) }
+                val themeTransition = LocalThemeTransition.current
+                val context = LocalContext.current
+                val themePresses = rememberPressTracker()
                 SettingsItem(
                     icon = Icons.Default.DarkMode,
                     iconTint = palette.amber,
@@ -181,8 +192,20 @@ fun SettingsContent(
                             options = ThemeMode.entries,
                             selected = state.themeMode,
                             label = { themeLabels.getValue(it) },
-                            onSelect = { onEvent(SettingsEvent.ThemeModeSelected(it)) },
-                            modifier = Modifier.fillMaxWidth()
+                            onSelect = { mode ->
+                                // Before the change is saved, so the root knows where to reveal it from
+                                themeTransition?.onOptionTapped(
+                                    from = state.themeMode,
+                                    to = mode,
+                                    phoneDark = context.phoneDarkTheme(),
+                                    center = themePresses.take()
+                                )
+                                if (mode != state.themeMode) haptics.confirm()
+                                onEvent(SettingsEvent.ThemeModeSelected(mode))
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .trackPresses(themePresses)
                         )
                     }
                 )
@@ -210,7 +233,10 @@ fun SettingsContent(
                     title = stringResource(R.string.settings_app_lock),
                     subtitle = stringResource(state.biometricStatus.appLockSubtitleRes()),
                     checked = state.appLock.enabled,
-                    onCheckedChange = { onEvent(SettingsEvent.AppLockToggled(it)) },
+                    onCheckedChange = {
+                        haptics.toggle(it)
+                        onEvent(SettingsEvent.AppLockToggled(it))
+                    },
                     iconTint = palette.teal,
                     // Stays switchable while on, so it can always be turned off
                     enabled = state.isAppLockAvailable || state.appLock.enabled
@@ -313,6 +339,7 @@ private fun LanguageChangedSnackbar(
         stringResource(R.string.language_changed_both, changed, changedInEnglish)
     }
     val undoLabel = stringResource(R.string.language_undo)
+    val screenSnapshot = LocalScreenSnapshot.current
 
     LaunchedEffect(change, isInNewLanguage) {
         if (!isInNewLanguage) return@LaunchedEffect
@@ -324,13 +351,13 @@ private fun LanguageChangedSnackbar(
                 duration = SnackbarDuration.Indefinite
             )
         }
-        onEvent(
-            if (result == SnackbarResult.ActionPerformed) {
-                SettingsEvent.LanguageUndoClicked
-            } else {
-                SettingsEvent.LanguageChangeShown
-            }
-        )
+        if (result == SnackbarResult.ActionPerformed) {
+            // Undoing switches the language back, which recreates the activity like the change did
+            screenSnapshot?.captureForRecreate()
+            onEvent(SettingsEvent.LanguageUndoClicked)
+        } else {
+            onEvent(SettingsEvent.LanguageChangeShown)
+        }
     }
 }
 

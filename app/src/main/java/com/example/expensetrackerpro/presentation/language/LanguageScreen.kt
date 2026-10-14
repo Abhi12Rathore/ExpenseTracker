@@ -4,18 +4,34 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Chat
@@ -35,10 +51,17 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -49,7 +72,9 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -58,8 +83,12 @@ import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.AppLanguage
 import com.example.expensetrackerpro.domain.models.DayPeriod
+import com.example.expensetrackerpro.domain.models.FinancialSummary
 import com.example.expensetrackerpro.domain.models.LanguageChoice
 import com.example.expensetrackerpro.domain.models.LanguagePreview
+import com.example.expensetrackerpro.presentation.common.haptics.rememberHaptics
+import com.example.expensetrackerpro.presentation.common.motion.LocalAnimationsEnabled
+import com.example.expensetrackerpro.presentation.common.motion.LocalScreenSnapshot
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.presentation.language.components.LanguagePreviewCard
 import com.example.expensetrackerpro.presentation.language.components.LanguageRow
@@ -74,7 +103,17 @@ private const val TRANSLATION_FEEDBACK_EMAIL = "arathore.abhishek457@gmail.com"
 // What stands for "whatever the phone uses" where a language has its script badge
 private const val SYSTEM_DEFAULT_BADGE = "Aa"
 
-private val CardShape = RoundedCornerShape(20.dp)
+private val CardCorner = 20.dp
+private val SECTION_GAP = 20.dp
+
+// Below this the preview shows only the balance and its row, leaving room for the list
+private const val COMPACT_SCREEN_HEIGHT_DP = 640
+
+// Stable keys, so a selection never makes the list re-lay out its rows
+private const val KEY_HEADER_SUGGESTED = "header_suggested"
+private const val KEY_SYSTEM_DEFAULT = "system_default"
+private const val KEY_HEADER_ALL = "header_all"
+private const val KEY_FEEDBACK = "feedback"
 
 @Composable
 fun LanguageScreen(
@@ -83,8 +122,11 @@ fun LanguageScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val screenSnapshot = LocalScreenSnapshot.current
     LaunchedEffect(uiState.isApplied) {
         if (!uiState.isApplied) return@LaunchedEffect
+        // The new language recreates the activity, which fades this picture out over itself
+        screenSnapshot?.captureForRecreate()
         // Closed first: the switch draws the app again, which then comes back on Settings
         onNavigateBack()
         viewModel.onEvent(LanguageEvent.ClosedAfterApply)
@@ -158,27 +200,117 @@ fun LanguageContent(
                 )
             )
         },
-        bottomBar = {
-            if (state.isApplyVisible) {
-                ApplyLanguageButton(
-                    language = state.selectedLanguage,
-                    onClick = { onEvent(LanguageEvent.ApplyClicked) }
-                )
-            }
-        },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Column(
+        // Only the top: the list runs on under the gesture bar and the apply bar, and pads its own end
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+                .padding(top = padding.calculateTopPadding())
         ) {
-            state.preview?.let { LanguagePreviewCard(preview = it) }
+            // Saved, so a list restored near its end has its full padding before the bar is measured again
+            var applyBarHeight by rememberSaveable { mutableIntStateOf(0) }
+            val density = LocalDensity.current
+            val animationsEnabled = LocalAnimationsEnabled.current
+            val listBottomPadding by animateDpAsState(
+                targetValue = if (state.isApplyVisible) with(density) { applyBarHeight.toDp() } else 0.dp,
+                animationSpec = if (animationsEnabled) spring() else snap(),
+                label = "listBottomPadding"
+            )
 
-            LanguageSection(title = stringResource(R.string.language_section_suggested)) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                PinnedPreview(state = state)
+                LanguageList(
+                    state = state,
+                    onEvent = onEvent,
+                    bottomPadding = listBottomPadding,
+                    onFeedbackClick = {
+                        if (!onSendFeedback(feedbackSubject)) {
+                            scope.launch { snackbarHostState.showSnackbar(noEmailAppText) }
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            AnimatedVisibility(
+                visible = state.isApplyVisible,
+                enter = if (animationsEnabled) slideInVertically { it } + fadeIn() else EnterTransition.None,
+                exit = if (animationsEnabled) slideOutVertically { it } + fadeOut() else ExitTransition.None,
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                Surface(
+                    color = MaterialTheme.colorScheme.background,
+                    modifier = Modifier.onSizeChanged { applyBarHeight = it.height }
+                ) {
+                    ApplyLanguageButton(
+                        language = state.selectedLanguage,
+                        onClick = { onEvent(LanguageEvent.ApplyClicked) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Home in the selected language, above the list and outside it, so picking a language changes
+ * only what the card says: the list beneath never moves.
+ */
+@Composable
+private fun PinnedPreview(state: LanguageUiState) {
+    val compact = LocalConfiguration.current.screenHeightDp < COMPACT_SCREEN_HEIGHT_DP
+    // Until the first preview has loaded the card is laid out empty, so it has its size from the start
+    val preview = state.preview ?: LanguagePreview(
+        language = state.selectedLanguage,
+        dayPeriod = null,
+        userName = "",
+        summary = FinancialSummary(),
+        categories = emptyList()
+    )
+    // The tallest it has been: a script drawn taller than the others can't push the list down and up
+    // Measured again when the screen turns short or tall, as the compact card is a different size
+    var tallest by remember(compact) { mutableIntStateOf(0) }
+    val density = LocalDensity.current
+
+    LanguagePreviewCard(
+        preview = preview,
+        compact = compact,
+        modifier = Modifier
+            .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 12.dp)
+            .heightIn(min = with(density) { tallest.toDp() })
+            .onSizeChanged { tallest = maxOf(tallest, it.height) }
+            .alpha(if (state.preview == null) 0f else 1f)
+    )
+}
+
+@Composable
+private fun LanguageList(
+    state: LanguageUiState,
+    onEvent: (LanguageEvent) -> Unit,
+    bottomPadding: Dp,
+    onFeedbackClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val navigationBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    // Saveable: the scroll position survives rotation and the process being stopped
+    val listState = rememberLazyListState()
+    val suggestedCount = state.suggested.size + 1
+
+    LazyColumn(
+        state = listState,
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            start = 16.dp,
+            end = 16.dp,
+            bottom = 16.dp + maxOf(bottomPadding, navigationBar)
+        )
+    ) {
+        item(key = KEY_HEADER_SUGGESTED) {
+            SectionTitle(stringResource(R.string.language_section_suggested), Modifier.padding(bottom = 8.dp))
+        }
+        item(key = KEY_SYSTEM_DEFAULT) {
+            GroupedRow(index = 0, count = suggestedCount) {
                 LanguageRow(
                     badge = SYSTEM_DEFAULT_BADGE,
                     title = stringResource(R.string.language_system_default),
@@ -186,28 +318,30 @@ fun LanguageContent(
                     selected = state.selected == LanguageChoice.SystemDefault,
                     onClick = { onEvent(LanguageEvent.LanguageSelected(LanguageChoice.SystemDefault)) }
                 )
-                state.suggested.forEach { language ->
-                    RowDivider()
+            }
+        }
+        itemsIndexed(state.suggested, key = { _, language -> language.tag }) { index, language ->
+            GroupedRow(index = index + 1, count = suggestedCount) {
+                LanguageChoiceRow(language = language, state = state, onEvent = onEvent)
+            }
+        }
+
+        if (state.others.isNotEmpty()) {
+            item(key = KEY_HEADER_ALL) {
+                SectionTitle(
+                    stringResource(R.string.language_section_all),
+                    Modifier.padding(top = SECTION_GAP, bottom = 8.dp)
+                )
+            }
+            itemsIndexed(state.others, key = { _, language -> language.tag }) { index, language ->
+                GroupedRow(index = index, count = state.others.size) {
                     LanguageChoiceRow(language = language, state = state, onEvent = onEvent)
                 }
             }
+        }
 
-            if (state.others.isNotEmpty()) {
-                LanguageSection(title = stringResource(R.string.language_section_all)) {
-                    state.others.forEachIndexed { index, language ->
-                        if (index > 0) RowDivider()
-                        LanguageChoiceRow(language = language, state = state, onEvent = onEvent)
-                    }
-                }
-            }
-
-            TranslationFeedbackRow(
-                onClick = {
-                    if (!onSendFeedback(feedbackSubject)) {
-                        scope.launch { snackbarHostState.showSnackbar(noEmailAppText) }
-                    }
-                }
-            )
+        item(key = KEY_FEEDBACK) {
+            TranslationFeedbackRow(onClick = onFeedbackClick, modifier = Modifier.padding(top = SECTION_GAP))
         }
     }
 }
@@ -230,22 +364,40 @@ private fun LanguageChoiceRow(
 }
 
 @Composable
-private fun LanguageSection(title: String, content: @Composable () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .semantics { heading() }
-        )
-        Surface(
-            shape = CardShape,
-            color = MaterialTheme.colorScheme.surfaceContainerLow,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column { content() }
+private fun SectionTitle(title: String, modifier: Modifier = Modifier) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = modifier
+            .padding(horizontal = 16.dp)
+            .semantics { heading() }
+    )
+}
+
+/**
+ * One row of a section's card. Each row is its own list item, so the card is drawn in pieces:
+ * the first rounds the top, the last the bottom, and every row after the first starts with a divider.
+ */
+@Composable
+private fun GroupedRow(index: Int, count: Int, content: @Composable () -> Unit) {
+    val first = index == 0
+    val last = index == count - 1
+    val shape = RoundedCornerShape(
+        topStart = if (first) CardCorner else 0.dp,
+        topEnd = if (first) CardCorner else 0.dp,
+        bottomStart = if (last) CardCorner else 0.dp,
+        bottomEnd = if (last) CardCorner else 0.dp
+    )
+
+    Surface(
+        shape = shape,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column {
+            if (!first) RowDivider()
+            content()
         }
     }
 }
@@ -266,11 +418,15 @@ private fun RowDivider() {
  */
 @Composable
 private fun ApplyLanguageButton(language: AppLanguage, onClick: () -> Unit) {
+    val haptics = rememberHaptics()
     val inLanguage = rememberLocalizedContext(language).getString(R.string.language_use, language.nativeName)
     val inEnglish = stringResource(R.string.language_use_english, language.englishName)
 
     Button(
-        onClick = onClick,
+        onClick = {
+            haptics.confirm()
+            onClick()
+        },
         shape = RoundedCornerShape(28.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -297,11 +453,11 @@ private fun ApplyLanguageButton(language: AppLanguage, onClick: () -> Unit) {
 }
 
 @Composable
-private fun TranslationFeedbackRow(onClick: () -> Unit) {
+private fun TranslationFeedbackRow(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
@@ -334,6 +490,13 @@ private val previewState = LanguageUiState(
     systemLanguageName = "English (India)",
     suggested = listOf(AppLanguage.HINDI),
     others = listOf(AppLanguage.ENGLISH),
+    preview = LanguagePreview(
+        language = AppLanguage.ENGLISH,
+        dayPeriod = DayPeriod.EVENING,
+        userName = "Abhishek",
+        summary = PreviewData.financialSummary,
+        categories = PreviewData.categoryExpense.take(2)
+    ),
     versionName = "1.0"
 )
 
@@ -352,17 +515,19 @@ private fun LanguageContentSelectedPreview() {
         LanguageContent(
             state = previewState.copy(
                 selected = LanguageChoice.Specific(AppLanguage.HINDI),
-                preview = LanguagePreview(
-                    language = AppLanguage.HINDI,
-                    dayPeriod = DayPeriod.EVENING,
-                    userName = "Abhishek",
-                    summary = PreviewData.financialSummary,
-                    categories = PreviewData.categoryExpense.take(2)
-                )
+                preview = previewState.preview?.copy(language = AppLanguage.HINDI)
             ),
             onEvent = {},
             onSendFeedback = { true },
             onNavigateBack = {}
         )
+    }
+}
+
+@Preview(heightDp = 600)
+@Composable
+private fun LanguageContentShortScreenPreview() {
+    ExpenseTrackerProTheme {
+        LanguageContent(state = previewState, onEvent = {}, onSendFeedback = { true }, onNavigateBack = {})
     }
 }

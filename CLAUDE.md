@@ -30,7 +30,8 @@ Goal: production-quality portfolio project.
 - `data/scan/` → `MlKitBillTextReader` (text recognition, then deletes the photo), `BillLineAssembler` (joins recognized pieces into the bill's lines), `GmsBillScannerAvailability`
 - `data/language/` → `AppLanguageRepositoryImpl` (the one place the app's language is read from and handed to AppCompat), `AndroidDeviceLanguages` (the phone's own languages), `AndroidAppLocaleProvider`; `data/category/` → `ResourceDefaultCategoryNames` (built-in category names from string resources, in any language asked for)
 - `data/preferences/` → DataStore-backed repositories (theme, app lock, user profile); `data/security/` → Android biometric availability
-- `domain/` → `models/` (typed IDs in `Ids.kt`), `error/` (`DomainError`, `Outcome`), `repository/` (interfaces), `security/` (device capability interfaces), `scan/` (`BillTextReader`, `BillScannerAvailability`), `locale/` (`AppLocaleProvider`, `DeviceLanguages`), `category/` (`DefaultCategoryNames`), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
+- `data/motion/` → `AndroidMotionPreferences`: animations off when the animator duration scale is 0 ("Remove animations")
+- `domain/` → `models/` (typed IDs in `Ids.kt`), `error/` (`DomainError`, `Outcome`), `repository/` (interfaces), `security/` (device capability interfaces), `motion/` (`MotionPreferences`), `scan/` (`BillTextReader`, `BillScannerAvailability`), `locale/` (`AppLocaleProvider`, `DeviceLanguages`), `category/` (`DefaultCategoryNames`), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
 - `domain/usecase/scan/` → `ScanBillUseCase` (read, then `ParseBillUseCase`), the parsers it delegates to (one per rule: amount, title, date, note), and `BillKeywords`: every word list and limit the parsers use, en-IN for now
 - `presentation/<feature>/` → Screen, ViewModel, `components/`, `uistate/`
 - `presentation/common/category/editor/` → the add/edit category sheet shared by Manage Categories and Add/Edit Transaction: its state, events and `CategoryEditorReducer`; the host ViewModel keeps the state and wraps the events
@@ -39,6 +40,8 @@ Goal: production-quality portfolio project.
 - `presentation/exportBackup/` → Settings → Export & backup: the period to export and the "Save as" picker; the CSV itself is built in `domain/usecase/export/`. `BackupController` owns creating a backup and restoring from one (the Backup card and the confirmation sheet); the ViewModel shows its state and forwards its events
 - `presentation/language/` → Settings → Language: the list, the Preview card (`LocalizedContent` draws it in another language without switching the app) and the bilingual apply button. The Undo snackbar is on Settings, owned by `presentation/settings/LanguageChangeController`
 - `presentation/common/date/` → `LocalDateFormatter`: how Composables reach the injected `DateFormatter`
+- `presentation/common/motion/` → `AppMotionHost` (the app root: theme reveal, theme cross-fade, the fade after a recreate), `ThemeTransitionController` (the tapped spot, from the theme option to the root), `ScreenSnapshotHolder` (a picture of the screen across a recreate), `LocalAnimationsEnabled`, `rememberCountUp`, `PressTracker`, `phoneDarkTheme()`
+- `presentation/common/haptics/` → `rememberHaptics()`: confirm and toggle feedback through the View (Compose 1.7 has no such `HapticFeedbackType`)
 - `presentation/lock/` → lock screen, the biometric prompt wrapper, and `AppLockController` (lock state, prompt flow, background timing); `MainViewModel` shows its state and forwards the lock events
 - `ui/theme/` → colors, typography, theme
 - `utils/` → shared helpers
@@ -87,6 +90,11 @@ Apply these to all new and changed code. Existing violations are tracked under K
 - German runs longest. A label that must stay on one line gets `maxLines = 1` with an ellipsis, and a short wording in every language rather than a layout that only fits English.
 - Check new screens in Hindi and in en-XA (long text): nothing clipped, nothing wrapped into its neighbour.
 
+## Motion
+- Every animation is skipped when `MotionPreferences` says animations are off: Composables read `LocalAnimationsEnabled` (use `snap()` / `EnterTransition.None`, or start at the end value), plain classes take `MotionPreferences`.
+- An animation never blocks input: overlays are only drawn, never take touches, and a second change ends the running one at once.
+- The effective theme reads the phone's dark mode through `phoneDarkTheme()` / `phoneInDarkTheme()`, never `isSystemInDarkTheme()`.
+
 ## Database
 - Pre-release: every schema change bumps the version; `fallbackToDestructiveMigration` resets the data. From the first public release, write a tested Migration instead.
 - Current version: 4 (added `categories.builtInKey`).
@@ -107,6 +115,7 @@ Settled during the LLD refactor. Change one only with a reason that beats the on
 - **A doubtful value is left out rather than guessed**: a total next to "Sub Total", a date in the future or over a year old, an amount of ₹10,00,000 or more. Bill words and limits live only in `BillKeywords`; the parsers hold rules, not words.
 - **A built-in category is known by its key, and its name follows the app's language.** The name is still stored, so every query and JOIN reads it as before; `LocalizeDefaultCategoriesUseCase` rewrites it when the language changes. A rename clears the key, which is how the user's name is never replaced; a built-in whose translated name another category of its type already has is left as it is. Backups carry the key as an optional field, so older files still restore.
 - **The language change is applied after the Language screen has closed**, and the previous choice is kept in memory for the Undo. The switch recreates the activity while `MainViewModel` stays, and the app is never reported as backgrounded, so the app lock is not triggered.
+- **Theme and language changes are shown with a snapshot at the root.** The whole tree recomposes with new colors in one frame, so `AppMotionHost` draws a picture of the old look over the new one and takes it away: a circle from the tapped option, or a cross-fade when the phone switched dark mode. A theme change doesn't recreate the activity (`configChanges="uiMode"`); a language change does, so its picture is kept in the activity-retained `ScreenSnapshotHolder` for at most a second. The effective theme reads the phone's own dark mode (`UiModeManager`), because from Android 12 the app's configuration reports the app's own night mode for a moment after a change.
 - **IDs are typed in the domain and `Int` in Room.** `TransactionId` and `CategoryId` can't be mixed up; entities keep `Int`, so typing them needed no schema change.
 
 ## Known issues (remove each line once fixed)
