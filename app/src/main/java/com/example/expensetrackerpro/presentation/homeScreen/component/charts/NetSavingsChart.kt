@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -92,8 +91,8 @@ fun NetSavingsChart(
     val currentMonths by rememberUpdatedState(months)
     val currentOnMonthClick by rememberUpdatedState(onMonthClick)
 
-    val isPreview = LocalInspectionMode.current
-    val growth = remember(periodKey) { Animatable(if (isPreview) 1f else 0f) }
+    val startsDrawn = chartStartsDrawn()
+    val growth = remember(periodKey) { Animatable(if (startsDrawn) 1f else 0f) }
     LaunchedEffect(periodKey) {
         growth.animateTo(1f, tween(STAGGERED_GROW_MILLIS, easing = LinearEasing))
     }

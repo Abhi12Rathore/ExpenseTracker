@@ -22,6 +22,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalInspectionMode
+import com.example.expensetrackerpro.presentation.common.motion.LocalAnimationsEnabled
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -63,6 +65,11 @@ internal fun futureBarColor(): Color = MaterialTheme.colorScheme.onSurface.copy(
 @ReadOnlyComposable
 internal fun labelBackdropColor(): Color =
     MaterialTheme.colorScheme.surfaceContainer.copy(alpha = LABEL_BACKDROP_ALPHA)
+
+/** A chart is drawn in full at once in a preview and with animations off; otherwise it grows in. */
+@Composable
+@ReadOnlyComposable
+internal fun chartStartsDrawn(): Boolean = LocalInspectionMode.current || !LocalAnimationsEnabled.current
 
 /** How far the bar at [index] has grown (0 to 1) at [progress] of the whole staggered animation. */
 internal fun barGrowth(progress: Float, index: Int, count: Int): Float {

@@ -43,6 +43,7 @@ class ScreenSnapshot internal constructor(
 ) {
     /** Call just before something recreates the activity, such as applying a language. */
     suspend fun captureForRecreate() {
+        if (!holder.wantsSnapshot()) return
         holder.put(layer.toImageBitmap())
     }
 }
@@ -75,6 +76,7 @@ fun AppMotionHost(
     content: @Composable (shownDark: Boolean, systemBarsDark: Boolean) -> Unit
 ) {
     val layer = rememberGraphicsLayer()
+    val animationsEnabled = LocalAnimationsEnabled.current
     var shownDark by remember { mutableStateOf(darkTheme) }
     var systemBarsDark by remember { mutableStateOf(darkTheme) }
     var overlay by remember { mutableStateOf<Overlay?>(null) }
@@ -100,7 +102,8 @@ fun AppMotionHost(
         if (darkTheme == shownDark) return@LaunchedEffect
         val center = controller.takeReveal(themeMode)
         try {
-            if (!animate) return@LaunchedEffect
+            // With animations off the theme switches at once, and no picture is taken
+            if (!animate || !animationsEnabled) return@LaunchedEffect
             // Taken before the switch, so it always shows the old look
             val snapshot = layer.toImageBitmap()
             revealRadius.snapTo(0f)

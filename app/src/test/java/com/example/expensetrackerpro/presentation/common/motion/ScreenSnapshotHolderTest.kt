@@ -4,15 +4,19 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.ImageBitmapConfig
 import androidx.compose.ui.graphics.colorspace.ColorSpace
 import androidx.compose.ui.graphics.colorspace.ColorSpaces
+import com.example.expensetrackerpro.fakes.FakeMotionPreferences
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ScreenSnapshotHolderTest {
 
     private val time = FakeTimeProvider(nowMillis = 5_000_000L)
-    private val holder = ScreenSnapshotHolder(time)
+    private val motion = FakeMotionPreferences()
+    private val holder = ScreenSnapshotHolder(time, motion)
 
     @Test
     fun thePictureIsHandedOutOnce() {
@@ -44,6 +48,21 @@ class ScreenSnapshotHolderTest {
     @Test
     fun withNothingPut_thereIsNothingToTake() {
         assertNull(holder.take())
+    }
+
+    @Test
+    fun withAnimationsOff_noPictureIsWantedOrKept() {
+        motion.enabled = false
+
+        assertFalse(holder.wantsSnapshot())
+        holder.put(FakeImageBitmap())
+        // The new activity then simply appears
+        assertNull(holder.take())
+    }
+
+    @Test
+    fun withAnimationsOn_aPictureIsWanted() {
+        assertTrue(holder.wantsSnapshot())
     }
 
     private class FakeImageBitmap : ImageBitmap {

@@ -1,6 +1,8 @@
 package com.example.expensetrackerpro.presentation.language.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -31,6 +33,7 @@ import com.example.expensetrackerpro.domain.models.DayPeriod
 import com.example.expensetrackerpro.domain.models.FinancialSummary
 import com.example.expensetrackerpro.domain.models.LanguagePreview
 import com.example.expensetrackerpro.presentation.common.category.CategoryIconTile
+import com.example.expensetrackerpro.presentation.common.motion.LocalAnimationsEnabled
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.utils.CurrencyFormatter
 
@@ -47,6 +50,8 @@ private const val CROSS_FADE_MILLIS = 200
  */
 @Composable
 fun LanguagePreviewCard(preview: LanguagePreview, modifier: Modifier = Modifier, compact: Boolean = false) {
+    val animationsEnabled = LocalAnimationsEnabled.current
+
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -57,7 +62,11 @@ fun LanguagePreviewCard(preview: LanguagePreview, modifier: Modifier = Modifier,
             targetState = preview,
             contentKey = { it.language },
             transitionSpec = {
-                fadeIn(tween(CROSS_FADE_MILLIS)) togetherWith fadeOut(tween(CROSS_FADE_MILLIS)) using null
+                if (animationsEnabled) {
+                    fadeIn(tween(CROSS_FADE_MILLIS)) togetherWith fadeOut(tween(CROSS_FADE_MILLIS)) using null
+                } else {
+                    EnterTransition.None togetherWith ExitTransition.None using null
+                }
             },
             label = "languagePreview"
         ) { shown ->

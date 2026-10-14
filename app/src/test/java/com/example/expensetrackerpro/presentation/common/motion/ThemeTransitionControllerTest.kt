@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.presentation.common.motion
 
 import androidx.compose.ui.geometry.Offset
 import com.example.expensetrackerpro.domain.models.ThemeMode
+import com.example.expensetrackerpro.fakes.FakeMotionPreferences
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -12,7 +13,8 @@ import org.junit.Test
 class ThemeTransitionControllerTest {
 
     private val time = FakeTimeProvider(nowMillis = 1_000_000L)
-    private val controller = ThemeTransitionController(time)
+    private val motion = FakeMotionPreferences()
+    private val controller = ThemeTransitionController(time, motion)
     private val tap = Offset(840f, 917f)
 
     @Test
@@ -82,5 +84,24 @@ class ThemeTransitionControllerTest {
         controller.onOptionTapped(ThemeMode.SYSTEM, ThemeMode.SYSTEM, phoneDark = null, center = tap)
 
         assertNull(controller.takeReveal(ThemeMode.SYSTEM))
+    }
+
+    @Test
+    fun withAnimationsOff_nothingIsRevealed() {
+        motion.enabled = false
+
+        controller.onOptionTapped(ThemeMode.LIGHT, ThemeMode.DARK, phoneDark = false, center = tap)
+
+        // The root then switches the theme at once
+        assertNull(controller.takeReveal(ThemeMode.DARK))
+    }
+
+    @Test
+    fun turningAnimationsOff_dropsATapAlreadyMade() {
+        controller.onOptionTapped(ThemeMode.LIGHT, ThemeMode.DARK, phoneDark = false, center = tap)
+        motion.enabled = false
+        controller.onOptionTapped(ThemeMode.DARK, ThemeMode.LIGHT, phoneDark = false, center = tap)
+
+        assertNull(controller.takeReveal(ThemeMode.LIGHT))
     }
 }

@@ -2,6 +2,7 @@ package com.example.expensetrackerpro.presentation.common.motion
 
 import androidx.compose.ui.geometry.Offset
 import com.example.expensetrackerpro.domain.models.ThemeMode
+import com.example.expensetrackerpro.domain.motion.MotionPreferences
 import com.example.expensetrackerpro.domain.time.TimeProvider
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import javax.inject.Inject
@@ -13,7 +14,8 @@ import javax.inject.Inject
  */
 @ActivityRetainedScoped
 class ThemeTransitionController @Inject constructor(
-    private val timeProvider: TimeProvider
+    private val timeProvider: TimeProvider,
+    private val motion: MotionPreferences
 ) {
 
     private data class PendingReveal(val target: ThemeMode, val center: Offset, val tappedAtMillis: Long)
@@ -34,6 +36,11 @@ class ThemeTransitionController @Inject constructor(
      * expires unused.
      */
     fun onOptionTapped(from: ThemeMode, to: ThemeMode, phoneDark: Boolean?, center: Offset) {
+        if (!motion.areAnimationsEnabled()) {
+            // Nothing is revealed: the root switches the theme at once
+            pending = null
+            return
+        }
         val changesLook = if (phoneDark == null) {
             from != to
         } else {

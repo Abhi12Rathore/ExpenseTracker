@@ -25,6 +25,8 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
@@ -35,7 +37,9 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.navigation.compose.rememberNavController
 import com.example.expensetrackerpro.domain.models.ThemeMode
 import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
+import com.example.expensetrackerpro.domain.motion.MotionPreferences
 import com.example.expensetrackerpro.presentation.common.motion.AppMotionHost
+import com.example.expensetrackerpro.presentation.common.motion.LocalAnimationsEnabled
 import com.example.expensetrackerpro.presentation.common.motion.ScreenSnapshotHolder
 import com.example.expensetrackerpro.presentation.common.motion.ThemeTransitionController
 import com.example.expensetrackerpro.presentation.common.motion.phoneInDarkTheme
@@ -63,6 +67,12 @@ class MainActivity : AppCompatActivity() {
     // Kept across the activity being recreated, which a change of language does
     @Inject
     lateinit var screenSnapshots: ScreenSnapshotHolder
+
+    @Inject
+    lateinit var motionPreferences: MotionPreferences
+
+    // Read again on every return, as "Remove animations" may have been changed meanwhile
+    private var animationsEnabled by mutableStateOf(true)
 
     // Follows the whole app rather than this activity, so rotation and dialogs never count as
     // leaving. Registering replays ON_START, which is harmless: nothing has been backgrounded yet.
@@ -93,6 +103,7 @@ class MainActivity : AppCompatActivity() {
         viewModel.onEvent(MainEvent.ActivityCreated)
         ProcessLifecycleOwner.get().lifecycle.addObserver(appVisibilityObserver)
 
+        animationsEnabled = motionPreferences.areAnimationsEnabled()
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             // The phone's own dark mode: the app's configuration reports the app's override for a moment
@@ -135,46 +146,48 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            AppMotionHost(
-                themeMode = uiState.themeMode,
-                darkTheme = darkTheme,
-                // Anything before that happens under the splash
-                animate = uiState.isReady,
-                controller = themeTransition,
-                snapshots = screenSnapshots
-            ) { shownDark, systemBarsDark ->
-                ExpenseTrackerProTheme(darkTheme = shownDark, lightSystemBars = !systemBarsDark) {
-                    // Both outlive the lock screen, so unlocking returns to the same screen and state
-                    val navController = rememberNavController()
-                    val appContentState = rememberSaveableStateHolder()
+            CompositionLocalProvider(LocalAnimationsEnabled provides animationsEnabled) {
+                AppMotionHost(
+                    themeMode = uiState.themeMode,
+                    darkTheme = darkTheme,
+                    // Anything before that happens under the splash
+                    animate = uiState.isReady,
+                    controller = themeTransition,
+                    snapshots = screenSnapshots
+                ) { shownDark, systemBarsDark ->
+                    ExpenseTrackerProTheme(darkTheme = shownDark, lightSystemBars = !systemBarsDark) {
+                        // Both outlive the lock screen, so unlocking returns to the same screen and state
+                        val navController = rememberNavController()
+                        val appContentState = rememberSaveableStateHolder()
 
-                    Scaffold(
-                        modifier = Modifier.fillMaxSize(),
-                        contentWindowInsets = WindowInsets.systemBars.only(
-                            WindowInsetsSides.Top + WindowInsetsSides.Horizontal
-                        )
-                    ) { innerPadding ->
-                        // The top and side insets are applied here once; consuming them stops the
-                        // Scaffolds and bars nested inside from adding them again. The bottom one is
-                        // left to each screen, so the bottom bar can draw behind the gesture bar
-                        Box(
-                            modifier = Modifier
-                                .padding(innerPadding)
-                                .consumeWindowInsets(innerPadding)
-                        ) {
-                            if (uiState.isLocked) {
-                                LockScreen(
-                                    isPromptRequested = uiState.isPromptRequested,
-                                    message = uiState.lockMessage,
-                                    onEvent = viewModel::onEvent
-                                )
-                            } else {
-                                appContentState.SaveableStateProvider(APP_CONTENT_KEY) {
-                                    CompositionLocalProvider(LocalDateFormatter provides dateFormatter) {
-                                        AppNavHost(
-                                            navController = navController,
-                                            snackbarHostState = snackbarHostState
-                                        )
+                        Scaffold(
+                            modifier = Modifier.fillMaxSize(),
+                            contentWindowInsets = WindowInsets.systemBars.only(
+                                WindowInsetsSides.Top + WindowInsetsSides.Horizontal
+                            )
+                        ) { innerPadding ->
+                            // The top and side insets are applied here once; consuming them stops the
+                            // Scaffolds and bars nested inside from adding them again. The bottom one is
+                            // left to each screen, so the bottom bar can draw behind the gesture bar
+                            Box(
+                                modifier = Modifier
+                                    .padding(innerPadding)
+                                    .consumeWindowInsets(innerPadding)
+                            ) {
+                                if (uiState.isLocked) {
+                                    LockScreen(
+                                        isPromptRequested = uiState.isPromptRequested,
+                                        message = uiState.lockMessage,
+                                        onEvent = viewModel::onEvent
+                                    )
+                                } else {
+                                    appContentState.SaveableStateProvider(APP_CONTENT_KEY) {
+                                        CompositionLocalProvider(LocalDateFormatter provides dateFormatter) {
+                                            AppNavHost(
+                                                navController = navController,
+                                                snackbarHostState = snackbarHostState
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -183,6 +196,11 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        animationsEnabled = motionPreferences.areAnimationsEnabled()
     }
 
     override fun onDestroy() {

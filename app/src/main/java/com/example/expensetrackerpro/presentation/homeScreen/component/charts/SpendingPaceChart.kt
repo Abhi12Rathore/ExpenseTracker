@@ -34,7 +34,6 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -167,8 +166,8 @@ fun SpendingPaceChart(
         if (width <= 0) 0 else (x / width * (dayCount - 1)).roundToInt().coerceIn(0, dayCount - 1)
     }
 
-    val isPreview = LocalInspectionMode.current
-    val reveal = remember(periodKey) { Animatable(if (isPreview) 1f else 0f) }
+    val startsDrawn = chartStartsDrawn()
+    val reveal = remember(periodKey) { Animatable(if (startsDrawn) 1f else 0f) }
     LaunchedEffect(periodKey) {
         reveal.animateTo(1f, tween(DRAW_MILLIS, easing = FastOutSlowInEasing))
     }

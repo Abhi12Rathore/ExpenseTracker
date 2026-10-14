@@ -1,7 +1,6 @@
 package com.example.expensetrackerpro.presentation.homeScreen.component.charts
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
@@ -40,9 +39,9 @@ fun BalanceSparkline(
     modifier: Modifier = Modifier,
     color: Color = LocalContentColor.current
 ) {
-    val isPreview = LocalInspectionMode.current
+    val startsDrawn = chartStartsDrawn()
     // Drawn left to right once, when it first appears
-    val reveal = remember { Animatable(if (isPreview) 1f else 0f) }
+    val reveal = remember { Animatable(if (startsDrawn) 1f else 0f) }
     LaunchedEffect(Unit) {
         reveal.animateTo(1f, tween(SPARKLINE_DRAW_MILLIS, easing = FastOutSlowInEasing))
     }

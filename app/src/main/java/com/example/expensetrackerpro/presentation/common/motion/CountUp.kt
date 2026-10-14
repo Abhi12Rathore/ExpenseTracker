@@ -26,7 +26,9 @@ private const val COUNT_UP_MILLIS = 600
  */
 @Composable
 fun rememberCountUp(target: Money, start: Boolean): Money {
-    var played by rememberSaveable { mutableStateOf(false) }
+    // With animations off it has, in effect, already played
+    val animationsEnabled = LocalAnimationsEnabled.current
+    var played by rememberSaveable { mutableStateOf(!animationsEnabled) }
     val progress = remember { Animatable(if (played) 1f else 0f) }
     val currentStart by rememberUpdatedState(start)
 

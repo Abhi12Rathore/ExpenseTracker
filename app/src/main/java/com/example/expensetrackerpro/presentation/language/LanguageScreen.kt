@@ -5,7 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -82,6 +86,7 @@ import com.example.expensetrackerpro.domain.models.FinancialSummary
 import com.example.expensetrackerpro.domain.models.LanguageChoice
 import com.example.expensetrackerpro.domain.models.LanguagePreview
 import com.example.expensetrackerpro.presentation.common.haptics.rememberHaptics
+import com.example.expensetrackerpro.presentation.common.motion.LocalAnimationsEnabled
 import com.example.expensetrackerpro.presentation.common.motion.LocalScreenSnapshot
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.presentation.language.components.LanguagePreviewCard
@@ -204,8 +209,10 @@ fun LanguageContent(
         ) {
             var applyBarHeight by remember { mutableIntStateOf(0) }
             val density = LocalDensity.current
+            val animationsEnabled = LocalAnimationsEnabled.current
             val listBottomPadding by animateDpAsState(
                 targetValue = if (state.isApplyVisible) with(density) { applyBarHeight.toDp() } else 0.dp,
+                animationSpec = if (animationsEnabled) spring() else snap(),
                 label = "listBottomPadding"
             )
 
@@ -226,8 +233,8 @@ fun LanguageContent(
 
             AnimatedVisibility(
                 visible = state.isApplyVisible,
-                enter = slideInVertically { it } + fadeIn(),
-                exit = slideOutVertically { it } + fadeOut(),
+                enter = if (animationsEnabled) slideInVertically { it } + fadeIn() else EnterTransition.None,
+                exit = if (animationsEnabled) slideOutVertically { it } + fadeOut() else ExitTransition.None,
                 modifier = Modifier.align(Alignment.BottomCenter)
             ) {
                 Surface(

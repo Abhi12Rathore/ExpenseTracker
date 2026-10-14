@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.presentation.common.motion
 
 import androidx.compose.ui.graphics.ImageBitmap
+import com.example.expensetrackerpro.domain.motion.MotionPreferences
 import com.example.expensetrackerpro.domain.time.TimeProvider
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import javax.inject.Inject
@@ -12,12 +13,17 @@ import javax.inject.Inject
  */
 @ActivityRetainedScoped
 class ScreenSnapshotHolder @Inject constructor(
-    private val timeProvider: TimeProvider
+    private val timeProvider: TimeProvider,
+    private val motion: MotionPreferences
 ) {
     private var snapshot: ImageBitmap? = null
     private var takenAtMillis = 0L
 
+    /** False with animations off: there is no fade, so no picture is worth taking. */
+    fun wantsSnapshot(): Boolean = motion.areAnimationsEnabled()
+
     fun put(bitmap: ImageBitmap) {
+        if (!wantsSnapshot()) return
         snapshot = bitmap
         takenAtMillis = nowMillis()
     }
