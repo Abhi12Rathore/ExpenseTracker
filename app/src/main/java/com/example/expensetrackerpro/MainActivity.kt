@@ -36,6 +36,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.expensetrackerpro.domain.models.ThemeMode
 import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
 import com.example.expensetrackerpro.presentation.common.motion.AppMotionHost
+import com.example.expensetrackerpro.presentation.common.motion.ScreenSnapshotHolder
 import com.example.expensetrackerpro.presentation.common.motion.ThemeTransitionController
 import com.example.expensetrackerpro.presentation.common.motion.phoneInDarkTheme
 import com.example.expensetrackerpro.presentation.lock.LockScreen
@@ -58,6 +59,10 @@ class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var themeTransition: ThemeTransitionController
+
+    // Kept across the activity being recreated, which a change of language does
+    @Inject
+    lateinit var screenSnapshots: ScreenSnapshotHolder
 
     // Follows the whole app rather than this activity, so rotation and dialogs never count as
     // leaving. Registering replays ON_START, which is harmless: nothing has been backgrounded yet.
@@ -135,7 +140,8 @@ class MainActivity : AppCompatActivity() {
                 darkTheme = darkTheme,
                 // Anything before that happens under the splash
                 animate = uiState.isReady,
-                controller = themeTransition
+                controller = themeTransition,
+                snapshots = screenSnapshots
             ) { shownDark, systemBarsDark ->
                 ExpenseTrackerProTheme(darkTheme = shownDark, lightSystemBars = !systemBarsDark) {
                     // Both outlive the lock screen, so unlocking returns to the same screen and state

@@ -69,6 +69,7 @@ import com.example.expensetrackerpro.presentation.settings.uistate.SettingsEvent
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsMessage
 import com.example.expensetrackerpro.presentation.settings.uistate.SettingsUiState
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
+import com.example.expensetrackerpro.presentation.common.motion.LocalScreenSnapshot
 import com.example.expensetrackerpro.presentation.common.motion.LocalThemeTransition
 import com.example.expensetrackerpro.presentation.common.motion.phoneDarkTheme
 import com.example.expensetrackerpro.presentation.common.motion.rememberPressTracker
@@ -332,6 +333,7 @@ private fun LanguageChangedSnackbar(
         stringResource(R.string.language_changed_both, changed, changedInEnglish)
     }
     val undoLabel = stringResource(R.string.language_undo)
+    val screenSnapshot = LocalScreenSnapshot.current
 
     LaunchedEffect(change, isInNewLanguage) {
         if (!isInNewLanguage) return@LaunchedEffect
@@ -343,13 +345,13 @@ private fun LanguageChangedSnackbar(
                 duration = SnackbarDuration.Indefinite
             )
         }
-        onEvent(
-            if (result == SnackbarResult.ActionPerformed) {
-                SettingsEvent.LanguageUndoClicked
-            } else {
-                SettingsEvent.LanguageChangeShown
-            }
-        )
+        if (result == SnackbarResult.ActionPerformed) {
+            // Undoing switches the language back, which recreates the activity like the change did
+            screenSnapshot?.captureForRecreate()
+            onEvent(SettingsEvent.LanguageUndoClicked)
+        } else {
+            onEvent(SettingsEvent.LanguageChangeShown)
+        }
     }
 }
 

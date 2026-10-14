@@ -81,6 +81,7 @@ import com.example.expensetrackerpro.domain.models.DayPeriod
 import com.example.expensetrackerpro.domain.models.FinancialSummary
 import com.example.expensetrackerpro.domain.models.LanguageChoice
 import com.example.expensetrackerpro.domain.models.LanguagePreview
+import com.example.expensetrackerpro.presentation.common.motion.LocalScreenSnapshot
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.presentation.language.components.LanguagePreviewCard
 import com.example.expensetrackerpro.presentation.language.components.LanguageRow
@@ -114,8 +115,11 @@ fun LanguageScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val screenSnapshot = LocalScreenSnapshot.current
     LaunchedEffect(uiState.isApplied) {
         if (!uiState.isApplied) return@LaunchedEffect
+        // The new language recreates the activity, which fades this picture out over itself
+        screenSnapshot?.captureForRecreate()
         // Closed first: the switch draws the app again, which then comes back on Settings
         onNavigateBack()
         viewModel.onEvent(LanguageEvent.ClosedAfterApply)
