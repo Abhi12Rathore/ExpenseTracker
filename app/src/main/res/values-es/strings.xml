@@ -263,7 +263,6 @@
     <string name="transaction_update">Actualizar</string>
     <string name="transaction_update_amount">Actualizar %1$s</string>
     <string name="bill_scan_title">Escanear un recibo</string>
-    <string name="bill_scan_subtitle">Rellena el importe, el título y la fecha con una foto</string>
     <string name="bill_scan_reading">Leyendo el recibo…</string>
     <string name="bill_scan_try_again">Reintentar</string>
     <string name="bill_fill_banner_title">Rellenado con tu recibo</string>
@@ -273,6 +272,24 @@
     <string name="bill_fill_tag_suggested">✨ Sugerencia</string>
     <string name="bill_fill_other_amounts">Otros importes del recibo</string>
     <string name="bill_fill_total_missing">No hemos encontrado el total. Elige un importe de abajo o escríbelo.</string>
+    <!-- Quick add -->
+    <string name="quick_add_hint">Descríbelo…</string>
+    <string name="quick_add_helper">Escríbelo o dilo, o escanea un recibo</string>
+    <string name="quick_add_voice">Dilo</string>
+    <string name="quick_add_voice_prompt">Di qué gastaste o recibiste</string>
+    <string name="quick_add_fill">Rellenar el formulario</string>
+    <string name="quick_add_understood">Entendido</string>
+    <string name="quick_add_tap_to_change">Toca un dato para cambiarlo</string>
+    <string name="quick_add_amount_missing">¿Importe?</string>
+    <string name="quick_add_category_missing">¿Categoría?</string>
+    <string name="quick_add_title_missing">¿Título?</string>
+    <string name="quick_add_sure">%1$s, encontrado</string>
+    <string name="quick_add_guess">%1$s, una suposición</string>
+    <string name="quick_add_missing">%1$s, no encontrado</string>
+    <string name="quick_add_banner_title">Rellenado con tu texto</string>
+    <string name="quick_add_banner_quote">«%1$s»</string>
+    <string name="quick_add_tag">✨ De tu texto</string>
+    <string name="quick_add_learned">La próxima vez, «%1$s» irá a %2$s</string>
     <string name="transaction_delete_dialog_title">¿Eliminar el movimiento?</string>
     <string name="transaction_delete_dialog_message">Desaparecerá de tus movimientos y de los totales.</string>
     <string name="transaction_delete_dialog_cancel">Cancelar</string>

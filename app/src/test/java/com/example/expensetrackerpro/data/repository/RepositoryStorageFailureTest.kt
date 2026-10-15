@@ -11,8 +11,12 @@ import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.Transaction
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
+import com.example.expensetrackerpro.domain.models.CategoryMemory
+import com.example.expensetrackerpro.domain.models.CategoryId
+import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.fakes.ThrowingAppDataDao
 import com.example.expensetrackerpro.fakes.ThrowingCategoryDao
+import com.example.expensetrackerpro.fakes.ThrowingCategoryMemoryDao
 import com.example.expensetrackerpro.fakes.ThrowingSampleDataDao
 import com.example.expensetrackerpro.fakes.ThrowingTransactionDao
 import com.example.expensetrackerpro.fakes.category
@@ -138,6 +142,20 @@ class RepositoryStorageFailureTest {
 
         assertThrowsTheBug { repository.deleteCategory(food) }
         assertThrowsTheBug { repository.deleteCategoryReassigning(food, groceries) }
+    }
+
+    // --- What quick add remembers
+
+    @Test
+    fun rememberingACategory_isAStorageFailure() = runTest {
+        val repository = CategoryMemoryRepositoryImpl(ThrowingCategoryMemoryDao(full))
+        assertEquals(storageFailure, repository.remember(CategoryMemory("dmart", TransactionType.EXPENSE, CategoryId(1))))
+    }
+
+    @Test
+    fun rememberingACategory_throwsAnythingThatIsNotSqlites() = runTest {
+        val repository = CategoryMemoryRepositoryImpl(ThrowingCategoryMemoryDao(bug))
+        assertThrowsTheBug { repository.remember(CategoryMemory("dmart", TransactionType.EXPENSE, CategoryId(1))) }
     }
 
     // --- Delete all data, load sample data

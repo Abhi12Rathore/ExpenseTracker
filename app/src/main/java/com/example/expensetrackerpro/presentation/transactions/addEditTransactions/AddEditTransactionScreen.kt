@@ -57,7 +57,9 @@ import com.example.expensetrackerpro.presentation.transactions.addEditTransactio
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.DateSelectionSection
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.NoteSection
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.SaveExpenseButton
-import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.ScanBillCard
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.quickadd.QuickAddBar
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.quickadd.QuickAddExamples
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.quickadd.QuickAddPreviewCard
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.TitleField
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.TransactionTopBar
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.transactionDateLabel
@@ -67,6 +69,10 @@ import com.example.expensetrackerpro.presentation.transactions.addEditTransactio
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionUiState
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.DraftField
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.DraftFill
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.DraftSource
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.QuickAddEvent
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.QuickAddUiState
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.voice.rememberVoiceInput
 import kotlinx.coroutines.launch
 
 @Composable
@@ -83,6 +89,12 @@ fun AddEditTransactionScreen(
         onScanned = { viewModel.onEvent(AddEditTransactionEvent.BillScanned(it)) },
         onUnavailable = { viewModel.onEvent(AddEditTransactionEvent.BillScannerFailed) }
     )
+    val launchVoiceInput = rememberVoiceInput(
+        languageTag = state.quickAdd.voiceLanguageTag,
+        onRecognized = { viewModel.onEvent(AddEditTransactionEvent.QuickAdd(QuickAddEvent.VoiceRecognized(it))) },
+        onUnavailable = { viewModel.onEvent(AddEditTransactionEvent.QuickAdd(QuickAddEvent.VoiceUnavailable)) }
+    )
+    val amountFocusRequester = remember { FocusRequester() }
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
@@ -103,6 +115,17 @@ fun AddEditTransactionScreen(
                     )
                     if (result == SnackbarResult.ActionPerformed) launchBillScanner()
                 }
+                // The form is filled and the keypad comes up for the amount the text didn't have
+                AddEditTransactionEffect.FocusAmount -> amountFocusRequester.requestFocus()
+                is AddEditTransactionEffect.CategoryLearned -> launch {
+                    val result = snackbarHostState.showSnackbar(
+                        message = context.getString(R.string.quick_add_learned, effect.title, effect.categoryName),
+                        actionLabel = context.getString(R.string.transactions_undo)
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        viewModel.onEvent(AddEditTransactionEvent.QuickAdd(QuickAddEvent.LearnUndone))
+                    }
+                }
             }
         }
     }
@@ -112,7 +135,9 @@ fun AddEditTransactionScreen(
         onEvent = viewModel::onEvent,
         onNavigateBack = onNavigateBack,
         onScanBillClick = launchBillScanner,
-        snackbarHostState = snackbarHostState
+        onVoiceClick = launchVoiceInput,
+        snackbarHostState = snackbarHostState,
+        amountFocusRequester = amountFocusRequester
     )
 }
 
@@ -123,7 +148,9 @@ fun AddEditTransactionContent(
     onEvent: (AddEditTransactionEvent) -> Unit,
     onNavigateBack: () -> Unit,
     onScanBillClick: () -> Unit,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+    onVoiceClick: () -> Unit,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    amountFocusRequester: FocusRequester = remember { FocusRequester() }
 ) {
     // Purely visual: which of the text fields below the amount has focus
     var isTitleFocused by remember { mutableStateOf(false) }
@@ -134,7 +161,9 @@ fun AddEditTransactionContent(
         onEvent = onEvent,
         onNavigateBack = onNavigateBack,
         onScanBillClick = onScanBillClick,
+        onVoiceClick = onVoiceClick,
         snackbarHostState = snackbarHostState,
+        amountFocusRequester = amountFocusRequester,
         // Typing a title or note leaves little room, so the amount shrinks to a summary line
         isAmountCollapsed = WindowInsets.isImeVisible && (isTitleFocused || isNoteFocused),
         onTitleFocusChange = { isTitleFocused = it },
@@ -148,13 +177,18 @@ private fun AddEditTransactionLayout(
     onEvent: (AddEditTransactionEvent) -> Unit,
     onNavigateBack: () -> Unit,
     onScanBillClick: () -> Unit,
+    onVoiceClick: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    amountFocusRequester: FocusRequester,
     isAmountCollapsed: Boolean,
     onTitleFocusChange: (Boolean) -> Unit,
     onNoteFocusChange: (Boolean) -> Unit
 ) {
     val focusManager = LocalFocusManager.current
-    val amountFocusRequester = remember { FocusRequester() }
+    // The tags beside filled fields say where the values came from
+    val fillTag = stringResource(
+        if (state.draftFill?.source is DraftSource.Text) R.string.quick_add_tag else R.string.bill_fill_tag
+    )
 
     // A new transaction starts with the keypad up, ready for the amount
     LaunchedEffect(Unit) {
@@ -230,16 +264,25 @@ private fun AddEditTransactionLayout(
                     onSelect = { onEvent(AddEditTransactionEvent.TypeChanged(it)) },
                     modifier = Modifier.fillMaxWidth()
                 )
-                BillScanSection(state = state, onEvent = onEvent, onScanBillClick = onScanBillClick)
+                QuickFillSection(
+                    state = state,
+                    onEvent = onEvent,
+                    onScanBillClick = onScanBillClick,
+                    onVoiceClick = onVoiceClick
+                )
                 AmountHero(
                     amount = state.amount,
                     transactionType = state.transactionType,
                     onAmountChange = { onEvent(AddEditTransactionEvent.AmountChanged(it)) },
                     focusRequester = amountFocusRequester,
-                    isFromBill = state.isFromDraft(DraftField.AMOUNT)
+                    isFromBill = state.isFromDraft(DraftField.AMOUNT),
+                    fillTag = fillTag
                 )
-                // A single amount is already in the field, so there is nothing to pick from
-                state.draftFill?.amountOptions?.takeIf { it.size > 1 || state.draftFill.isAmountMissing }?.let {
+                // A single amount is already in the field, so there is nothing to pick from; a
+                // sentence with no amount has none to offer at all
+                state.draftFill?.amountOptions
+                    ?.takeIf { it.isNotEmpty() && (it.size > 1 || state.draftFill.isAmountMissing) }
+                    ?.let {
                     BillAmountChips(
                         amounts = it,
                         selected = state.validAmount,
@@ -262,7 +305,8 @@ private fun AddEditTransactionLayout(
                 isError = state.isTitleErrorVisible,
                 onTitleChange = { onEvent(AddEditTransactionEvent.TitleChanged(it)) },
                 onFocusChange = onTitleFocusChange,
-                isFromBill = state.isFromDraft(DraftField.TITLE)
+                isFromBill = state.isFromDraft(DraftField.TITLE),
+                fillTag = fillTag
             )
 
             DateSelectionSection(
@@ -272,7 +316,8 @@ private fun AddEditTransactionLayout(
                 maxPickerUtcMillis = state.maxPickerUtcMillis,
                 onDateChoiceSelected = { onEvent(AddEditTransactionEvent.DateChoiceSelected(it)) },
                 onDatePicked = { onEvent(AddEditTransactionEvent.DatePicked(it)) },
-                isFromBill = state.isFromDraft(DraftField.DATE)
+                isFromBill = state.isFromDraft(DraftField.DATE),
+                fillTag = fillTag
             )
 
             NoteSection(
@@ -283,7 +328,8 @@ private fun AddEditTransactionLayout(
                 onNoteChange = { onEvent(AddEditTransactionEvent.NoteChanged(it)) },
                 onRemove = { onEvent(AddEditTransactionEvent.NoteRemoved) },
                 onFocusChange = onNoteFocusChange,
-                isFromBill = state.isFromDraft(DraftField.NOTE)
+                isFromBill = state.isFromDraft(DraftField.NOTE),
+                fillTag = fillTag
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -292,23 +338,54 @@ private fun AddEditTransactionLayout(
 }
 
 /**
- * Under the type switch: the way into the scanner, or once a bill has filled the form, the
- * banner saying so. Nothing at all where scanning is not offered.
+ * Under the type switch, on a new transaction: the quick-add bar (type, say or scan), with what it
+ * understood; or once a bill or the text has filled the form, the banner saying so.
  */
 @Composable
-private fun BillScanSection(
+private fun QuickFillSection(
     state: AddEditTransactionUiState,
     onEvent: (AddEditTransactionEvent) -> Unit,
-    onScanBillClick: () -> Unit
+    onScanBillClick: () -> Unit,
+    onVoiceClick: () -> Unit
 ) {
     val fill = state.draftFill
+    val quickAdd = state.quickAdd
+    val onQuickAddEvent: (QuickAddEvent) -> Unit = { onEvent(AddEditTransactionEvent.QuickAdd(it)) }
 
     when {
         fill != null -> {
-            BillFilledBanner(onClear = { onEvent(AddEditTransactionEvent.BillFillCleared) })
-            if (fill.isAmountMissing) BillTotalMissingNotice()
+            BillFilledBanner(onClear = { onEvent(AddEditTransactionEvent.BillFillCleared) }, source = fill.source)
+            // A sentence without an amount brings up the keypad instead
+            if (fill.isAmountMissing && fill.source == DraftSource.Bill) BillTotalMissingNotice()
         }
-        state.isScanAvailable -> ScanBillCard(isReading = state.isReadingBill, onClick = onScanBillClick)
+        quickAdd.isAvailable -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            QuickAddBar(
+                text = quickAdd.text,
+                canFill = quickAdd.canFill,
+                isVoiceAvailable = quickAdd.isVoiceAvailable,
+                isScanAvailable = state.isScanAvailable,
+                isReadingBill = state.isReadingBill,
+                onTextChange = { onQuickAddEvent(QuickAddEvent.TextChanged(it)) },
+                onFill = { onQuickAddEvent(QuickAddEvent.FillClicked) },
+                onVoiceClick = onVoiceClick,
+                onScanClick = onScanBillClick
+            )
+            if (quickAdd.showExamples && quickAdd.text.isBlank()) {
+                QuickAddExamples(onExampleSelected = { onQuickAddEvent(QuickAddEvent.ExampleSelected(it)) })
+            }
+            quickAdd.preview?.let { preview ->
+                QuickAddPreviewCard(
+                    preview = preview,
+                    editing = quickAdd.editing,
+                    onChipClick = { onQuickAddEvent(QuickAddEvent.ChipClicked(it)) },
+                    onEditDismissed = { onQuickAddEvent(QuickAddEvent.ChipEditDismissed) },
+                    onCategoryChosen = { onQuickAddEvent(QuickAddEvent.CategoryChosen(it)) },
+                    onDateChoiceChosen = { onQuickAddEvent(QuickAddEvent.DateChoiceChosen(it)) },
+                    onDatePicked = { onQuickAddEvent(QuickAddEvent.DatePicked(it)) },
+                    onFill = { onQuickAddEvent(QuickAddEvent.FillClicked) }
+                )
+            }
+        }
     }
 }
 
@@ -342,6 +419,7 @@ private val previewScannedState = previewAddState.copy(
     dateChoice = DateChoice.OTHER,
     isSaveEnabled = true,
     isScanAvailable = true,
+    quickAdd = QuickAddUiState(isAvailable = true),
     draftFill = DraftFill(
         filledFields = DraftField.entries.toSet(),
         amountOptions = listOf(Money.ofRupees(1428), Money.ofRupees(1360), Money.ofRupees(690))
@@ -373,7 +451,9 @@ private fun AddEditTransactionPreview(
             onEvent = {},
             onNavigateBack = {},
             onScanBillClick = {},
+            onVoiceClick = {},
             snackbarHostState = remember { SnackbarHostState() },
+            amountFocusRequester = remember { FocusRequester() },
             isAmountCollapsed = isAmountCollapsed,
             onTitleFocusChange = {},
             onNoteFocusChange = {}
@@ -389,8 +469,27 @@ private fun AddTransactionPreview() {
 
 @PreviewLightDark
 @Composable
-private fun ScanAvailablePreview() {
-    AddEditTransactionPreview(state = previewAddState.copy(isScanAvailable = true))
+private fun QuickAddPreview() {
+    AddEditTransactionPreview(
+        state = previewAddState.copy(
+            isScanAvailable = true,
+            quickAdd = QuickAddUiState(isAvailable = true, showExamples = true, isVoiceAvailable = true)
+        )
+    )
+}
+
+@PreviewLightDark
+@Composable
+private fun FilledFromTextPreview() {
+    AddEditTransactionPreview(
+        state = previewScannedState.copy(
+            draftFill = DraftFill(
+                filledFields = DraftField.entries.toSet(),
+                amountOptions = listOf(Money.ofRupees(1428)),
+                source = DraftSource.Text("Spent 1428 at cafe coffee day yesterday")
+            )
+        )
+    )
 }
 
 @PreviewLightDark

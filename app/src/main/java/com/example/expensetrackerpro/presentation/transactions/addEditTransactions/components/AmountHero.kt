@@ -53,7 +53,8 @@ fun AmountHero(
     onAmountChange: (String) -> Unit,
     focusRequester: FocusRequester,
     modifier: Modifier = Modifier,
-    isFromBill: Boolean = false
+    isFromBill: Boolean = false,
+    fillTag: String = stringResource(R.string.bill_fill_tag)
 ) {
     val color = transactionType.amountColor()
     val textStyle = MaterialTheme.typography.displaySmall.copy(
@@ -67,7 +68,7 @@ fun AmountHero(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AmountField(amount, onAmountChange, focusRequester, textStyle, color, description)
-        if (isFromBill) FromBillTag()
+        if (isFromBill) FromBillTag(text = fillTag)
     }
 }
 

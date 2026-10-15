@@ -30,6 +30,7 @@ import com.example.expensetrackerpro.domain.usecase.transaction.ValidateAmountUs
 import com.example.expensetrackerpro.domain.usecase.transaction.ValidateTransactionDraftUseCase
 import com.example.expensetrackerpro.fakes.FakeBillScannerAvailability
 import com.example.expensetrackerpro.fakes.FakeBillTextReader
+import com.example.expensetrackerpro.fakes.draftAssistController
 import com.example.expensetrackerpro.fakes.FakeCategoryRepository
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
 import com.example.expensetrackerpro.fakes.FakeTransactionRepository
@@ -81,6 +82,9 @@ class AddEditTransactionBillScanTest {
     private val billReader = FakeBillTextReader()
     private val scannerAvailability = FakeBillScannerAvailability()
 
+    // Everything a bill can fill: it never says whether it is income or expense
+    private val billFields = DraftField.entries.toSet() - DraftField.TYPE
+
     private val photo = "file:///cache/scan/bill.jpg"
 
     // Everything on it can be read: total, merchant, date (three days ago) and bill number
@@ -118,13 +122,7 @@ class AddEditTransactionBillScanTest {
             UpdateCategoryUseCase(categories)
         ),
         categoryEditorReducer = CategoryEditorReducer(ValidateCategoryNameUseCase()),
-        scanBill = ScanBillUseCase(billReader, ParseBillUseCase(), timeProvider),
-        isBillScannerAvailable = IsBillScannerAvailableUseCase(scannerAvailability),
-        draftReducer = TransactionDraftReducer(
-            FormatAmountInputUseCase(),
-            ResolveTransactionDateUseCase(timeProvider),
-            ResolveCategoryHintUseCase()
-        ),
+        assist = draftAssistController(timeProvider, billReader, scannerAvailability),
         savedStateHandle = SavedStateHandle(
             savedState + if (transactionId != null) mapOf("transactionId" to transactionId) else emptyMap()
         )
@@ -194,7 +192,7 @@ class AddEditTransactionBillScanTest {
         assertEquals(millisAt(2026, Calendar.OCTOBER, 5, hour = 12), state.dateMillis)
         assertEquals(DateChoice.OTHER, state.dateChoice)
 
-        assertEquals(DraftField.entries.toSet(), state.draftFill?.filledFields)
+        assertEquals(billFields, state.draftFill?.filledFields)
         assertEquals(listOf(rupees(1428), rupees(1360), rupees(290)), state.draftFill?.amountOptions)
         assertFalse(state.draftFill?.isAmountMissing ?: true)
         assertFalse(state.isReadingBill)
@@ -261,7 +259,7 @@ class AddEditTransactionBillScanTest {
         fun filled() = viewModel.uiState.value.draftFill?.filledFields
 
         viewModel.onEvent(AddEditTransactionEvent.TitleChanged("Cafe Coffee Day, MG Road"))
-        assertEquals(DraftField.entries.toSet() - DraftField.TITLE, filled())
+        assertEquals(billFields - DraftField.TITLE, filled())
 
         viewModel.onEvent(AddEditTransactionEvent.AmountChanged("1430"))
         viewModel.onEvent(AddEditTransactionEvent.NoteChanged("Bill no. 4521, with Asha"))
@@ -306,7 +304,7 @@ class AddEditTransactionBillScanTest {
 
         assertNull(viewModel.uiState.value.selectedCategoryId)
         assertEquals(
-            DraftField.entries.toSet() - DraftField.CATEGORY,
+            billFields - DraftField.CATEGORY,
             viewModel.uiState.value.draftFill?.filledFields
         )
     }

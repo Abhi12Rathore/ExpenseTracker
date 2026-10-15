@@ -263,7 +263,6 @@
     <string name="transaction_update">Mettre à jour</string>
     <string name="transaction_update_amount">Mettre à jour %1$s</string>
     <string name="bill_scan_title">Scanner un ticket</string>
-    <string name="bill_scan_subtitle">Remplissez le montant, le titre et la date à partir d’une photo</string>
     <string name="bill_scan_reading">Lecture du ticket…</string>
     <string name="bill_scan_try_again">Réessayer</string>
     <string name="bill_fill_banner_title">Rempli à partir de votre ticket</string>
@@ -273,6 +272,24 @@
     <string name="bill_fill_tag_suggested">✨ Suggestion</string>
     <string name="bill_fill_other_amounts">Autres montants sur le ticket</string>
     <string name="bill_fill_total_missing">Total introuvable. Choisissez un montant ci-dessous ou saisissez-le.</string>
+    <!-- Quick add -->
+    <string name="quick_add_hint">Décrivez-le…</string>
+    <string name="quick_add_helper">Écrivez-le ou dites-le, ou scannez un ticket</string>
+    <string name="quick_add_voice">Dites-le</string>
+    <string name="quick_add_voice_prompt">Dites ce que vous avez dépensé ou reçu</string>
+    <string name="quick_add_fill">Remplir le formulaire</string>
+    <string name="quick_add_understood">Compris</string>
+    <string name="quick_add_tap_to_change">Touchez un élément pour le modifier</string>
+    <string name="quick_add_amount_missing">Montant\u00A0?</string>
+    <string name="quick_add_category_missing">Catégorie\u00A0?</string>
+    <string name="quick_add_title_missing">Titre\u00A0?</string>
+    <string name="quick_add_sure">%1$s, trouvé</string>
+    <string name="quick_add_guess">%1$s, une supposition</string>
+    <string name="quick_add_missing">%1$s, introuvable</string>
+    <string name="quick_add_banner_title">Rempli à partir de votre texte</string>
+    <string name="quick_add_banner_quote">«\u00A0%1$s\u00A0»</string>
+    <string name="quick_add_tag">✨ De votre texte</string>
+    <string name="quick_add_learned">La prochaine fois, «\u00A0%1$s\u00A0» ira dans %2$s</string>
     <string name="transaction_delete_dialog_title">Supprimer la transaction\u00A0?</string>
     <string name="transaction_delete_dialog_message">Elle sera retirée de vos transactions et de vos totaux.</string>
     <string name="transaction_delete_dialog_cancel">Annuler</string>

@@ -87,6 +87,12 @@ val IncomeDark = Color(0xFF22A08A)
 val ExpenseLight = Color(0xFFDD6A2E)
 val ExpenseDark = Color(0xFFD9662B)
 
+// A value quick add guessed, between the green of one it found and the red of one it didn't
+val GuessContainerLight = Color(0xFFFFF0D1)
+val GuessContainerDark = Color(0xFF4A3A12)
+val OnGuessContainerLight = Color(0xFF6A4B00)
+val OnGuessContainerDark = Color(0xFFFFDDA0)
+
 // Charts
 val ChartGridLight = Color(0xFFDFE4DE)
 val ChartGridDark = Color(0xFF3F493F)

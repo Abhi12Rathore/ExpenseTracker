@@ -253,7 +253,6 @@
     <string name="transaction_update">अपडेट करें</string>
     <string name="transaction_update_amount">%1$s अपडेट करें</string>
     <string name="bill_scan_title">बिल स्कैन करें</string>
-    <string name="bill_scan_subtitle">फ़ोटो से राशि, टाइटल और तारीख भरें</string>
     <string name="bill_scan_reading">बिल पढ़ा जा रहा है…</string>
     <string name="bill_scan_try_again">फिर कोशिश करें</string>
     <string name="bill_fill_banner_title">आपके बिल से भरा गया</string>
@@ -263,6 +262,24 @@
     <string name="bill_fill_tag_suggested">✨ सुझाव</string>
     <string name="bill_fill_other_amounts">बिल पर दूसरी राशियाँ</string>
     <string name="bill_fill_total_missing">कुल राशि नहीं मिली। नीचे से कोई राशि चुनें या खुद लिखें।</string>
+    <!-- Quick add -->
+    <string name="quick_add_hint">बताएं…</string>
+    <string name="quick_add_helper">लिखें या बोलें, या बिल स्कैन करें</string>
+    <string name="quick_add_voice">बोलें</string>
+    <string name="quick_add_voice_prompt">बताएं क्या खर्च किया या क्या मिला</string>
+    <string name="quick_add_fill">फ़ॉर्म भरें</string>
+    <string name="quick_add_understood">समझ आया</string>
+    <string name="quick_add_tap_to_change">बदलने के लिए चिप पर टैप करें</string>
+    <string name="quick_add_amount_missing">राशि?</string>
+    <string name="quick_add_category_missing">कैटेगरी?</string>
+    <string name="quick_add_title_missing">टाइटल?</string>
+    <string name="quick_add_sure">%1$s, मिला</string>
+    <string name="quick_add_guess">%1$s, अंदाज़ा</string>
+    <string name="quick_add_missing">%1$s, नहीं मिला</string>
+    <string name="quick_add_banner_title">आपके लिखे से भरा गया</string>
+    <string name="quick_add_banner_quote">“%1$s”</string>
+    <string name="quick_add_tag">✨ आपके लिखे से</string>
+    <string name="quick_add_learned">अगली बार “%1$s” %2$s में जाएगा</string>
     <string name="transaction_delete_dialog_title">लेन-देन हटाएं?</string>
     <string name="transaction_delete_dialog_message">यह आपके लेन-देन और कुल हिसाब से हट जाएगा।</string>
     <string name="transaction_delete_dialog_cancel">रद्द करें</string>

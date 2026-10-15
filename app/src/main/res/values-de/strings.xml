@@ -262,7 +262,6 @@
     <string name="transaction_update">Aktualisieren</string>
     <string name="transaction_update_amount">%1$s aktualisieren</string>
     <string name="bill_scan_title">Beleg scannen</string>
-    <string name="bill_scan_subtitle">Betrag, Titel und Datum aus einem Foto übernehmen</string>
     <string name="bill_scan_reading">Beleg wird gelesen…</string>
     <string name="bill_scan_try_again">Erneut versuchen</string>
     <string name="bill_fill_banner_title">Aus deinem Beleg übernommen</string>
@@ -272,6 +271,24 @@
     <string name="bill_fill_tag_suggested">✨ Vorschlag</string>
     <string name="bill_fill_other_amounts">Weitere Beträge auf dem Beleg</string>
     <string name="bill_fill_total_missing">Die Summe wurde nicht gefunden. Wähle unten einen Betrag oder tippe ihn ein.</string>
+    <!-- Quick add -->
+    <string name="quick_add_hint">Beschreib es…</string>
+    <string name="quick_add_helper">Schreib oder sag es, oder scanne einen Beleg</string>
+    <string name="quick_add_voice">Sprechen</string>
+    <string name="quick_add_voice_prompt">Sag, was du ausgegeben oder bekommen hast</string>
+    <string name="quick_add_fill">Formular ausfüllen</string>
+    <string name="quick_add_understood">Verstanden</string>
+    <string name="quick_add_tap_to_change">Zum Ändern antippen</string>
+    <string name="quick_add_amount_missing">Betrag?</string>
+    <string name="quick_add_category_missing">Kategorie?</string>
+    <string name="quick_add_title_missing">Titel?</string>
+    <string name="quick_add_sure">%1$s, erkannt</string>
+    <string name="quick_add_guess">%1$s, geschätzt</string>
+    <string name="quick_add_missing">%1$s, nicht erkannt</string>
+    <string name="quick_add_banner_title">Aus deinem Text übernommen</string>
+    <string name="quick_add_banner_quote">„%1$s“</string>
+    <string name="quick_add_tag">✨ Aus deinem Text</string>
+    <string name="quick_add_learned">Nächstes Mal kommt „%1$s“ zu %2$s</string>
     <string name="transaction_delete_dialog_title">Buchung löschen?</string>
     <string name="transaction_delete_dialog_message">Sie wird aus deinen Buchungen und Summen entfernt.</string>
     <string name="transaction_delete_dialog_cancel">Abbrechen</string>

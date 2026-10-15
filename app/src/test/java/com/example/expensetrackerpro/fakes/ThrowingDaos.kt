@@ -2,15 +2,18 @@ package com.example.expensetrackerpro.fakes
 
 import com.example.expensetrackerpro.data.local.dao.AppDataDao
 import com.example.expensetrackerpro.data.local.dao.CategoryDao
+import com.example.expensetrackerpro.data.local.dao.CategoryMemoryDao
 import com.example.expensetrackerpro.data.local.dao.SampleDataDao
 import com.example.expensetrackerpro.data.local.dao.TransactionDao
 import com.example.expensetrackerpro.data.local.entity.CategoryEntity
+import com.example.expensetrackerpro.data.local.entity.CategoryMemoryEntity
 import com.example.expensetrackerpro.data.local.entity.TransactionEntity
 import com.example.expensetrackerpro.data.local.model.CategoryUsageEntity
 import com.example.expensetrackerpro.data.local.model.TransactionWithCategory
 import com.example.expensetrackerpro.domain.models.TransactionType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 
 // DAOs whose writes all throw [error], for failures a real database can't be made to produce
 
@@ -78,6 +81,8 @@ class ThrowingAppDataDao(private val error: Exception) : AppDataDao() {
     override suspend fun deleteCustomCategories() = throw error
 
     override suspend fun deleteAllCategories() = throw error
+
+    override suspend fun deleteCategoryMemory() = throw error
 }
 
 class ThrowingSampleDataDao(private val error: Exception) : SampleDataDao() {
@@ -89,4 +94,11 @@ class ThrowingSampleDataDao(private val error: Exception) : SampleDataDao() {
     override suspend fun insertTransactions(transactions: List<TransactionEntity>) = throw error
 
     override suspend fun deleteAllTransactions() = throw error
+}
+
+class ThrowingCategoryMemoryDao(private val error: Exception) : CategoryMemoryDao {
+
+    override fun observeAll(): Flow<List<CategoryMemoryEntity>> = flowOf(emptyList())
+
+    override suspend fun upsert(memory: CategoryMemoryEntity) = throw error
 }

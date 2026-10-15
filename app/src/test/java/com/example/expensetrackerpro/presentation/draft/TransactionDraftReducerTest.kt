@@ -19,6 +19,8 @@ import com.example.expensetrackerpro.presentation.transactions.addEditTransactio
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.DraftField
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.DraftFill
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.withDate
+import com.example.expensetrackerpro.domain.models.TransactionType
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.DraftSource
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -31,6 +33,9 @@ class TransactionDraftReducerTest {
     // Thursday 8 Oct 2026, 12:00 in Kolkata
     private val now = millisAt(2026, Calendar.OCTOBER, 8, hour = 12)
     private val resolveDate = ResolveTransactionDateUseCase(FakeTimeProvider(now))
+    // Everything a bill can fill: it never says whether it is income or expense
+    private val billFields = DraftField.entries.toSet() - DraftField.TYPE
+
     private val reducer = TransactionDraftReducer(FormatAmountInputUseCase(), resolveDate, ResolveCategoryHintUseCase())
 
     private val groceries = category(id = 1, name = "Groceries").copy(builtInKey = BuiltInCategory.GROCERIES)
@@ -79,7 +84,7 @@ class TransactionDraftReducerTest {
         val form = reducer.apply(emptyForm, grocer.copy(categoryHint = CategoryHint.FUEL))
 
         assertNull(form.selectedCategoryId)
-        assertEquals(DraftField.entries.toSet() - DraftField.CATEGORY, form.draftFill?.filledFields)
+        assertEquals(billFields - DraftField.CATEGORY, form.draftFill?.filledFields)
     }
 
     @Test
@@ -107,5 +112,72 @@ class TransactionDraftReducerTest {
         assertSame(emptyForm, reducer.fieldEdited(emptyForm, DraftField.TITLE))
         assertSame(emptyForm, reducer.selectAmount(emptyForm, rupees(100)))
         assertSame(emptyForm, reducer.clear(emptyForm))
+    }
+
+    // --- A draft from text: its own category, and money in or out
+
+    private val salary = category(id = 3, name = "Salary", type = TransactionType.INCOME)
+        .copy(builtInKey = BuiltInCategory.SALARY)
+    private val allCategories = listOf(groceries, health, salary)
+    private val typed = DraftSource.Text("salary 1,05,000")
+
+    @Test
+    fun aChosenCategory_winsOverTheHint_andIsWhatWasSuggested() {
+        val form = reducer.apply(emptyForm, grocer.copy(categoryId = health.id), typed, allCategories)
+
+        assertEquals(health.id, form.selectedCategoryId)
+        assertEquals(health.id, form.draftFill?.suggestedCategoryId)
+        assertEquals(typed, form.draftFill?.source)
+    }
+
+    @Test
+    fun aDraftThatSaysIncome_switchesTheType_andPicksAnIncomeCategoryAtOnce() {
+        val draft = TransactionDraft(amount = rupees(105_000), title = "Salary", type = TransactionType.INCOME, categoryId = salary.id)
+
+        val form = reducer.apply(emptyForm, draft, typed, allCategories)
+
+        assertEquals(TransactionType.INCOME, form.transactionType)
+        assertEquals(listOf(salary), form.availableCategories)
+        assertEquals(salary, form.selectedCategory)
+        assertEquals(TransactionType.EXPENSE, form.draftFill?.typeBeforeFill)
+        assertTrue(DraftField.TYPE in (form.draftFill?.filledFields ?: emptySet()))
+    }
+
+    @Test
+    fun aPickedCategory_keepsTheType_andTheDraftsOtherTypeCategoryIsNotPicked() {
+        val picked = emptyForm.copy(selectedCategoryId = groceries.id)
+        val draft = TransactionDraft(amount = rupees(500), type = TransactionType.INCOME, categoryId = salary.id)
+
+        val form = reducer.apply(picked, draft, typed, allCategories)
+
+        assertEquals(TransactionType.EXPENSE, form.transactionType)
+        assertEquals(groceries.id, form.selectedCategoryId)
+        assertNull(form.draftFill?.typeBeforeFill)
+    }
+
+    @Test
+    fun clear_putsTheTypeBack() {
+        val draft = TransactionDraft(amount = rupees(105_000), type = TransactionType.INCOME, categoryId = salary.id)
+        val filled = reducer.apply(emptyForm, draft, typed, allCategories)
+
+        val cleared = reducer.clear(filled, allCategories)
+
+        assertEquals(TransactionType.EXPENSE, cleared.transactionType)
+        assertEquals(listOf(groceries, health), cleared.availableCategories)
+        assertNull(cleared.selectedCategoryId)
+        assertNull(cleared.draftFill)
+    }
+
+    @Test
+    fun clear_keepsTheType_onceTheUserPickedACategoryOfIt() {
+        val draft = TransactionDraft(amount = rupees(105_000), type = TransactionType.INCOME)
+        val filled = reducer.apply(emptyForm, draft, typed, allCategories)
+        val picked = reducer.fieldEdited(filled.copy(selectedCategoryId = salary.id), DraftField.CATEGORY)
+
+        val cleared = reducer.clear(picked, allCategories)
+
+        assertEquals(TransactionType.INCOME, cleared.transactionType)
+        assertEquals(salary.id, cleared.selectedCategoryId)
+        assertEquals("", cleared.amount)
     }
 }

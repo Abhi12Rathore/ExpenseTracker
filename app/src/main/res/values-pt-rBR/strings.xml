@@ -264,7 +264,6 @@
     <string name="transaction_update">Atualizar</string>
     <string name="transaction_update_amount">Atualizar %1$s</string>
     <string name="bill_scan_title">Escanear um comprovante</string>
-    <string name="bill_scan_subtitle">Preencha valor, título e data a partir de uma foto</string>
     <string name="bill_scan_reading">Lendo o comprovante…</string>
     <string name="bill_scan_try_again">Tentar de novo</string>
     <string name="bill_fill_banner_title">Preenchido com seu comprovante</string>
@@ -274,6 +273,24 @@
     <string name="bill_fill_tag_suggested">✨ Sugestão</string>
     <string name="bill_fill_other_amounts">Outros valores no comprovante</string>
     <string name="bill_fill_total_missing">Não encontramos o total. Escolha um valor abaixo ou digite.</string>
+    <!-- Quick add -->
+    <string name="quick_add_hint">Descreva…</string>
+    <string name="quick_add_helper">Escreva ou fale, ou escaneie um comprovante</string>
+    <string name="quick_add_voice">Falar</string>
+    <string name="quick_add_voice_prompt">Diga o que você gastou ou recebeu</string>
+    <string name="quick_add_fill">Preencher o formulário</string>
+    <string name="quick_add_understood">Entendido</string>
+    <string name="quick_add_tap_to_change">Toque em um item para mudar</string>
+    <string name="quick_add_amount_missing">Valor?</string>
+    <string name="quick_add_category_missing">Categoria?</string>
+    <string name="quick_add_title_missing">Título?</string>
+    <string name="quick_add_sure">%1$s, encontrado</string>
+    <string name="quick_add_guess">%1$s, um palpite</string>
+    <string name="quick_add_missing">%1$s, não encontrado</string>
+    <string name="quick_add_banner_title">Preenchido com seu texto</string>
+    <string name="quick_add_banner_quote">“%1$s”</string>
+    <string name="quick_add_tag">✨ Do seu texto</string>
+    <string name="quick_add_learned">Da próxima vez, “%1$s” vai para %2$s</string>
     <string name="transaction_delete_dialog_title">Excluir a transação?</string>
     <string name="transaction_delete_dialog_message">Ela sai das suas transações e dos totais.</string>
     <string name="transaction_delete_dialog_cancel">Cancelar</string>
