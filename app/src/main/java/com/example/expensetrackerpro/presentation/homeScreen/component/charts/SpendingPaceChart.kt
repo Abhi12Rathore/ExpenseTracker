@@ -47,6 +47,7 @@ import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.PacePoint
 import com.example.expensetrackerpro.domain.models.SpendingPace
 import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
+import com.example.expensetrackerpro.presentation.common.currency.amountFormatKey
 import com.example.expensetrackerpro.presentation.common.filter.comparedWithLabel
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.ui.theme.extendedColors
@@ -149,6 +150,8 @@ fun SpendingPaceChart(
     modifier: Modifier = Modifier
 ) {
     val currencyFormatter = LocalCurrencyFormatter.current
+    // Labels are kept between frames, so a change of currency has to write them again
+    val formatKey = amountFormatKey()
     val dayCount = pace.dayCount
     if (dayCount < 2) return
 
@@ -189,7 +192,7 @@ fun SpendingPaceChart(
     val textMeasurer = rememberTextMeasurer()
     val axisStyle = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.extendedColors.chartAxisText)
     val axisMax = remember(currentTotal, previousTotal) { niceAxisMax(maxOf(currentTotal, previousTotal)) }
-    val gridLabels = remember(axisMax, axisStyle) {
+    val gridLabels = remember(axisMax, axisStyle, formatKey) {
         GridlineFractions.map { fraction ->
             fraction to textMeasurer.measure(currencyFormatter.formatShort(axisMax.atFraction(fraction)), axisStyle)
         }
@@ -197,7 +200,7 @@ fun SpendingPaceChart(
     val xLabels = remember(periodKey, axisStyle) {
         paceAxisLabels(pace, dateFormatter).map { it.index to textMeasurer.measure(it.text, axisStyle) }
     }
-    val endLabel = remember(currentTotal, axisStyle, currentColor) {
+    val endLabel = remember(currentTotal, axisStyle, currentColor, formatKey) {
         textMeasurer.measure(
             currencyFormatter.formatShort(currentTotal),
             axisStyle.copy(color = currentColor, fontWeight = FontWeight.SemiBold)

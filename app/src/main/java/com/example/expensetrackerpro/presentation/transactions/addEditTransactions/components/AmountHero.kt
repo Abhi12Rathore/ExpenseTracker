@@ -37,6 +37,7 @@ import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.TransactionType
 import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
+import com.example.expensetrackerpro.presentation.common.currency.amountFormatKey
 import com.example.expensetrackerpro.ui.theme.extendedColors
 
 /** Income green or expense red, from the theme. */
@@ -82,7 +83,9 @@ private fun AmountField(
     description: String
 ) {
     val currencyFormatter = LocalCurrencyFormatter.current
-    val groupingTransformation = remember(currencyFormatter) { AmountGroupingTransformation(currencyFormatter) }
+    // Asks the formatter on every edit; a new one when the currency or language changes redraws the field
+    val formatKey = amountFormatKey()
+    val groupingTransformation = remember(currencyFormatter, formatKey) { AmountGroupingTransformation(currencyFormatter) }
 
     Row(
         modifier = Modifier
@@ -91,7 +94,9 @@ private fun AmountField(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = currencyFormatter.symbol, style = textStyle)
+        // Where the app's language writes it: `€12` in English, `12 €` in German
+        val symbolAfter = currencyFormatter.isSymbolAfter
+        if (!symbolAfter) Text(text = currencyFormatter.symbol, style = textStyle)
         BasicTextField(
             value = amount,
             onValueChange = onAmountChange,
@@ -118,6 +123,9 @@ private fun AmountField(
                 }
             }
         )
+        if (symbolAfter) {
+            Text(text = currencyFormatter.symbol, style = textStyle, modifier = Modifier.padding(start = 8.dp))
+        }
     }
 }
 

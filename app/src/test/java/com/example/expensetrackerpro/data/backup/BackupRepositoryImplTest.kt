@@ -1,5 +1,9 @@
 package com.example.expensetrackerpro.data.backup
 
+import com.example.expensetrackerpro.domain.models.RestoredBackup
+import com.example.expensetrackerpro.domain.usecase.currency.SetCurrencyUseCase
+import com.example.expensetrackerpro.fakes.FakeCurrencyRepository
+import com.example.expensetrackerpro.domain.currency.AppCurrency
 import com.example.expensetrackerpro.data.repository.CategoryRepositoryImpl
 import com.example.expensetrackerpro.domain.usecase.category.LocalizeDefaultCategoriesUseCase
 import com.example.expensetrackerpro.fakes.FakeAppLocaleProvider
@@ -95,7 +99,7 @@ class BackupRepositoryImplTest {
     private suspend fun writtenBackup(): ByteArray {
         val file = ByteArrayOutputStream()
         documentWritesTo(file)
-        assertEquals(Outcome.Success(Unit), repository.writeBackup(document, createdAtMillis = 5_000L, appVersion = "1.0"))
+        assertEquals(Outcome.Success(Unit), repository.writeBackup(document, createdAtMillis = 5_000L, appVersion = "1.0", currency = AppCurrency.USD))
 
         return file.toByteArray()
     }
@@ -108,7 +112,7 @@ class BackupRepositoryImplTest {
 
         assertEquals('{'.code.toByte(), bytes.first())
         val written = BackupJson.decodeFromString<BackupDto>(bytes.toString(Charsets.UTF_8))
-        assertEquals(dao.snapshot().toBackupDto(createdAtMillis = 5_000L, appVersion = "1.0"), written)
+        assertEquals(dao.snapshot().toBackupDto(createdAtMillis = 5_000L, appVersion = "1.0", currency = AppCurrency.USD), written)
         assertEquals(3, written.transactions.size)
     }
 
@@ -126,15 +130,18 @@ class BackupRepositoryImplTest {
 
         documentHolds(ByteArrayInputStream(bytes))
         val readBackup = ReadBackupUseCase(repository, ValidateBackupUseCase(ValidateCategoryNameUseCase()))
-        assertEquals(Outcome.Success(3), RestoreBackupUseCase(
+        val currency = FakeCurrencyRepository(AppCurrency.USD)
+        assertEquals(Outcome.Success(RestoredBackup(3)), RestoreBackupUseCase(
                 readBackup,
                 repository,
                 LocalizeDefaultCategoriesUseCase(
                     CategoryRepositoryImpl(database.categoryDao()),
                     ResourceDefaultCategoryNames(context),
                     FakeAppLocaleProvider()
-                )
-            )(document))
+                ),
+                currency,
+                SetCurrencyUseCase(currency)
+            )(document, switchCurrency = true))
 
         val after = dao.snapshot()
         assertEquals(before.categories, after.categories)
@@ -172,7 +179,7 @@ class BackupRepositoryImplTest {
 
         assertEquals(
             Outcome.Failure(DomainError.FileWriteFailed),
-            repository.writeBackup(document, createdAtMillis = 5_000L, appVersion = "1.0")
+            repository.writeBackup(document, createdAtMillis = 5_000L, appVersion = "1.0", currency = AppCurrency.USD)
         )
     }
 
@@ -250,7 +257,7 @@ class BackupRepositoryImplTest {
     fun restore_thatTheDatabaseTurnsDown_isAStorageFailure_andLeavesTheDataAsItWas() = runTest {
         fillDatabase()
         val before = dao.snapshot()
-        val validated = ValidateBackupUseCase(ValidateCategoryNameUseCase())(dao.snapshot().toBackupDto(1L, "1.0").toDocument()).getOrNull()
+        val validated = ValidateBackupUseCase(ValidateCategoryNameUseCase())(dao.snapshot().toBackupDto(1L, "1.0", AppCurrency.INR).toDocument()).getOrNull()
         // Not something validation lets through: a transaction under a category that is not restored
         val broken = validated?.let { backup ->
             backup.copy(transactions = backup.transactions + backup.transactions.first().copy(categoryId = CategoryId(9_999)))

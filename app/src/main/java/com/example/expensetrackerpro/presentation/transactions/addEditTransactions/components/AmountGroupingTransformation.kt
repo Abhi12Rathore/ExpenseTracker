@@ -7,7 +7,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import com.example.expensetrackerpro.utils.CurrencyFormatter
 
 /**
- * Shows a typed amount grouped as [formatter]'s currency groups it (`1,23,456.7` for rupees)
+ * Shows a typed amount as [formatter] writes it in the app's currency and language (`1,23,456.7` for
+ * rupees in English, `123.456,7` for euros in German)
  * while the field keeps plain digits.
  */
 class AmountGroupingTransformation(private val formatter: CurrencyFormatter) : VisualTransformation {

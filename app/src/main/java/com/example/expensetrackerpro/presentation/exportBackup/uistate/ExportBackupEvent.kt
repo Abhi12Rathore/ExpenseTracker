@@ -11,6 +11,8 @@ sealed interface ExportBackupEvent {
     data class BackupDestinationPicked(val uri: String) : ExportBackupEvent
     /** A file to restore from was chosen. It is checked, then a sheet asks before anything is replaced. */
     data class RestoreFilePicked(val uri: String) : ExportBackupEvent
+    /** The sheet's switch: show amounts in the backup's currency after restoring. */
+    data class RestoreCurrencySwitchToggled(val switch: Boolean) : ExportBackupEvent
     data object RestoreConfirmed : ExportBackupEvent
     data object RestoreDismissed : ExportBackupEvent
 

@@ -22,6 +22,11 @@ interface TransactionRepository {
 
     suspend fun getTransactionById(id: TransactionId): Transaction?
 
+    /** The transaction with the latest date, or null when there are none. */
+    suspend fun getLatestTransaction(): Transaction?
+
+    suspend fun countTransactions(): Int
+
     fun getAllTransactions(): Flow<List<Transaction>>
 
     fun getTransactionsByType(type: TransactionType): Flow<List<Transaction>>

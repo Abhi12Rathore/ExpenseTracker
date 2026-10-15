@@ -33,6 +33,7 @@ import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.models.Money
 import com.example.expensetrackerpro.domain.models.MonthlyNet
 import com.example.expensetrackerpro.presentation.common.currency.LocalCurrencyFormatter
+import com.example.expensetrackerpro.presentation.common.currency.amountFormatKey
 import com.example.expensetrackerpro.presentation.common.preview.PreviewData
 import com.example.expensetrackerpro.ui.theme.extendedColors
 import com.example.expensetrackerpro.presentation.common.date.LocalDateFormatter
@@ -85,6 +86,8 @@ fun NetSavingsChart(
     modifier: Modifier = Modifier
 ) {
     val currencyFormatter = LocalCurrencyFormatter.current
+    // Labels are kept between frames, so a change of currency has to write them again
+    val formatKey = amountFormatKey()
 
     if (months.isEmpty()) return
 
@@ -115,7 +118,7 @@ fun NetSavingsChart(
     val xLabels = remember(periodKey, axisStyle) {
         months.map { textMeasurer.measure(dateFormatter.formatMonthInitial(it.range.startMillis), axisStyle) }
     }
-    val worstLabel = remember(worstIndex, months, axisStyle, overspentColor) {
+    val worstLabel = remember(worstIndex, months, axisStyle, overspentColor, formatKey) {
         worstIndex?.let {
             textMeasurer.measure(
                 currencyFormatter.formatShort(months[it].net),

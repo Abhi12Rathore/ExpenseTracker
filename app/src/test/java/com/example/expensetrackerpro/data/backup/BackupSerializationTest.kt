@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.data.backup
 
+import com.example.expensetrackerpro.domain.currency.AppCurrency
 import org.junit.Assert.assertTrue
 import com.example.expensetrackerpro.domain.models.BuiltInCategory
 import com.example.expensetrackerpro.data.local.entity.CategoryEntity
@@ -36,7 +37,7 @@ class BackupSerializationTest {
         )
     )
 
-    private val dto = stored.toBackupDto(createdAtMillis = 1_760_100_000_000L, appVersion = "1.0")
+    private val dto = stored.toBackupDto(createdAtMillis = 1_760_100_000_000L, appVersion = "1.0", currency = AppCurrency.INR)
 
     private fun encode(backup: BackupDto): String = BackupJson.encodeToString(backup)
 
@@ -63,7 +64,7 @@ class BackupSerializationTest {
         val file = BackupJson.parseToJsonElement(encode(dto)).jsonObject
 
         assertEquals(
-            setOf("format", "version", "createdAt", "appVersion", "categories", "transactions"),
+            setOf("format", "version", "createdAt", "appVersion", "categories", "transactions", "currency"),
             file.keys
         )
         assertEquals("\"${Backup.FORMAT}\"", file["format"].toString())
@@ -83,6 +84,23 @@ class BackupSerializationTest {
             setOf("title", "amountPaise", "note", "dateMillis", "categoryId", "type"),
             (file.getValue("transactions").jsonArray.first() as JsonObject).keys
         )
+    }
+
+    @Test
+    fun theCurrency_isWrittenByItsCode_andReadBack() {
+        val file = BackupJson.parseToJsonElement(encode(dto)).jsonObject
+
+        assertEquals("\"INR\"", file["currency"].toString())
+        assertEquals("INR", decode(encode(dto)).toDocument().currency)
+    }
+
+    @Test
+    fun aFileWrittenBeforeTheCurrencyWasNoted_stillReads_withoutOne() {
+        val older = encode(dto).replace(",\"currency\":\"INR\"", "")
+
+        assertEquals(false, older.contains("currency"))
+        assertEquals(dto.copy(currency = null), decode(older))
+        assertEquals(null, decode(older).toDocument().currency)
     }
 
     @Test

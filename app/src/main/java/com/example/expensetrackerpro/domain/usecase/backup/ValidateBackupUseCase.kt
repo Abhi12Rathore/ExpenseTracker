@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.backup
 
+import com.example.expensetrackerpro.domain.currency.AppCurrency
 import com.example.expensetrackerpro.domain.error.DomainError
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.Backup
@@ -57,7 +58,9 @@ class ValidateBackupUseCase @Inject constructor(
                 createdAtMillis = document.createdAtMillis,
                 appVersion = document.appVersion,
                 categories = categories,
-                transactions = transactions
+                transactions = transactions,
+                // A currency this app doesn't offer isn't a reason to refuse the file: amounts stay as they are
+                currency = document.currency?.let(AppCurrency::findByCode)
             )
         )
     }

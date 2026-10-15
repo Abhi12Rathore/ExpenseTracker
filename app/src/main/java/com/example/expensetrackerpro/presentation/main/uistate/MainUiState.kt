@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation.main.uistate
 
+import com.example.expensetrackerpro.domain.currency.AppCurrency
 import com.example.expensetrackerpro.domain.models.ThemeMode
 import com.example.expensetrackerpro.presentation.lock.LockMessage
 
@@ -7,6 +8,8 @@ data class MainUiState(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     // False until the saved theme has been read, so the first frame is never drawn in the wrong one
     val isThemeLoaded: Boolean = false,
+    // The currency amounts are shown in; read under the splash with the data
+    val currency: AppCurrency = AppCurrency.INR,
     // False while the database is still opening
     val isDataLoaded: Boolean = false,
     // The app lock, as its AppLockController reports it

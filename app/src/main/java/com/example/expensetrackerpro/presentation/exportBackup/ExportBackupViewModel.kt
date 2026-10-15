@@ -100,6 +100,8 @@ class ExportBackupViewModel @Inject constructor(
                 if (!screenState.value.isExporting) {
                     backupController.onRestoreFilePicked(DocumentUri(event.uri))
                 }
+            is ExportBackupEvent.RestoreCurrencySwitchToggled ->
+                backupController.onCurrencySwitchToggled(event.switch)
             ExportBackupEvent.RestoreConfirmed -> backupController.onRestoreConfirmed()
             ExportBackupEvent.RestoreDismissed -> backupController.onRestoreDismissed()
             ExportBackupEvent.MessageShown -> clearShownMessage()

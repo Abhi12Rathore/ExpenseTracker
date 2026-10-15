@@ -51,12 +51,14 @@ fun backupDocument(
         transactionRecord(title = "Lunch", dateMillis = 300L),
         transactionRecord(title = "Pay", amountPaise = 85_000_00, dateMillis = 100L, categoryId = 2, type = "INCOME"),
         transactionRecord(title = "Clay", amountPaise = 5, dateMillis = 200L, categoryId = 7)
-    )
+    ),
+    currency: String? = null
 ) = BackupDocument(
     format = format,
     version = version,
     createdAtMillis = createdAtMillis,
     appVersion = "1.0",
     categories = categories,
-    transactions = transactions
+    transactions = transactions,
+    currency = currency
 )

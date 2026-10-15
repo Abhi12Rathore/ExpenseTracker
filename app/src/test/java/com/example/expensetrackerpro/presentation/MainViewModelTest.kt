@@ -1,5 +1,11 @@
 package com.example.expensetrackerpro.presentation
 
+import com.example.expensetrackerpro.domain.currency.AppCurrency
+import com.example.expensetrackerpro.domain.usecase.currency.ObserveCurrencyUseCase
+import com.example.expensetrackerpro.domain.usecase.currency.LoadCurrencyUseCase
+import com.example.expensetrackerpro.domain.usecase.app.ObserveDisplaySettingsUseCase
+import com.example.expensetrackerpro.domain.usecase.app.PrepareAppUseCase
+import com.example.expensetrackerpro.fakes.FakeCurrencyRepository
 import java.util.Locale
 import com.example.expensetrackerpro.domain.models.BuiltInCategory
 import com.example.expensetrackerpro.domain.locale.AppLocaleProvider
@@ -78,11 +84,12 @@ class MainViewModelTest {
         appLockRepository: AppLockRepository = FakeAppLockRepository(),
         transactionRepository: TransactionRepository = FakeTransactionRepository(),
         localeProvider: AppLocaleProvider = FakeAppLocaleProvider(),
+        currencyRepository: FakeCurrencyRepository = FakeCurrencyRepository(),
         // The activity reports itself created as soon as the app starts
         isActivityCreated: Boolean = true
     ) = MainViewModel(
-        localizeDefaultCategories(categoryRepository, localeProvider),
-        GetThemeModeUseCase(themeRepository),
+        PrepareAppUseCase(LoadCurrencyUseCase(currencyRepository), localizeDefaultCategories(categoryRepository, localeProvider)),
+        ObserveDisplaySettingsUseCase(GetThemeModeUseCase(themeRepository), ObserveCurrencyUseCase(currencyRepository)),
         ObserveDeletedTransactionsUseCase(transactionRepository),
         RestoreTransactionUseCase(transactionRepository),
         AppLockController(
@@ -114,6 +121,19 @@ class MainViewModelTest {
         val viewModel = mainViewModel(themeRepository = FakeThemePreferenceRepository(ThemeMode.DARK))
 
         assertEquals(ThemeMode.DARK, viewModel.uiState.value.themeMode)
+    }
+
+    @Test
+    fun readsTheStoredCurrency_atStart_andFollowsLaterChanges() = runTest {
+        val currencies = FakeCurrencyRepository(AppCurrency.INR, stored = AppCurrency.EUR)
+        val viewModel = mainViewModel(currencyRepository = currencies)
+
+        assertEquals(1, currencies.loads)
+        assertEquals(AppCurrency.EUR, viewModel.uiState.value.currency)
+
+        currencies.setCurrency(AppCurrency.JPY)
+
+        assertEquals(AppCurrency.JPY, viewModel.uiState.value.currency)
     }
 
     @Test

@@ -57,6 +57,7 @@ class BackupController @Inject constructor(
         this.scope = scope
         this.savedStateHandle = savedStateHandle
 
+        _state.update { it.copy(switchCurrency = savedStateHandle[KEY_SWITCH_CURRENCY] ?: true) }
         restoreSource?.let(::preview)
     }
 
@@ -77,6 +78,8 @@ class BackupController @Inject constructor(
         if (_state.value.isBusy) return
 
         restoreSource = source
+        // Each file is offered its own currency afresh
+        onCurrencySwitchToggled(true)
         preview(source)
     }
 
@@ -104,13 +107,20 @@ class BackupController @Inject constructor(
 
         _state.update { it.copy(isRestoring = true) }
         scope.launch {
-            val message = when (val result = restoreBackup(source)) {
-                is Outcome.Success -> ExportBackupMessage.Restored(result.value)
+            val switchCurrency = _state.value.switchCurrency
+            val message = when (val result = restoreBackup(source, switchCurrency)) {
+                is Outcome.Success ->
+                    ExportBackupMessage.Restored(result.value.transactionCount, result.value.switchedTo)
                 is Outcome.Failure -> ExportBackupMessage.Failed(result.error.toMessageRes())
             }
             restoreSource = null
             _state.update { it.copy(isRestoring = false, restorePreview = null, message = message) }
         }
+    }
+
+    fun onCurrencySwitchToggled(switch: Boolean) {
+        savedStateHandle[KEY_SWITCH_CURRENCY] = switch
+        _state.update { it.copy(switchCurrency = switch) }
     }
 
     fun onRestoreDismissed() {
@@ -127,5 +137,6 @@ class BackupController @Inject constructor(
 
     private companion object {
         const val KEY_RESTORE_URI = "restore_uri"
+        const val KEY_SWITCH_CURRENCY = "restore_switch_currency"
     }
 }

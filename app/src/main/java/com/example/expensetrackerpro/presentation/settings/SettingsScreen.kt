@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.Timer
@@ -51,6 +52,7 @@ import com.example.expensetrackerpro.domain.models.AppLockSettings
 import com.example.expensetrackerpro.domain.models.AuthResult
 import com.example.expensetrackerpro.domain.models.BiometricStatus
 import com.example.expensetrackerpro.domain.models.CategoryCounts
+import com.example.expensetrackerpro.domain.models.CurrencyChange
 import com.example.expensetrackerpro.domain.models.LanguageChange
 import com.example.expensetrackerpro.domain.models.LanguageChoice
 import com.example.expensetrackerpro.domain.models.ThemeMode
@@ -76,6 +78,7 @@ import com.example.expensetrackerpro.presentation.common.motion.phoneDarkTheme
 import com.example.expensetrackerpro.presentation.common.motion.rememberPressTracker
 import com.example.expensetrackerpro.presentation.common.motion.trackPresses
 import com.example.expensetrackerpro.ui.theme.extendedColors
+import com.example.expensetrackerpro.utils.nameRes
 import kotlinx.coroutines.withTimeoutOrNull
 
 @Composable
@@ -83,6 +86,7 @@ fun SettingsScreen(
     onNavigateToCategories: () -> Unit,
     onNavigateToExportBackup: () -> Unit,
     onNavigateToLanguage: () -> Unit,
+    onNavigateToCurrency: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -109,7 +113,8 @@ fun SettingsScreen(
         onEvent = viewModel::onEvent,
         onNavigateToCategories = onNavigateToCategories,
         onNavigateToExportBackup = onNavigateToExportBackup,
-        onNavigateToLanguage = onNavigateToLanguage
+        onNavigateToLanguage = onNavigateToLanguage,
+        onNavigateToCurrency = onNavigateToCurrency
     )
 }
 
@@ -119,7 +124,8 @@ fun SettingsContent(
     onEvent: (SettingsEvent) -> Unit,
     onNavigateToCategories: () -> Unit,
     onNavigateToExportBackup: () -> Unit,
-    onNavigateToLanguage: () -> Unit
+    onNavigateToLanguage: () -> Unit,
+    onNavigateToCurrency: () -> Unit
 ) {
     SettingsDialogs(state = state, onEvent = onEvent)
     val haptics = rememberHaptics()
@@ -149,6 +155,7 @@ fun SettingsContent(
     }
 
     LanguageChangedSnackbar(change = state.languageChange, snackbarHostState = snackbarHostState, onEvent = onEvent)
+    CurrencyChangedSnackbar(change = state.currencyChange, snackbarHostState = snackbarHostState, onEvent = onEvent)
 
     val palette = MaterialTheme.extendedColors.categoryPalette
 
@@ -174,6 +181,7 @@ fun SettingsContent(
 
             ProfileCard(
                 profile = state.profile,
+                currency = state.currency,
                 onClick = { onEvent(SettingsEvent.ProfileClicked) }
             )
 
@@ -222,6 +230,26 @@ fun SettingsContent(
                             text = state.language.label(),
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                )
+                SettingsDivider()
+                SettingsItem(
+                    icon = Icons.Default.Payments,
+                    iconTint = palette.green,
+                    title = stringResource(R.string.settings_currency),
+                    subtitle = stringResource(R.string.settings_currency_subtitle),
+                    onClick = onNavigateToCurrency,
+                    trailing = {
+                        Text(
+                            text = stringResource(
+                                R.string.settings_currency_symbol_code,
+                                state.currency.badge,
+                                state.currency.code
+                            ),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1
                         )
                     }
                 )
@@ -361,6 +389,34 @@ private fun LanguageChangedSnackbar(
     }
 }
 
+/**
+ * Says amounts are now shown in another currency and offers to undo it. The screen it was chosen
+ * on has closed by then, so the message is shown here.
+ */
+@Composable
+private fun CurrencyChangedSnackbar(
+    change: CurrencyChange?,
+    snackbarHostState: SnackbarHostState,
+    onEvent: (SettingsEvent) -> Unit
+) {
+    val message = change?.let { stringResource(R.string.currency_changed, stringResource(it.current.nameRes())) }
+    val undoLabel = stringResource(R.string.currency_undo)
+
+    LaunchedEffect(change) {
+        if (message == null) return@LaunchedEffect
+        val result = snackbarHostState.showSnackbar(
+            message = message,
+            actionLabel = undoLabel,
+            duration = SnackbarDuration.Long
+        )
+        if (result == SnackbarResult.ActionPerformed) {
+            onEvent(SettingsEvent.CurrencyUndoClicked)
+        } else {
+            onEvent(SettingsEvent.CurrencyChangeShown)
+        }
+    }
+}
+
 /** The language's own name for itself, which reads the same in every language. */
 @Composable
 private fun LanguageChoice.label(): String = when (this) {
@@ -471,7 +527,8 @@ private fun SettingsContentPreview() {
             onEvent = {},
             onNavigateToCategories = {},
             onNavigateToExportBackup = {},
-            onNavigateToLanguage = {}
+            onNavigateToLanguage = {},
+            onNavigateToCurrency = {}
         )
     }
 }
@@ -485,7 +542,8 @@ private fun SettingsContentDeveloperPreview() {
             onEvent = {},
             onNavigateToCategories = {},
             onNavigateToExportBackup = {},
-            onNavigateToLanguage = {}
+            onNavigateToLanguage = {},
+            onNavigateToCurrency = {}
         )
     }
 }
@@ -499,7 +557,8 @@ private fun SettingsContentDeleteAllPreview() {
             onEvent = {},
             onNavigateToCategories = {},
             onNavigateToExportBackup = {},
-            onNavigateToLanguage = {}
+            onNavigateToLanguage = {},
+            onNavigateToCurrency = {}
         )
     }
 }

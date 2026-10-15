@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.domain.usecase.backup
 
+import com.example.expensetrackerpro.domain.currency.CurrencyProvider
 import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.error.onSuccess
 import com.example.expensetrackerpro.domain.models.BuildInfo
@@ -14,7 +15,8 @@ class CreateBackupUseCase @Inject constructor(
     private val backupRepository: BackupRepository,
     private val backupInfoRepository: BackupInfoRepository,
     private val timeProvider: TimeProvider,
-    private val buildInfo: BuildInfo
+    private val buildInfo: BuildInfo,
+    private val currencyProvider: CurrencyProvider
 ) {
 
     /** A backup that was saved is also remembered as the last one made. */
@@ -22,7 +24,12 @@ class CreateBackupUseCase @Inject constructor(
         val nowMillis = timeProvider.now().timeInMillis
 
         return backupRepository
-            .writeBackup(destination, createdAtMillis = nowMillis, appVersion = buildInfo.versionName)
+            .writeBackup(
+                destination,
+                createdAtMillis = nowMillis,
+                appVersion = buildInfo.versionName,
+                currency = currencyProvider.current()
+            )
             .onSuccess { backupInfoRepository.setLastBackupMillis(nowMillis) }
     }
 }

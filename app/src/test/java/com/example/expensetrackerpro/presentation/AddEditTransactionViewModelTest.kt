@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation
 
+import com.example.expensetrackerpro.fakes.sanitizeAmountInput
 import androidx.lifecycle.SavedStateHandle
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.domain.error.DomainError
@@ -93,7 +94,7 @@ class AddEditTransactionViewModelTest {
         ),
         deleteTransaction = DeleteTransactionUseCase(transactions),
         validateTransactionDraft = ValidateTransactionDraftUseCase(ValidateAmountUseCase()),
-        sanitizeAmountInput = SanitizeAmountInputUseCase(),
+        sanitizeAmountInput = sanitizeAmountInput(),
         formatAmountInput = FormatAmountInputUseCase(),
         resolveTransactionDate = ResolveTransactionDateUseCase(timeProvider),
         getCategories = GetCategoriesUseCase(categories),

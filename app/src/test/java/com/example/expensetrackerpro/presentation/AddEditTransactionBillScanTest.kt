@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation
 
+import com.example.expensetrackerpro.fakes.sanitizeAmountInput
 import com.example.expensetrackerpro.domain.models.BuiltInCategory
 import androidx.lifecycle.SavedStateHandle
 import com.example.expensetrackerpro.R
@@ -111,7 +112,7 @@ class AddEditTransactionBillScanTest {
         ),
         deleteTransaction = DeleteTransactionUseCase(transactions),
         validateTransactionDraft = ValidateTransactionDraftUseCase(ValidateAmountUseCase()),
-        sanitizeAmountInput = SanitizeAmountInputUseCase(),
+        sanitizeAmountInput = sanitizeAmountInput(),
         formatAmountInput = FormatAmountInputUseCase(),
         resolveTransactionDate = ResolveTransactionDateUseCase(timeProvider),
         getCategories = GetCategoriesUseCase(categories),

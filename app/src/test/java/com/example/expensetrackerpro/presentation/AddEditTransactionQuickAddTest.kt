@@ -20,7 +20,6 @@ import com.example.expensetrackerpro.domain.usecase.transaction.DeleteTransactio
 import com.example.expensetrackerpro.domain.usecase.transaction.FormatAmountInputUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.GetTransactionByIdUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.ResolveTransactionDateUseCase
-import com.example.expensetrackerpro.domain.usecase.transaction.SanitizeAmountInputUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.SaveTransactionUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.UpdateTransactionUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.ValidateAmountUseCase
@@ -37,6 +36,7 @@ import com.example.expensetrackerpro.fakes.draftAssistController
 import com.example.expensetrackerpro.fakes.millisAt
 import com.example.expensetrackerpro.fakes.recognizedText
 import com.example.expensetrackerpro.fakes.rupees
+import com.example.expensetrackerpro.fakes.sanitizeAmountInput
 import com.example.expensetrackerpro.fakes.transaction
 import com.example.expensetrackerpro.presentation.common.category.editor.CategoryEditorReducer
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.AddEditTransactionViewModel
@@ -96,7 +96,7 @@ class AddEditTransactionQuickAddTest {
         saveTransaction = SaveTransactionUseCase(AddTransactionUseCase(transactions), UpdateTransactionUseCase(transactions)),
         deleteTransaction = DeleteTransactionUseCase(transactions),
         validateTransactionDraft = ValidateTransactionDraftUseCase(ValidateAmountUseCase()),
-        sanitizeAmountInput = SanitizeAmountInputUseCase(),
+        sanitizeAmountInput = sanitizeAmountInput(),
         formatAmountInput = FormatAmountInputUseCase(),
         resolveTransactionDate = ResolveTransactionDateUseCase(timeProvider),
         getCategories = GetCategoriesUseCase(categories),

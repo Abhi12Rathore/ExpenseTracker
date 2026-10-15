@@ -544,4 +544,66 @@
         <item quantity="many">Se han exportado %1$d movimientos</item>
         <item quantity="other">Se han exportado %1$d movimientos</item>
     </plurals>
+
+    <!-- Currency -->
+    <string name="settings_currency">Moneda</string>
+    <string name="settings_currency_subtitle">Cómo se muestran los importes</string>
+    <string name="currency_title">Moneda</string>
+    <string name="currency_back">Atrás</string>
+    <string name="currency_preview_label">Vista previa</string>
+    <string name="currency_preview_balance">Saldo de este mes</string>
+    <string name="currency_preview_chart_axis">Eje del gráfico</string>
+    <string name="currency_search_hint">Buscar moneda o código</string>
+    <string name="currency_search_clear">Borrar búsqueda</string>
+    <string name="currency_search_no_match">Ninguna moneda coincide con «%1$s»</string>
+    <string name="currency_section_suggested">Sugeridas</string>
+    <string name="currency_section_all">Todas las monedas</string>
+    <string name="currency_row_current">%1$s · actual</string>
+    <string name="currency_use">Usar %1$s</string>
+    <string name="currency_confirm_title">¿Mostrar importes en %1$s?</string>
+    <string name="currency_confirm_becomes">pasa a ser</string>
+    <string name="currency_confirm_nothing_converted">No se convierte nada.</string>
+    <string name="currency_confirm_explanation">Úsalo si llevas tus cuentas en otra moneda. Una sola moneda para toda la app.</string>
+    <string name="currency_confirm_change">Cambiar</string>
+    <string name="currency_confirm_cancel">Cancelar</string>
+    <string name="currency_changed">Importes ahora en %1$s</string>
+    <string name="currency_undo">Deshacer</string>
+    <string name="restore_sheet_currency_differs">Esta copia de seguridad se hizo en %1$s. Ahora los importes se muestran en %2$s.</string>
+    <string name="restore_sheet_currency_switch">Mostrar importes en %1$s al restaurar</string>
+    <plurals name="currency_confirm_body">
+        <item quantity="one">Tu %1$d movimiento conserva su número. Solo cambian el símbolo y el formato:</item>
+        <item quantity="many">Tus %1$d movimientos conservan sus números. Solo cambian el símbolo y el formato:</item>
+        <item quantity="other">Tus %1$d movimientos conservan sus números. Solo cambian el símbolo y el formato:</item>
+    </plurals>
+    <plurals name="restore_success_currency">
+        <item quantity="one">Se ha restaurado %1$d movimiento. Importes ahora en %2$s</item>
+        <item quantity="many">Se han restaurado %1$d movimientos. Importes ahora en %2$s</item>
+        <item quantity="other">Se han restaurado %1$d movimientos. Importes ahora en %2$s</item>
+    </plurals>
+
+    <!-- Currency names -->
+    <string name="currency_name_inr">Rupia india</string>
+    <string name="currency_name_usd">Dólar estadounidense</string>
+    <string name="currency_name_eur">Euro</string>
+    <string name="currency_name_gbp">Libra esterlina</string>
+    <string name="currency_name_aed">Dírham de los EAU</string>
+    <string name="currency_name_sar">Riyal saudí</string>
+    <string name="currency_name_qar">Riyal catarí</string>
+    <string name="currency_name_sgd">Dólar de Singapur</string>
+    <string name="currency_name_aud">Dólar australiano</string>
+    <string name="currency_name_cad">Dólar canadiense</string>
+    <string name="currency_name_nzd">Dólar neozelandés</string>
+    <string name="currency_name_jpy">Yen japonés</string>
+    <string name="currency_name_cny">Yuan chino</string>
+    <string name="currency_name_hkd">Dólar de Hong Kong</string>
+    <string name="currency_name_myr">Ringgit malayo</string>
+    <string name="currency_name_thb">Baht tailandés</string>
+    <string name="currency_name_idr">Rupia indonesia</string>
+    <string name="currency_name_npr">Rupia nepalí</string>
+    <string name="currency_name_lkr">Rupia de Sri Lanka</string>
+    <string name="currency_name_bdt">Taka bangladesí</string>
+    <string name="currency_name_pkr">Rupia pakistaní</string>
+    <string name="currency_name_zar">Rand sudafricano</string>
+    <string name="currency_name_brl">Real brasileño</string>
+    <string name="currency_name_chf">Franco suizo</string>
 </resources>
