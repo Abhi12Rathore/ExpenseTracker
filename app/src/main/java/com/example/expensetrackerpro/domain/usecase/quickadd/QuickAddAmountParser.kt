@@ -10,17 +10,20 @@ internal data class FoundAmount(val amount: Money, val confidence: FieldConfiden
 /**
  * Finds the amount: `450`, `₹450`, `rs 450`, `450 rupees`, `1,05,000`, `4.5k`, `1.05L`,
  * `1.05 lakh`, `2 crore` or words, `one lakh five thousand`. Of several numbers it takes the one
- * next to a currency word or symbol, else the largest, which is then only a guess. Numbers already
- * taken as a date or time are not looked at.
+ * next to a currency word or the app currency's symbol, before or after it (`S$450`, `450 €`),
+ * else the largest, which is then only a guess. Numbers already taken as a date or time are not
+ * looked at.
  */
 internal class QuickAddAmountParser(private val keywords: QuickAddKeywords) {
 
     /** The amount, with its tokens marked as [used]; null when the sentence has none. */
     fun parse(tokens: List<Token>, used: BooleanArray, currencySymbol: String): FoundAmount? {
+        // A symbol can be several tokens, as "S$" is "S" and "$"
+        val symbol = QuickAddTokens.tokenize(currencySymbol).map { it.lower }
         val candidates = mutableListOf<Candidate>()
         var i = 0
         while (i < tokens.size) {
-            val candidate = if (used[i]) null else readAt(tokens, used, i, currencySymbol)
+            val candidate = if (used[i]) null else readAt(tokens, used, i, symbol)
             if (candidate != null) {
                 candidates += candidate
                 i = candidate.span.last + 1
@@ -33,6 +36,8 @@ internal class QuickAddAmountParser(private val keywords: QuickAddKeywords) {
         val chosen = marked ?: candidates.filter { it.hasDigits || it.hasMultiplier }.maxByOrNull { it.value }
             ?: return null
         chosen.span.forEach { used[it] = true }
+        // So that a symbol made of letters, "AED" or the "S" of "S$", isn't taken for the title
+        chosen.symbolSpan?.forEach { used[it] = true }
 
         val isOnlyNumber = candidates.size == 1
         return FoundAmount(
@@ -45,7 +50,7 @@ internal class QuickAddAmountParser(private val keywords: QuickAddKeywords) {
      * The number starting at [start], with what makes it up: digits and words, a multiplier joined
      * on or apart ("4.5k", "2 crore", "one lakh five thousand"). Null when no amount starts there.
      */
-    private fun readAt(tokens: List<Token>, used: BooleanArray, start: Int, currencySymbol: String): Candidate? {
+    private fun readAt(tokens: List<Token>, used: BooleanArray, start: Int, symbol: List<String>): Candidate? {
         var total = BigDecimal.ZERO
         var current = BigDecimal.ZERO
         var hasCurrent = false
@@ -117,28 +122,37 @@ internal class QuickAddAmountParser(private val keywords: QuickAddKeywords) {
         val value = total + current
         if (value.signum() <= 0) return null
         // Number words alone, as in "one plate", are only an amount when a currency word says so
-        val isMarked = hasCurrencySuffix || isCurrency(tokens, before(tokens, start), currencySymbol) ||
+        val symbolSpan = symbolBefore(tokens, used, start, symbol) ?: symbolAt(tokens, used, end + 1, symbol)
+        val isMarked = hasCurrencySuffix || symbolSpan != null ||
+            tokens.getOrNull(before(tokens, start))?.lower in keywords.currencyWords ||
             tokens.wordAt(end + 1) in keywords.currencyWords
 
         if (!hasDigits && !hasMultiplier && !isMarked) return null
-        return Candidate(value, start..end, isMarked, hasDigits, hasMultiplier)
+        return Candidate(value, start..end, isMarked, hasDigits, hasMultiplier, symbolSpan)
+    }
+
+    /** The currency symbol's tokens ending just before [start], passing over a "." as in "rs. 450". */
+    private fun symbolBefore(tokens: List<Token>, used: BooleanArray, start: Int, symbol: List<String>): IntRange? =
+        symbolAt(tokens, used, before(tokens, start) - symbol.size + 1, symbol)
+
+    /** The currency symbol's tokens starting at [from], compared without case: "aed 450" too. */
+    private fun symbolAt(tokens: List<Token>, used: BooleanArray, from: Int, symbol: List<String>): IntRange? {
+        if (symbol.isEmpty() || from < 0 || from + symbol.size > tokens.size) return null
+        val span = from until from + symbol.size
+        return span.takeIf { range -> range.all { !used[it] && tokens[it].lower == symbol[it - from] } }
     }
 
     /** The token before [i], passing over a "." as in "rs. 450". */
     private fun before(tokens: List<Token>, i: Int): Int =
         if (tokens.getOrNull(i - 1)?.text == ".") i - 2 else i - 1
 
-    private fun isCurrency(tokens: List<Token>, i: Int, currencySymbol: String): Boolean {
-        val token = tokens.getOrNull(i) ?: return false
-        return token.text == currencySymbol || token.lower in keywords.currencyWords
-    }
-
     private data class Candidate(
         val value: BigDecimal,
         val span: IntRange,
         val isMarked: Boolean,
         val hasDigits: Boolean,
-        val hasMultiplier: Boolean
+        val hasMultiplier: Boolean,
+        val symbolSpan: IntRange?
     )
 
     private companion object {
