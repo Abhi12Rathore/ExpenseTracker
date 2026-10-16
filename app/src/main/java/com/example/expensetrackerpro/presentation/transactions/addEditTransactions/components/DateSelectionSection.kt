@@ -48,7 +48,8 @@ fun DateSelectionSection(
     onDateChoiceSelected: (DateChoice) -> Unit,
     onDatePicked: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    isFromBill: Boolean = false
+    isFromBill: Boolean = false,
+    fillTag: String = stringResource(R.string.bill_fill_tag)
 ) {
     // Purely visual: whether the date picker is showing
     var showDatePicker by remember { mutableStateOf(false) }
@@ -59,7 +60,7 @@ fun DateSelectionSection(
     ) {
         TaggedSectionLabel(
             text = stringResource(R.string.transaction_date),
-            tag = if (isFromBill) stringResource(R.string.bill_fill_tag) else null
+            tag = if (isFromBill) fillTag else null
         )
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -94,36 +95,53 @@ fun DateSelectionSection(
     }
 
     if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = pickerUtcMillis,
-            selectableDates = remember(maxPickerUtcMillis) {
-                // No future dates
-                object : SelectableDates {
-                    override fun isSelectableDate(utcTimeMillis: Long): Boolean =
-                        utcTimeMillis <= maxPickerUtcMillis
-                }
-            }
+        TransactionDatePickerDialog(
+            pickerUtcMillis = pickerUtcMillis,
+            maxPickerUtcMillis = maxPickerUtcMillis,
+            onDatePicked = onDatePicked,
+            onDismiss = { showDatePicker = false }
         )
+    }
+}
 
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis?.let(onDatePicked)
-                        showDatePicker = false
-                    }
-                ) {
-                    Text(stringResource(R.string.transaction_date_confirm))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text(stringResource(R.string.transaction_date_cancel))
-                }
+/** A date picker that offers no day after [maxPickerUtcMillis], today. Reports midnight UTC of the day. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TransactionDatePickerDialog(
+    pickerUtcMillis: Long,
+    maxPickerUtcMillis: Long,
+    onDatePicked: (Long) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = pickerUtcMillis,
+        selectableDates = remember(maxPickerUtcMillis) {
+            // No future dates
+            object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+                    utcTimeMillis <= maxPickerUtcMillis
             }
-        ) {
-            DatePicker(state = datePickerState)
         }
+    )
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    datePickerState.selectedDateMillis?.let(onDatePicked)
+                    onDismiss()
+                }
+            ) {
+                Text(stringResource(R.string.transaction_date_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.transaction_date_cancel))
+            }
+        }
+    ) {
+        DatePicker(state = datePickerState)
     }
 }

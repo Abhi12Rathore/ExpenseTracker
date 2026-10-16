@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -20,19 +21,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.DraftSource
 
 private val BannerShape = RoundedCornerShape(16.dp)
 
 /**
- * Says that the form was filled from a bill and should be checked, with "Clear" to take the
- * bill's values out again. Shows a receipt, not the photo: the photo is deleted once it is read.
+ * Says that the form was filled from a bill, or from the user's text, and should be checked, with
+ * "Clear" to take those values out again. A bill shows a receipt, not the photo: the photo is
+ * deleted once it is read. Text is quoted, so the user sees what was understood from what.
  */
 @Composable
-fun BillFilledBanner(onClear: () -> Unit, modifier: Modifier = Modifier) {
+fun BillFilledBanner(onClear: () -> Unit, modifier: Modifier = Modifier, source: DraftSource = DraftSource.Bill) {
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = BannerShape,
@@ -45,21 +49,28 @@ fun BillFilledBanner(onClear: () -> Unit, modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ReceiptLong,
+                imageVector = if (source is DraftSource.Text) Icons.Rounded.AutoAwesome else Icons.AutoMirrored.Filled.ReceiptLong,
                 contentDescription = null,
                 modifier = Modifier.size(28.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = stringResource(R.string.bill_fill_banner_title),
+                    text = stringResource(
+                        if (source is DraftSource.Text) R.string.quick_add_banner_title else R.string.bill_fill_banner_title
+                    ),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = stringResource(R.string.bill_fill_banner_message),
+                    text = when (source) {
+                        is DraftSource.Text -> stringResource(R.string.quick_add_banner_quote, source.text)
+                        DraftSource.Bill -> stringResource(R.string.bill_fill_banner_message)
+                    },
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             TextButton(onClick = onClear) {
@@ -97,6 +108,7 @@ private fun BillFilledBannerPreview() {
             ) {
                 BillFilledBanner(onClear = {})
                 BillTotalMissingNotice()
+                BillFilledBanner(onClear = {}, source = DraftSource.Text("Spent 450 on swiggy yesterday, dinner with Rahul"))
             }
         }
     }

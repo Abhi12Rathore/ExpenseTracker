@@ -38,6 +38,9 @@ sealed interface AddEditTransactionEvent {
     /** One of the amounts found on the bill was picked. */
     data class BillAmountSelected(val amount: Money) : AddEditTransactionEvent
 
-    /** "Clear" on the banner: what the bill filled in is removed. */
+    /** "Clear" on the banner: what the bill or the text filled in is removed. */
     data object BillFillCleared : AddEditTransactionEvent
+
+    /** Anything done in the quick-add bar or its preview. */
+    data class QuickAdd(val event: QuickAddEvent) : AddEditTransactionEvent
 }

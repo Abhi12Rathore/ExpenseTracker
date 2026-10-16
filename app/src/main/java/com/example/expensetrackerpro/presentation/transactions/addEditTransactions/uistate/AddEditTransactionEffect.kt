@@ -13,4 +13,10 @@ sealed interface AddEditTransactionEffect {
 
     /** The scanned bill could not be read. The message comes with a way to scan again. */
     data class BillUnreadable(@StringRes val messageRes: Int) : AddEditTransactionEffect
+
+    /** The text had no amount, so the keypad comes up for it. */
+    data object FocusAmount : AddEditTransactionEffect
+
+    /** The first correction for [title]: "Next time [title] goes to [categoryName]", with Undo. */
+    data class CategoryLearned(val title: String, val categoryName: String) : AddEditTransactionEffect
 }

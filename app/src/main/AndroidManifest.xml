@@ -2,6 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Quick add's microphone opens the system's "Speak now" screen, which records the voice
+         itself, so no microphone permission. From Android 11 the app sees it only through this. -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.action.RECOGNIZE_SPEECH" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:name=".ExpenseTrackerApplication"

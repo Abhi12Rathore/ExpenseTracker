@@ -37,6 +37,9 @@ data class ExtendedColors(
     val expense: Color,
     val chartGrid: Color,
     val chartAxisText: Color,
+    /** A value that is only a guess, such as a category quick add took from a keyword. */
+    val guessContainer: Color,
+    val onGuessContainer: Color,
     val categoryPalette: CategoryPalette
 )
 
@@ -45,6 +48,8 @@ val LightExtendedColors = ExtendedColors(
     expense = ExpenseLight,
     chartGrid = ChartGridLight,
     chartAxisText = ChartAxisTextLight,
+    guessContainer = GuessContainerLight,
+    onGuessContainer = OnGuessContainerLight,
     categoryPalette = CategoryPalette(
         indigo = CategoryIndigoLight,
         deepOrange = CategoryDeepOrangeLight,
@@ -68,6 +73,8 @@ val DarkExtendedColors = ExtendedColors(
     expense = ExpenseDark,
     chartGrid = ChartGridDark,
     chartAxisText = ChartAxisTextDark,
+    guessContainer = GuessContainerDark,
+    onGuessContainer = OnGuessContainerDark,
     categoryPalette = CategoryPalette(
         indigo = CategoryIndigoDark,
         deepOrange = CategoryDeepOrangeDark,

@@ -48,7 +48,8 @@ fun NoteSection(
     onRemove: () -> Unit,
     onFocusChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    isFromBill: Boolean = false
+    isFromBill: Boolean = false,
+    fillTag: String = stringResource(R.string.bill_fill_tag)
 ) {
     // Purely visual: tapping the row opens the field with the keyboard up, while a note that
     // was already there is only shown
@@ -94,7 +95,7 @@ fun NoteSection(
             .fillMaxWidth()
             .bringIntoViewRequester(bringIntoViewRequester)
     ) {
-        if (isFromBill) FromBillTag()
+        if (isFromBill) FromBillTag(text = fillTag)
 
         OutlinedTextField(
             value = note,

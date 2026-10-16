@@ -10,10 +10,12 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 import com.example.expensetrackerpro.data.local.dao.AppDataDao
 import com.example.expensetrackerpro.data.local.dao.CategoryDao
+import com.example.expensetrackerpro.data.local.dao.CategoryMemoryDao
 import com.example.expensetrackerpro.data.local.dao.DashboardDao
 import com.example.expensetrackerpro.data.local.dao.SampleDataDao
 import com.example.expensetrackerpro.data.local.dao.TransactionDao
 import com.example.expensetrackerpro.data.local.entity.CategoryEntity
+import com.example.expensetrackerpro.data.local.entity.CategoryMemoryEntity
 import com.example.expensetrackerpro.data.local.entity.TransactionEntity
 import com.example.expensetrackerpro.domain.category.DefaultCategoryNames
 import com.example.expensetrackerpro.domain.locale.AppLocaleProvider
@@ -22,9 +24,9 @@ import com.example.expensetrackerpro.data.local.utils.Converters
 
 
 @Database(
-    entities = [TransactionEntity::class, CategoryEntity::class],
+    entities = [TransactionEntity::class, CategoryEntity::class, CategoryMemoryEntity::class],
     // Pre-release: every schema change bumps this, and the destructive fallback resets the data
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -39,6 +41,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun appDataDao(): AppDataDao
 
     abstract fun sampleDataDao(): SampleDataDao
+
+    abstract fun categoryMemoryDao(): CategoryMemoryDao
 }
 
 internal class ExpenseDatabaseCallback(
@@ -56,10 +60,22 @@ internal class ExpenseDatabaseCallback(
     }
 
     // A schema change before release empties the database without calling onCreate, which would
-    // leave the app with no categories at all
+    // leave the app with no categories at all. Room calls this from inside dropping the tables,
+    // before they are made again, so the defaults go in once the database has opened
+    @Volatile
+    private var seedOnOpen = false
+
     override fun onDestructiveMigration(db: SupportSQLiteDatabase) {
         super.onDestructiveMigration(db)
-        seedDefaultCategories(db)
+        seedOnOpen = true
+    }
+
+    override fun onOpen(db: SupportSQLiteDatabase) {
+        super.onOpen(db)
+        if (seedOnOpen) {
+            seedOnOpen = false
+            seedDefaultCategories(db)
+        }
     }
 
     private fun seedDefaultCategories(db: SupportSQLiteDatabase) {

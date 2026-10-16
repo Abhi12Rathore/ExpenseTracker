@@ -25,14 +25,15 @@ fun TitleField(
     onTitleChange: (String) -> Unit,
     onFocusChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    isFromBill: Boolean = false
+    isFromBill: Boolean = false,
+    fillTag: String = stringResource(R.string.bill_fill_tag)
 ) {
     val placeholder =
         if (transactionType == TransactionType.INCOME) R.string.transaction_title_placeholder_income
         else R.string.transaction_title_placeholder_expense
 
     Column(modifier = modifier.fillMaxWidth()) {
-        if (isFromBill) FromBillTag()
+        if (isFromBill) FromBillTag(text = fillTag)
 
         TitleTextField(title, placeholder, isError, onTitleChange, onFocusChange, isFromBill)
     }

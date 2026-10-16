@@ -32,6 +32,7 @@ import com.example.expensetrackerpro.domain.usecase.transaction.ValidateAmountUs
 import com.example.expensetrackerpro.domain.usecase.transaction.ValidateTransactionDraftUseCase
 import com.example.expensetrackerpro.fakes.FakeBillScannerAvailability
 import com.example.expensetrackerpro.fakes.FakeBillTextReader
+import com.example.expensetrackerpro.fakes.draftAssistController
 import com.example.expensetrackerpro.fakes.FakeCategoryRepository
 import com.example.expensetrackerpro.fakes.FakeTimeProvider
 import com.example.expensetrackerpro.fakes.FakeTransactionRepository
@@ -104,13 +105,7 @@ class AddEditTransactionViewModelTest {
             UpdateCategoryUseCase(categories)
         ),
         categoryEditorReducer = CategoryEditorReducer(ValidateCategoryNameUseCase()),
-        scanBill = ScanBillUseCase(billReader, ParseBillUseCase(), timeProvider),
-        isBillScannerAvailable = IsBillScannerAvailableUseCase(scannerAvailability),
-        draftReducer = TransactionDraftReducer(
-            FormatAmountInputUseCase(),
-            ResolveTransactionDateUseCase(timeProvider),
-            ResolveCategoryHintUseCase()
-        ),
+        assist = draftAssistController(timeProvider, billReader, scannerAvailability),
         savedStateHandle = SavedStateHandle(
             savedState + if (transactionId != null) mapOf("transactionId" to transactionId) else emptyMap()
         )

@@ -8,7 +8,10 @@ import com.example.expensetrackerpro.data.local.entity.CategoryEntity
 import com.example.expensetrackerpro.data.local.entity.TransactionEntity
 import com.example.expensetrackerpro.data.local.model.StoredData
 
-/** Whole-table reads and writes behind "Delete all data" and backup and restore. */
+/**
+ * Whole-table reads and writes behind "Delete all data" and backup and restore. A restore replaces
+ * every category, so what quick add remembered goes with them (ON DELETE CASCADE).
+ */
 @Dao
 abstract class AppDataDao {
 
@@ -33,11 +36,16 @@ abstract class AppDataDao {
     @Query("DELETE FROM categories")
     abstract suspend fun deleteAllCategories()
 
-    // Transactions go first: a category that still has some can't be deleted
+    @Query("DELETE FROM category_memory")
+    abstract suspend fun deleteCategoryMemory()
+
+    // Transactions go first: a category that still has some can't be deleted. The built-ins stay,
+    // so what was remembered for them would too without its own delete
     @Transaction
     open suspend fun deleteAll() {
         deleteAllTransactions()
         deleteCustomCategories()
+        deleteCategoryMemory()
     }
 
     /** Both tables read in one transaction, so every transaction's category is among the categories. */

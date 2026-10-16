@@ -41,13 +41,14 @@ data class AddEditTransactionUiState(
     val isScanAvailable: Boolean = false,
     // The photo of a bill is being read
     val isReadingBill: Boolean = false,
-    // Non-null once a scanned bill has filled in the form, until that is cleared
-    val draftFill: DraftFill? = null
+    // Non-null once a scanned bill or quick add has filled in the form, until that is cleared
+    val draftFill: DraftFill? = null,
+    val quickAdd: QuickAddUiState = QuickAddUiState()
 ) {
     val selectedCategory: Category?
         get() = availableCategories.find { it.id == selectedCategoryId }
 
-    /** Whether [field] still holds the value a scanned bill gave it. */
+    /** Whether [field] still holds the value a scanned bill or quick add gave it. */
     fun isFromDraft(field: DraftField): Boolean = draftFill?.filledFields?.contains(field) == true
 }
 
