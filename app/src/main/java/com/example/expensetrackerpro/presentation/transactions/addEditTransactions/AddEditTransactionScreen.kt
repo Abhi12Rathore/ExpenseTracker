@@ -65,7 +65,11 @@ import com.example.expensetrackerpro.presentation.transactions.addEditTransactio
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.transactionDateLabel
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEffect
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEvent
+import com.example.expensetrackerpro.domain.models.QuickAddField
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.quickadd.FrequentSpends
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.components.quickadd.QuickAddBatchCard
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.scan.rememberBillScanner
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEntryMode
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionUiState
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.DraftField
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.DraftFill
@@ -95,6 +99,19 @@ fun AddEditTransactionScreen(
         onUnavailable = { viewModel.onEvent(AddEditTransactionEvent.QuickAdd(QuickAddEvent.VoiceUnavailable)) }
     )
     val amountFocusRequester = remember { FocusRequester() }
+    val quickAddFocusRequester = remember { FocusRequester() }
+
+    // Opened from the + button's long press or an app shortcut: ready for what was asked, once
+    val launchRequest = state.quickAdd.launchRequest
+    LaunchedEffect(launchRequest) {
+        when (launchRequest) {
+            AddEntryMode.SCAN -> launchBillScanner()
+            AddEntryMode.VOICE -> launchVoiceInput()
+            AddEntryMode.QUICK_ADD -> quickAddFocusRequester.requestFocus()
+            AddEntryMode.MANUAL, null -> return@LaunchedEffect
+        }
+        viewModel.onEvent(AddEditTransactionEvent.QuickAdd(QuickAddEvent.LaunchHandled))
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
@@ -114,6 +131,14 @@ fun AddEditTransactionScreen(
                         actionLabel = context.getString(R.string.bill_scan_try_again)
                     )
                     if (result == SnackbarResult.ActionPerformed) launchBillScanner()
+                }
+                // The form now holds the next of a batch; the user is told the last one went in
+                is AddEditTransactionEffect.SavedOneOfMany -> launch {
+                    haptics.confirm()
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    snackbarHostState.showSnackbar(
+                        context.getString(R.string.quick_add_review_saved, effect.number, effect.total)
+                    )
                 }
                 // The form is filled and the keypad comes up for the amount the text didn't have
                 AddEditTransactionEffect.FocusAmount -> amountFocusRequester.requestFocus()
@@ -137,7 +162,8 @@ fun AddEditTransactionScreen(
         onScanBillClick = launchBillScanner,
         onVoiceClick = launchVoiceInput,
         snackbarHostState = snackbarHostState,
-        amountFocusRequester = amountFocusRequester
+        amountFocusRequester = amountFocusRequester,
+        quickAddFocusRequester = quickAddFocusRequester
     )
 }
 
@@ -150,7 +176,8 @@ fun AddEditTransactionContent(
     onScanBillClick: () -> Unit,
     onVoiceClick: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    amountFocusRequester: FocusRequester = remember { FocusRequester() }
+    amountFocusRequester: FocusRequester = remember { FocusRequester() },
+    quickAddFocusRequester: FocusRequester = remember { FocusRequester() }
 ) {
     // Purely visual: which of the text fields below the amount has focus
     var isTitleFocused by remember { mutableStateOf(false) }
@@ -164,6 +191,7 @@ fun AddEditTransactionContent(
         onVoiceClick = onVoiceClick,
         snackbarHostState = snackbarHostState,
         amountFocusRequester = amountFocusRequester,
+        quickAddFocusRequester = quickAddFocusRequester,
         // Typing a title or note leaves little room, so the amount shrinks to a summary line
         isAmountCollapsed = WindowInsets.isImeVisible && (isTitleFocused || isNoteFocused),
         onTitleFocusChange = { isTitleFocused = it },
@@ -180,6 +208,7 @@ private fun AddEditTransactionLayout(
     onVoiceClick: () -> Unit,
     snackbarHostState: SnackbarHostState,
     amountFocusRequester: FocusRequester,
+    quickAddFocusRequester: FocusRequester,
     isAmountCollapsed: Boolean,
     onTitleFocusChange: (Boolean) -> Unit,
     onNoteFocusChange: (Boolean) -> Unit
@@ -187,12 +216,19 @@ private fun AddEditTransactionLayout(
     val focusManager = LocalFocusManager.current
     // The tags beside filled fields say where the values came from
     val fillTag = stringResource(
-        if (state.draftFill?.source is DraftSource.Text) R.string.quick_add_tag else R.string.bill_fill_tag
+        when (state.draftFill?.source) {
+            is DraftSource.Text -> R.string.quick_add_tag
+            is DraftSource.History -> R.string.quick_add_history_tag
+            DraftSource.Bill, null -> R.string.bill_fill_tag
+        }
     )
 
-    // A new transaction starts with the keypad up, ready for the amount
+    // A new transaction starts with the keypad up, ready for the amount, unless it was opened for
+    // the bar, the scanner or the voice
     LaunchedEffect(Unit) {
-        if (!state.isEditMode && !isAmountCollapsed) amountFocusRequester.requestFocus()
+        if (!state.isEditMode && !isAmountCollapsed && state.quickAdd.launchRequest == null) {
+            amountFocusRequester.requestFocus()
+        }
     }
 
     state.categoryEditor?.let { editor ->
@@ -268,7 +304,8 @@ private fun AddEditTransactionLayout(
                     state = state,
                     onEvent = onEvent,
                     onScanBillClick = onScanBillClick,
-                    onVoiceClick = onVoiceClick
+                    onVoiceClick = onVoiceClick,
+                    focusRequester = quickAddFocusRequester
                 )
                 AmountHero(
                     amount = state.amount,
@@ -346,7 +383,8 @@ private fun QuickFillSection(
     state: AddEditTransactionUiState,
     onEvent: (AddEditTransactionEvent) -> Unit,
     onScanBillClick: () -> Unit,
-    onVoiceClick: () -> Unit
+    onVoiceClick: () -> Unit,
+    focusRequester: FocusRequester
 ) {
     val fill = state.draftFill
     val quickAdd = state.quickAdd
@@ -354,7 +392,11 @@ private fun QuickFillSection(
 
     when {
         fill != null -> {
-            BillFilledBanner(onClear = { onEvent(AddEditTransactionEvent.BillFillCleared) }, source = fill.source)
+            BillFilledBanner(
+                onClear = { onEvent(AddEditTransactionEvent.BillFillCleared) },
+                source = fill.source,
+                reviewPosition = quickAdd.reviewPosition
+            )
             // A sentence without an amount brings up the keypad instead
             if (fill.isAmountMissing && fill.source == DraftSource.Bill) BillTotalMissingNotice()
         }
@@ -368,10 +410,33 @@ private fun QuickFillSection(
                 onTextChange = { onQuickAddEvent(QuickAddEvent.TextChanged(it)) },
                 onFill = { onQuickAddEvent(QuickAddEvent.FillClicked) },
                 onVoiceClick = onVoiceClick,
-                onScanClick = onScanBillClick
+                onScanClick = onScanBillClick,
+                focusRequester = focusRequester
             )
+            if (quickAdd.text.isBlank()) {
+                FrequentSpends(
+                    frequent = quickAdd.frequent,
+                    onSelected = { onQuickAddEvent(QuickAddEvent.FrequentSelected(it)) }
+                )
+            }
             if (quickAdd.showExamples && quickAdd.text.isBlank()) {
                 QuickAddExamples(onExampleSelected = { onQuickAddEvent(QuickAddEvent.ExampleSelected(it)) })
+            }
+            quickAdd.batch?.let { batch ->
+                QuickAddBatchCard(
+                    batch = batch,
+                    editing = quickAdd.editing,
+                    editingRow = quickAdd.editingRow,
+                    isSaving = quickAdd.isSavingAll,
+                    onCategoryClick = { onQuickAddEvent(QuickAddEvent.BatchCategoryClicked(it)) },
+                    onCategoryChosen = { row, id -> onQuickAddEvent(QuickAddEvent.BatchCategoryChosen(row, id)) },
+                    onDateClick = { onQuickAddEvent(QuickAddEvent.ChipClicked(QuickAddField.DATE)) },
+                    onEditDismissed = { onQuickAddEvent(QuickAddEvent.ChipEditDismissed) },
+                    onDateChoiceChosen = { onQuickAddEvent(QuickAddEvent.DateChoiceChosen(it)) },
+                    onDatePicked = { onQuickAddEvent(QuickAddEvent.DatePicked(it)) },
+                    onSaveAll = { onQuickAddEvent(QuickAddEvent.SaveAllClicked) },
+                    onReviewOneByOne = { onQuickAddEvent(QuickAddEvent.ReviewOneByOneClicked) }
+                )
             }
             quickAdd.preview?.let { preview ->
                 QuickAddPreviewCard(
@@ -454,6 +519,7 @@ private fun AddEditTransactionPreview(
             onVoiceClick = {},
             snackbarHostState = remember { SnackbarHostState() },
             amountFocusRequester = remember { FocusRequester() },
+            quickAddFocusRequester = remember { FocusRequester() },
             isAmountCollapsed = isAmountCollapsed,
             onTitleFocusChange = {},
             onNoteFocusChange = {}

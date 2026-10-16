@@ -28,6 +28,9 @@ class TransactionRepositoryImpl @Inject constructor(
     override suspend fun saveTransaction(transaction: Transaction): Outcome<Unit> =
         write { transactionDao.insertTransaction(transaction.toEntity()) }
 
+    override suspend fun saveTransactions(transactions: List<Transaction>): Outcome<Unit> =
+        write { transactionDao.insertTransactions(transactions.map { it.toEntity() }) }
+
     override suspend fun updateTransaction(transaction: Transaction): Outcome<Unit> =
         write { transactionDao.updateTransaction(transaction.toEntity()) }
 
@@ -62,6 +65,14 @@ class TransactionRepositoryImpl @Inject constructor(
 
         return transactions.map { list -> list.map { it.toDomain() } }
     }
+
+    override suspend fun getRepeatedTransactions(
+        type: TransactionType,
+        range: DateRange,
+        minCount: Int
+    ): List<Transaction> =
+        transactionDao.getRepeatedTransactions(type, range.startMillis, range.endMillis, minCount)
+            .map { it.toDomain() }
 
     // The only foreign key a transaction has is its category, so breaking it means that is gone
     private inline fun write(block: () -> Unit): Outcome<Unit> =

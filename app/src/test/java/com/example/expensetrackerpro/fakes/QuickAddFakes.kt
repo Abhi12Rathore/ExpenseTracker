@@ -5,23 +5,29 @@ import com.example.expensetrackerpro.domain.error.Outcome
 import com.example.expensetrackerpro.domain.models.CategoryMemory
 import com.example.expensetrackerpro.domain.repository.CategoryMemoryRepository
 import com.example.expensetrackerpro.domain.repository.QuickAddPreferencesRepository
+import com.example.expensetrackerpro.domain.repository.TransactionRepository
 import com.example.expensetrackerpro.domain.scan.BillScannerAvailability
 import com.example.expensetrackerpro.domain.scan.BillTextReader
 import com.example.expensetrackerpro.domain.speech.VoiceInputAvailability
 import com.example.expensetrackerpro.domain.time.TimeProvider
 import com.example.expensetrackerpro.domain.usecase.categorymemory.ObserveCategoryMemoryUseCase
 import com.example.expensetrackerpro.domain.usecase.categorymemory.RememberCategoryUseCase
+import com.example.expensetrackerpro.domain.usecase.quickadd.GetFrequentTransactionsUseCase
 import com.example.expensetrackerpro.domain.usecase.quickadd.IsVoiceInputAvailableUseCase
 import com.example.expensetrackerpro.domain.usecase.quickadd.MarkQuickAddUsedUseCase
 import com.example.expensetrackerpro.domain.usecase.quickadd.ObserveQuickAddUsedUseCase
 import com.example.expensetrackerpro.domain.usecase.quickadd.ParseQuickAddUseCase
 import com.example.expensetrackerpro.domain.usecase.quickadd.RuleBasedQuickAddParser
+import com.example.expensetrackerpro.domain.usecase.quickadd.SplitQuickAddUseCase
 import com.example.expensetrackerpro.domain.usecase.scan.IsBillScannerAvailableUseCase
 import com.example.expensetrackerpro.domain.usecase.scan.ParseBillUseCase
 import com.example.expensetrackerpro.domain.usecase.scan.ResolveCategoryHintUseCase
 import com.example.expensetrackerpro.domain.usecase.scan.ScanBillUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.FormatAmountInputUseCase
 import com.example.expensetrackerpro.domain.usecase.transaction.ResolveTransactionDateUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.SaveTransactionsUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.ValidateAmountUseCase
+import com.example.expensetrackerpro.domain.usecase.transaction.ValidateTransactionDraftUseCase
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.assist.DraftAssistController
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.draft.TransactionDraftReducer
 import kotlinx.coroutines.flow.Flow
@@ -67,11 +73,19 @@ fun draftAssistController(
     memory: FakeCategoryMemoryRepository = FakeCategoryMemoryRepository(),
     preferences: FakeQuickAddPreferencesRepository = FakeQuickAddPreferencesRepository(),
     voice: FakeVoiceInputAvailability = FakeVoiceInputAvailability(),
-    locale: Locale = Locale.ENGLISH
+    locale: Locale = Locale.ENGLISH,
+    transactions: TransactionRepository = FakeTransactionRepository()
 ) = DraftAssistController(
     scanBill = ScanBillUseCase(billReader, ParseBillUseCase(), timeProvider),
     isBillScannerAvailable = IsBillScannerAvailableUseCase(scannerAvailability),
-    parseQuickAdd = ParseQuickAddUseCase(RuleBasedQuickAddParser(), timeProvider, FakeCurrencyProvider()),
+    parseQuickAdd = parseQuickAdd(timeProvider),
+    splitQuickAdd = SplitQuickAddUseCase(parseQuickAdd(timeProvider)),
+    saveTransactions = SaveTransactionsUseCase(
+        transactions,
+        ValidateTransactionDraftUseCase(ValidateAmountUseCase()),
+        FormatAmountInputUseCase()
+    ),
+    getFrequentTransactions = GetFrequentTransactionsUseCase(transactions, timeProvider),
     observeCategoryMemory = ObserveCategoryMemoryUseCase(memory),
     rememberCategory = RememberCategoryUseCase(memory),
     observeQuickAddUsed = ObserveQuickAddUsedUseCase(preferences),
@@ -85,3 +99,6 @@ fun draftAssistController(
         ResolveCategoryHintUseCase()
     )
 )
+
+fun parseQuickAdd(timeProvider: TimeProvider) =
+    ParseQuickAddUseCase(RuleBasedQuickAddParser(), timeProvider, FakeCurrencyProvider())

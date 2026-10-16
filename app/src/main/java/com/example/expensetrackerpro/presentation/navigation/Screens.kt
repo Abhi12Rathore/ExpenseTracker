@@ -2,10 +2,21 @@ package com.example.expensetrackerpro.presentation.navigation
 
 import android.net.Uri
 import com.example.expensetrackerpro.domain.models.DateFilter
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEntryMode
 
 sealed class Screens(val route: String) {
 
-    data object TransactionForm : Screens("transaction_form?transactionId={transactionId}") {
+    /**
+     * The transaction form: a stored transaction by its id, or a new one opened in a mode (the
+     * bar focused, the scanner or the voice open). App shortcuts reach a new one through [DEEP_LINK].
+     */
+    data object TransactionForm : Screens("transaction_form?transactionId={transactionId}&mode={mode}") {
+        const val ARG_TRANSACTION_ID = "transactionId"
+        const val ARG_MODE = "mode"
+
+        /** What the launcher's app shortcuts open (`res/xml-v25/shortcuts.xml`). */
+        const val DEEP_LINK = "expensetracker://add?mode={mode}"
+
         fun getRoute(transactionId: Int? = null): String {
             return if (transactionId != null && transactionId != -1) {
                 "transaction_form?transactionId=$transactionId"
@@ -13,6 +24,10 @@ sealed class Screens(val route: String) {
                 "transaction_form"
             }
         }
+
+        /** A new transaction, opened ready for [mode]. */
+        fun newRoute(mode: AddEntryMode): String =
+            if (mode == AddEntryMode.MANUAL) getRoute() else "transaction_form?$ARG_MODE=${mode.name}"
     }
 
     data object ManageCategories : Screens("manage_categories")

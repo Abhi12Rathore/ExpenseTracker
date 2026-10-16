@@ -21,6 +21,8 @@ class ThrowingTransactionDao(private val error: Exception) : TransactionDao {
 
     override suspend fun insertTransaction(transaction: TransactionEntity) = throw error
 
+    override suspend fun insertTransactions(transactions: List<TransactionEntity>) = throw error
+
     override suspend fun updateTransaction(transaction: TransactionEntity) = throw error
 
     override suspend fun deleteTransaction(transaction: TransactionEntity) = throw error
@@ -43,6 +45,13 @@ class ThrowingTransactionDao(private val error: Exception) : TransactionDao {
         endMillis: Long,
         query: String
     ): Flow<List<TransactionWithCategory>> = emptyFlow()
+
+    override suspend fun getRepeatedTransactions(
+        type: TransactionType,
+        startMillis: Long,
+        endMillis: Long,
+        minCount: Int
+    ): List<TransactionWithCategory> = emptyList()
 }
 
 class ThrowingCategoryDao(private val error: Exception) : CategoryDao() {

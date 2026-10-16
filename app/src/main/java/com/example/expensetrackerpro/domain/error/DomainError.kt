@@ -38,5 +38,8 @@ enum class InvalidInputReason {
     NAME_TOO_LONG,
 
     /** Transactions can only move to a different category of the same type. */
-    INCOMPATIBLE_REASSIGN_TARGET
+    INCOMPATIBLE_REASSIGN_TARGET,
+
+    /** A transaction of several saved at once lacks an amount, a title or a category, or its note is too long. */
+    TRANSACTION_INCOMPLETE
 }

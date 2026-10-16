@@ -291,6 +291,44 @@
     <string name="quick_add_banner_quote">“%1$s”</string>
     <string name="quick_add_tag">✨ Do seu texto</string>
     <string name="quick_add_learned">Da próxima vez, “%1$s” vai para %2$s</string>
+
+    <!-- Quick add: frequent transactions, several in one sentence -->
+    <string name="quick_add_frequent">Frequentes</string>
+    <plurals name="quick_add_frequent_times">
+        <item quantity="one">%1$d vez</item>
+        <item quantity="many">%1$d vezes</item>
+        <item quantity="other">%1$d vezes</item>
+    </plurals>
+    <string name="quick_add_history_tag">🕘 Do seu histórico</string>
+    <string name="quick_add_history_banner_title">Preenchido com seu histórico</string>
+    <string name="quick_add_history_banner_message">Seu “%1$s” de sempre. Confira o valor antes de salvar.</string>
+    <string name="quick_add_review_banner_title">%1$s · %2$d de %3$d</string>
+    <string name="quick_add_review_saved">%1$d de %2$d salva. Aqui vai a próxima.</string>
+    <plurals name="quick_add_batch_found_expenses">
+        <item quantity="one">%1$d despesa encontrada</item>
+        <item quantity="many">%1$d despesas encontradas</item>
+        <item quantity="other">%1$d despesas encontradas</item>
+    </plurals>
+    <plurals name="quick_add_batch_found_transactions">
+        <item quantity="one">%1$d transação encontrada</item>
+        <item quantity="many">%1$d transações encontradas</item>
+        <item quantity="other">%1$d transações encontradas</item>
+    </plurals>
+    <string name="quick_add_batch_save_all_total">Salvar tudo · %1$s</string>
+    <string name="quick_add_batch_save_all">Salvar tudo</string>
+    <string name="quick_add_batch_review">Revisar uma por uma</string>
+    <string name="quick_add_batch_incomplete">Algumas estão sem título ou categoria. Escolha uma acima ou revise uma por uma.</string>
+
+    <!-- The + button's long press, and the launcher's app shortcuts -->
+    <string name="add_mode_menu_label">Mais formas de adicionar</string>
+    <string name="add_mode_quick_add">Adição rápida</string>
+    <string name="add_mode_scan">Escanear um comprovante</string>
+    <string name="add_mode_voice">Falar</string>
+    <string name="add_mode_manual">Preencher à mão</string>
+    <string name="shortcut_quick_add_short">Rápida</string>
+    <string name="shortcut_scan_short">Comprovante</string>
+    <string name="shortcut_voice_short">Falar</string>
+    <string name="shortcut_manual_short">Adicionar</string>
     <string name="transaction_delete_dialog_title">Excluir a transação?</string>
     <string name="transaction_delete_dialog_message">Ela sai das suas transações e dos totais.</string>
     <string name="transaction_delete_dialog_cancel">Cancelar</string>
@@ -499,6 +537,7 @@
     <string name="error_backup_invalid">Este arquivo não é um backup do Expense Tracker</string>
     <string name="error_backup_too_new">Este backup é de uma versão mais nova do app</string>
     <string name="error_bill_unreadable">Não foi possível ler este comprovante</string>
+    <string name="error_transaction_incomplete">Cada transação precisa de valor, título e categoria</string>
     <string name="error_file_write_failed">Não foi possível salvar o arquivo. Veja se o local ainda está disponível e tem espaço.</string>
 
     <!-- Export & backup -->

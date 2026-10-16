@@ -83,7 +83,8 @@ class CategoryEditorReducer @Inject constructor(
         is DomainError.InvalidInput -> when (error.reason) {
             InvalidInputReason.NAME_BLANK -> CategoryNameValidation.BLANK
             InvalidInputReason.NAME_TOO_LONG -> CategoryNameValidation.TOO_LONG
-            InvalidInputReason.INCOMPATIBLE_REASSIGN_TARGET -> null
+            InvalidInputReason.INCOMPATIBLE_REASSIGN_TARGET,
+            InvalidInputReason.TRANSACTION_INCOMPLETE -> null
         }
         DomainError.NotFound,
         DomainError.CategoryInUse,

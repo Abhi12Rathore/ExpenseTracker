@@ -16,6 +16,9 @@ interface TransactionRepository {
 
     suspend fun saveTransaction(transaction: Transaction): Outcome<Unit>
 
+    /** Adds every one of [transactions], or none of them when any write fails. */
+    suspend fun saveTransactions(transactions: List<Transaction>): Outcome<Unit>
+
     suspend fun updateTransaction(transaction: Transaction): Outcome<Unit>
 
     suspend fun deleteTransaction(transaction: Transaction): Outcome<Unit>
@@ -36,4 +39,10 @@ interface TransactionRepository {
      * whose title, note or category name contains it, ignoring case.
      */
     fun getTransactions(range: DateRange, query: String = ""): Flow<List<Transaction>>
+
+    /**
+     * The transactions of [type] within [range] whose title, ignoring case, and category come up
+     * at least [minCount] times there, newest first.
+     */
+    suspend fun getRepeatedTransactions(type: TransactionType, range: DateRange, minCount: Int): List<Transaction>
 }

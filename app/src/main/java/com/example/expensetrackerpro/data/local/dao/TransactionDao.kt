@@ -19,6 +19,10 @@ interface TransactionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTransaction(transaction: TransactionEntity)
 
+    // Room inserts a list in one transaction: when one row fails, none is stored
+    @Insert
+    suspend fun insertTransactions(transactions: List<TransactionEntity>)
+
     @Update
     suspend fun updateTransaction(transaction: TransactionEntity)
 
@@ -69,4 +73,29 @@ ORDER BY t.dateMillis DESC
         endMillis: Long,
         query: String
     ): Flow<List<TransactionWithCategory>>
+
+    /**
+     * Every transaction of [type] dated within the range whose title (ignoring case and the
+     * spaces around it) and category come up at least [minCount] times in it, newest first.
+     * A join on the repeated groups rather than a row-value IN, which SQLite has only from 3.15.
+     */
+    @Query(
+        """
+SELECT t.*, c.name AS categoryName, c.icon AS categoryIcon FROM transactions t JOIN categories c ON c.id = t.categoryId
+JOIN (
+    SELECT lower(trim(title)) AS titleKey, categoryId AS repeatedCategoryId FROM transactions
+    WHERE transactionType = :type AND dateMillis >= :startMillis AND dateMillis < :endMillis
+    GROUP BY lower(trim(title)), categoryId
+    HAVING COUNT(*) >= :minCount
+) r ON r.titleKey = lower(trim(t.title)) AND r.repeatedCategoryId = t.categoryId
+WHERE t.transactionType = :type AND t.dateMillis >= :startMillis AND t.dateMillis < :endMillis
+ORDER BY t.dateMillis DESC, t.id DESC
+"""
+    )
+    suspend fun getRepeatedTransactions(
+        type: TransactionType,
+        startMillis: Long,
+        endMillis: Long,
+        minCount: Int
+    ): List<TransactionWithCategory>
 }

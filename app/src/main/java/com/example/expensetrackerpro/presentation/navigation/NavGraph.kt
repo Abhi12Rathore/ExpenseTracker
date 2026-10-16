@@ -5,6 +5,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.example.expensetrackerpro.presentation.exportBackup.ExportBackupScreen
 import com.example.expensetrackerpro.presentation.currency.CurrencyScreen
 import com.example.expensetrackerpro.presentation.language.LanguageScreen
@@ -30,6 +31,9 @@ fun AppNavHost(
                     // Routes carry the plain number
                     navController.navigate(Screens.TransactionForm.getRoute(id?.value))
                 },
+                onNavigateToNewTransaction = { mode ->
+                    navController.navigate(Screens.TransactionForm.newRoute(mode))
+                },
                 onNavigateToManageCategories = {
                     navController.navigate(Screens.ManageCategories.route)
                 },
@@ -48,7 +52,12 @@ fun AppNavHost(
         // Destination 2: Full Screen Add/Edit Form
         composable(
             route = Screens.TransactionForm.route,
-            arguments = listOf(navArgument("transactionId") { type = NavType.IntType; defaultValue = -1 })
+            arguments = listOf(
+                navArgument(Screens.TransactionForm.ARG_TRANSACTION_ID) { type = NavType.IntType; defaultValue = -1 },
+                navArgument(Screens.TransactionForm.ARG_MODE) { type = NavType.StringType; nullable = true }
+            ),
+            // The app shortcuts; the NavHost exists only once the app is unlocked, so they never open over the lock
+            deepLinks = listOf(navDeepLink { uriPattern = Screens.TransactionForm.DEEP_LINK })
         ) {
             AddEditTransactionScreen(
                 onNavigateBack = { navController.popBackStack() }
