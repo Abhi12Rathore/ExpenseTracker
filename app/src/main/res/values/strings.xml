@@ -47,7 +47,7 @@
     <string name="spending_average_per_month">avg %1$s/month</string>
     <!-- Amount · date · transaction count -->
     <string name="spending_tooltip" translatable="false">%1$s · %2$s · %3$s</string>
-    <string name="spending_tooltip_open_transactions">Show these in Transactions</string>
+    <string name="spending_tooltip_open_transactions">Show these in History</string>
     <!-- Read out for each bar: date, then amount -->
     <string name="spending_bar_description" translatable="false">%1$s: %2$s</string>
     <string name="spending_empty">Nothing spent in this period yet. Expenses you add will show up here.</string>

@@ -58,7 +58,7 @@
     <string name="spending_monthly_title">महीने का खर्च</string>
     <string name="spending_average_per_day">औसत %1$s/दिन</string>
     <string name="spending_average_per_month">औसत %1$s/महीना</string>
-    <string name="spending_tooltip_open_transactions">इन्हें लेन-देन में देखें</string>
+    <string name="spending_tooltip_open_transactions">इन्हें हिस्ट्री में देखें</string>
     <string name="spending_empty">इस अवधि में अभी कोई खर्च नहीं। जो खर्च आप जोड़ेंगे, वे यहाँ दिखेंगे।</string>
     <plurals name="transaction_count">
         <item quantity="one">%1$d लेन-देन</item>
