@@ -116,7 +116,7 @@ Read `docs/architecture-decisions.md` before changing one of these. Each has its
 - A built-in category is known by its key; its name follows the app's language.
 - The language change is applied after the Language screen has closed.
 - Theme and language changes are shown with a snapshot at the root.
-- Quick add is another source of drafts.
+- Quick add is another source of drafts: a draft never overwrites what the user typed, and nothing is saved without Save (Save all included).
 - What quick add learns is a cache, not the user's data.
 - Several transactions from one sentence are saved all or none.
 - An entry mode is launched once.
