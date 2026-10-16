@@ -47,6 +47,7 @@ import com.example.expensetrackerpro.presentation.common.motion.ThemeTransitionC
 import com.example.expensetrackerpro.presentation.common.motion.phoneInDarkTheme
 import com.example.expensetrackerpro.presentation.lock.LockScreen
 import com.example.expensetrackerpro.presentation.main.MainViewModel
+import com.example.expensetrackerpro.presentation.main.uistate.MainContent
 import com.example.expensetrackerpro.presentation.main.uistate.MainEffect
 import com.example.expensetrackerpro.presentation.main.uistate.MainEvent
 import com.example.expensetrackerpro.utils.CurrencyFormatter
@@ -180,14 +181,15 @@ class MainActivity : AppCompatActivity() {
                                     .padding(innerPadding)
                                     .consumeWindowInsets(innerPadding)
                             ) {
-                                if (uiState.isLocked) {
-                                    LockScreen(
+                                when (uiState.content) {
+                                    // Under the splash: nothing runs before the lock state is known
+                                    MainContent.NONE -> Unit
+                                    MainContent.LOCK_SCREEN -> LockScreen(
                                         isPromptRequested = uiState.isPromptRequested,
                                         message = uiState.lockMessage,
                                         onEvent = viewModel::onEvent
                                     )
-                                } else {
-                                    appContentState.SaveableStateProvider(APP_CONTENT_KEY) {
+                                    MainContent.APP -> appContentState.SaveableStateProvider(APP_CONTENT_KEY) {
                                         CompositionLocalProvider(
                                             LocalDateFormatter provides dateFormatter,
                                             LocalCurrencyFormatter provides currencyFormatter,

@@ -49,6 +49,7 @@ import com.example.expensetrackerpro.presentation.lock.AppLockController
 import com.example.expensetrackerpro.presentation.lock.LockMessage
 import com.example.expensetrackerpro.presentation.main.MainViewModel
 import com.example.expensetrackerpro.presentation.main.uistate.MainEffect
+import com.example.expensetrackerpro.presentation.main.uistate.MainContent
 import com.example.expensetrackerpro.presentation.main.uistate.MainEvent
 import com.example.expensetrackerpro.util.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -274,6 +275,22 @@ class MainViewModelTest {
 
         assertTrue(viewModel.uiState.value.isReady)
         assertTrue(viewModel.uiState.value.isLocked)
+    }
+
+    @Test
+    fun nothingIsShown_untilTheLockStateIsKnown_thenTheLockScreenOrTheApp() = runTest {
+        // Nothing composed means no screen, and no shortcut's link, runs before the lock is shown
+        val locking = PendingAppLockRepository()
+        val locked = mainViewModel(appLockRepository = locking)
+        assertEquals(MainContent.NONE, locked.uiState.value.content)
+        locking.emit(AppLockSettings(enabled = true))
+        assertEquals(MainContent.LOCK_SCREEN, locked.uiState.value.content)
+
+        val open = PendingAppLockRepository()
+        val unlocked = mainViewModel(appLockRepository = open)
+        assertEquals(MainContent.NONE, unlocked.uiState.value.content)
+        open.emit(AppLockSettings(enabled = false))
+        assertEquals(MainContent.APP, unlocked.uiState.value.content)
     }
 
     @Test

@@ -21,4 +21,25 @@ data class MainUiState(
 ) {
     // The system splash stays up until this turns true
     val isReady: Boolean get() = isThemeLoaded && isDataLoaded && isLockStateKnown
+
+    /**
+     * What the activity shows. Nothing until the lock state is known, so the app's screens, and
+     * whatever a shortcut's link opens with them (the scanner, the voice), never run before the
+     * lock screen.
+     */
+    val content: MainContent
+        get() = when {
+            !isLockStateKnown -> MainContent.NONE
+            isLocked -> MainContent.LOCK_SCREEN
+            else -> MainContent.APP
+        }
+}
+
+enum class MainContent {
+    /** The lock state is still being read: nothing is composed. */
+    NONE,
+    LOCK_SCREEN,
+
+    /** The app's screens, behind the NavHost. */
+    APP
 }

@@ -463,18 +463,24 @@ class DraftAssistController @Inject constructor(
 
     /**
      * Stores every transaction of the batch, or none. The user has seen each value on its row, so
-     * this is a deliberate save; the form is done once it succeeds.
+     * this is a deliberate save; the form is done once it succeeds. A row whose category the user
+     * changed from the one suggested is remembered for its title, as the form's Save does.
      */
     private fun saveAll() {
         val form = host.form
         if (form.quickAdd.isSavingAll || form.quickAdd.batch?.canSaveAll != true) return
         val batch = parseBatch(form) ?: return
         val transactions = batch.parts.map { part -> transactionOf(part, form) ?: return }
+        val corrections = correctedRows(form, transactions)
 
         updateQuickAdd { it.copy(isSavingAll = true) }
         scope.launch {
             when (val result = saveTransactions(transactions)) {
                 is Outcome.Success -> {
+                    corrections.forEach { transaction ->
+                        // Remembering is only a help: a failure leaves quick add guessing next time
+                        rememberCategory(transaction.title, transaction.transactionType, transaction.categoryId)
+                    }
                     markQuickAddUsed()
                     host.send(AddEditTransactionEffect.Saved)
                 }
@@ -484,6 +490,18 @@ class DraftAssistController @Inject constructor(
                     host.send(AddEditTransactionEffect.ShowError(result.error.toMessageRes()))
                 }
             }
+        }
+    }
+
+    /** The batch's [transactions] whose category the user picked over the one the sentence suggested. */
+    private fun correctedRows(form: AddEditTransactionUiState, transactions: List<Transaction>): List<Transaction> {
+        if (chosenRowCategoryIds.isEmpty()) return emptyList()
+        val suggested = splitQuickAdd(text.value.trim(), form.transactionType, host.allCategories, learned)
+            ?.parts?.map { it.result.draft.categoryId }
+            ?: return emptyList()
+
+        return transactions.filterIndexed { row, transaction ->
+            row in chosenRowCategoryIds && suggested.getOrNull(row) != transaction.categoryId
         }
     }
 

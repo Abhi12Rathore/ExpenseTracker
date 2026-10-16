@@ -303,6 +303,56 @@ class AddEditTransactionQuickAddExtrasTest {
     }
 
     @Test
+    fun saveAll_remembersTheCategoriesTheUserChanged_andOnlyThose() = runTest {
+        val viewModel = viewModel()
+        type(viewModel, "450 swiggy and 120 uber and 300 dmart")
+        // Uber had none, so picking one is a correction; Dmart's suggestion is picked again, which is not
+        viewModel.quickAdd(QuickAddEvent.BatchCategoryChosen(1, shopping.id))
+        viewModel.quickAdd(QuickAddEvent.BatchCategoryChosen(2, groceries.id))
+
+        viewModel.quickAdd(QuickAddEvent.SaveAllClicked)
+        runCurrent()
+
+        assertEquals(3, transactions.current.size)
+        assertEquals(listOf(CategoryMemory("uber", TransactionType.EXPENSE, shopping.id)), memory.memory.value)
+    }
+
+    @Test
+    fun saveAll_changingASuggestedCategory_isRemembered() = runTest {
+        val viewModel = viewModel()
+        type(viewModel, "450 swiggy and 300 dmart")
+        viewModel.quickAdd(QuickAddEvent.BatchCategoryChosen(0, shopping.id))
+
+        viewModel.quickAdd(QuickAddEvent.SaveAllClicked)
+        runCurrent()
+
+        assertEquals(listOf(CategoryMemory("swiggy", TransactionType.EXPENSE, shopping.id)), memory.memory.value)
+    }
+
+    @Test
+    fun saveAll_thatFails_remembersNothing_andAMemoryThatFails_stillSaves() = runTest {
+        transactions.failWrites = true
+        val failing = viewModel()
+        type(failing, "450 swiggy and 120 uber")
+        failing.quickAdd(QuickAddEvent.BatchCategoryChosen(1, shopping.id))
+        failing.quickAdd(QuickAddEvent.SaveAllClicked)
+        runCurrent()
+        assertEquals(emptyList<Any>(), memory.memory.value)
+
+        transactions.failWrites = false
+        memory.failWith = DomainError.StorageFailure()
+        val viewModel = viewModel()
+        val effects = effectsOf(viewModel)
+        type(viewModel, "450 swiggy and 120 uber")
+        viewModel.quickAdd(QuickAddEvent.BatchCategoryChosen(1, shopping.id))
+        viewModel.quickAdd(QuickAddEvent.SaveAllClicked)
+        runCurrent()
+
+        assertEquals(2, transactions.current.size)
+        assertEquals(listOf(AddEditTransactionEffect.Saved), effects)
+    }
+
+    @Test
     fun saveAll_isNotOffered_whileARowIsIncomplete() = runTest {
         val viewModel = viewModel()
         type(viewModel, "450 swiggy and 120 uber")

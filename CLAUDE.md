@@ -140,7 +140,8 @@ Settled during the LLD refactor. Change one only with a reason that beats the on
 - Bill scanning reads rupee words only (₹, Rs, INR in `BillKeywords`). With another currency it still reads bare numbers, but a total written with another symbol may be missed.
 - `AddEditTransactionViewModel` has 12 dependencies. Fold them into facades.
 - `SettingsViewModel` has 12 dependencies. Fold them into facades.
-- The Add/Edit transaction form isn't kept in saved state, so typed values are lost on process death.
+- The Add/Edit transaction form isn't kept in saved state, so typed values are lost on process death. So are the quick-add batch (its row choices) and the rest of a review one by one.
+- `DraftAssistController` has 14 dependencies. Fold them into helpers.
 
 ## Workflow
 - Never commit to `main`. Use branches like `refactor/hilt` or `feature/theme-toggle`.

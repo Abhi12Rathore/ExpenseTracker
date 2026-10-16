@@ -14,7 +14,7 @@ sealed class Screens(val route: String) {
         const val ARG_TRANSACTION_ID = "transactionId"
         const val ARG_MODE = "mode"
 
-        /** What the launcher's app shortcuts open (`res/xml/shortcuts.xml`). */
+        /** What the launcher's app shortcuts open (`res/xml-v25/shortcuts.xml`). */
         const val DEEP_LINK = "expensetracker://add?mode={mode}"
 
         fun getRoute(transactionId: Int? = null): String {
