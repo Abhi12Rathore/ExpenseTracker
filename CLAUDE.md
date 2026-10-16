@@ -21,38 +21,24 @@ Goal: production-quality portfolio project.
 - Dependencies are declared in `gradle/libs.versions.toml`. Add new ones there, never hardcode versions in `app/build.gradle.kts`.
 
 ## Package structure (`com.example.expensetrackerpro`)
-- `data/local/` → Room: `entity/`, `dao/`, `expenseDatabase/`, `model/` (query result classes)
-- `data/local/dao/` → one DAO per aggregate: `TransactionDao` (transaction CRUD, range and search reads), `CategoryDao` (category CRUD, usage, rename, reassign-then-delete), `DashboardDao` (report queries, reads only), `CategoryMemoryDao` (the categories quick add learnt for titles); plus `AppDataDao` ("Delete all data", and the whole-table read and replace behind backup and restore) and `SampleDataDao` (debug sample data)
-- `data/mapper/` → entity ↔ domain mappers; `StorageErrorMapper` (`storageOutcome { }`) turns a `SQLiteException` into a `DomainError`
-- `data/repository/` → repository implementations
-- `data/files/` → `DocumentFiles`: reads and writes the documents the user picks in the system file screens, through `ContentResolver`; the one place a picked Uri is opened
-- `data/export/` → `FileExportRepositoryImpl`: writes the exported CSV (UTF-8 with a BOM) through `DocumentFiles`
-- `data/backup/` → the backup file: `BackupDto` (the JSON format, kotlinx.serialization), its mappers, and `BackupRepositoryImpl` (write, read, restore)
-- `data/scan/` → `MlKitBillTextReader` (text recognition, then deletes the photo), `BillLineAssembler` (joins recognized pieces into the bill's lines), `GmsBillScannerAvailability`
-- `data/language/` → `AppLanguageRepositoryImpl` (the one place the app's language is read from and handed to AppCompat), `AndroidDeviceLanguages` (the phone's own languages), `AndroidAppLocaleProvider`; `data/currency/` → `AndroidRegionCurrency` (the phone region's currency, for the first-run default), `AndroidNumberSymbolsProvider` (a language's decimal and grouping separators, from `DecimalFormatSymbols`), `ResourceCurrencyNames` (currency names from string resources, in any language asked for); `data/category/` → `ResourceDefaultCategoryNames` (built-in category names from string resources, in any language asked for)
-- `data/preferences/` → DataStore-backed repositories (theme, app lock, user profile, currency: `CurrencyRepositoryImpl` is also the `CurrencyProvider`; whether quick add has been used); `data/security/` → Android biometric availability
-- `data/motion/` → `AndroidMotionPreferences`: animations off when the animator duration scale is 0 ("Remove animations")
-- `data/speech/` → `AndroidVoiceInputAvailability`: whether a speech recognizer can show the system's "Speak now" screen
-- `domain/` → `models/` (typed IDs in `Ids.kt`), `error/` (`DomainError`, `Outcome`), `repository/` (interfaces), `security/` (device capability interfaces), `motion/` (`MotionPreferences`), `scan/` (`BillTextReader`, `BillScannerAvailability`), `quickadd/` (`QuickAddParser`, `QuickAddInput`), `speech/` (`VoiceInputAvailability`), `locale/` (`AppLocaleProvider`, `DeviceLanguages`, `NumberSymbolsProvider`), `currency/` (`AppCurrency`, `CurrencyProvider`, `RegionCurrency`, `CurrencyNames`, `NumberSymbols`), `category/` (`DefaultCategoryNames`), `usecase/<feature>/` (one class per operation, `operator fun invoke`)
-- `domain/usecase/scan/` → `ScanBillUseCase` (read, then `ParseBillUseCase`), the parsers it delegates to (one per rule: amount, title, date, note), and `BillKeywords`: every word list and limit the parsers use, en-IN for now
-- `domain/usecase/quickadd/` → `ParseQuickAddUseCase` (runs the `QuickAddParser`, then checks what it returned), `SplitQuickAddUseCase` (several transactions in one sentence, each part through `ParseQuickAddUseCase`), `GetFrequentTransactionsUseCase` (the frequent spends: title + category at least 3 times in 60 days, median amount), `RuleBasedQuickAddParser` and its rule parsers (date and time, amount, title and note), and `QuickAddKeywords`: every word they know, English and Hinglish (en-IN) for now. `domain/usecase/categorymemory/` → observing and remembering the category picked for a title
-- `presentation/<feature>/` → Screen, ViewModel, `components/`, `uistate/`
-- `presentation/common/category/editor/` → the add/edit category sheet shared by Manage Categories and Add/Edit Transaction: its state, events and `CategoryEditorReducer`; the host ViewModel keeps the state and wraps the events
-- `presentation/transactions/addEditTransactions/draft/` → `TransactionDraftReducer`: puts a `TransactionDraft` into the form and tracks which fields still hold its values and where they came from (`DraftFill`, `DraftSource` in `uistate/`); `scan/` → `rememberBillScanner`, the one place Google's scanner screen is launched; `voice/` → `rememberVoiceInput`, the one place the speech recognizer is launched
-- `presentation/transactions/addEditTransactions/assist/` → `DraftAssistController`: everything that fills the form for the user (bill scan, the quick-add bar and its preview, frequent spends, a batch from one sentence and its review one by one, learning from corrections, the entry mode); the ViewModel forwards the events and gives it the form through `DraftAssistHost`
-- `AddEntryMode` (`addEditTransactions/uistate/`) → how a new transaction opens (manual, quick add, scan, voice): the `mode` route argument, from the long press on the bottom bar's + and the launcher's static app shortcuts (`res/xml-v25/shortcuts.xml`, deep link `expensetracker://add?mode=…`, no intent filter)
-- `presentation/common/error/` → `DomainError.toMessageRes()`, the one place an error becomes a message
-- `presentation/exportBackup/` → Settings → Export & backup: the period to export and the "Save as" picker; the CSV itself is built in `domain/usecase/export/`. `BackupController` owns creating a backup and restoring from one (the Backup card and the confirmation sheet); the ViewModel shows its state and forwards its events
-- `presentation/language/` → Settings → Language: the list, the Preview card (`LocalizedContent` draws it in another language without switching the app) and the bilingual apply button. The Undo snackbar is on Settings, owned by `presentation/settings/RegionalSettingsController`
-- `presentation/currency/` → Settings → Currency: the pinned Preview card (the user's figures in the selected currency), search, Suggested (current + phone region) and all currencies, each with a sample in its own grouping; the confirmation that nothing is converted. Applying sets the currency at once and closes; the Undo snackbar is on Settings (`RegionalSettingsController`, which owns the Language and Currency rows)
-- `presentation/common/list/` → `SectionTitle` and `GroupedRow`, the sectioned card list the Language and Currency pickers share
-- `presentation/common/date/` → `LocalDateFormatter`: how Composables reach the injected `DateFormatter`
-- `presentation/common/currency/` → `LocalCurrencyFormatter`: how Composables reach the injected `CurrencyFormatter`; `LocalAppCurrency` (provided in `MainActivity` from `MainUiState.currency`, so a change recomposes every screen) and `amountFormatKey()`, the key for any `remember` that holds formatted amounts
-- `presentation/common/motion/` → `AppMotionHost` (the app root: theme reveal, theme cross-fade, the fade after a recreate), `ThemeTransitionController` (the tapped spot, from the theme option to the root), `ScreenSnapshotHolder` (a picture of the screen across a recreate), `LocalAnimationsEnabled`, `rememberCountUp`, `PressTracker`, `phoneDarkTheme()`
-- `presentation/common/haptics/` → `rememberHaptics()`: confirm and toggle feedback through the View (Compose 1.7 has no such `HapticFeedbackType`)
-- `presentation/lock/` → lock screen, the biometric prompt wrapper, and `AppLockController` (lock state, prompt flow, background timing); `MainViewModel` shows its state and forwards the lock events
-- `ui/theme/` → colors, typography, theme
-- `utils/` → shared helpers
+Only what the folder names don't tell.
+- DAOs: `TransactionDao` (CRUD, range and search reads), `CategoryDao` (CRUD, usage, rename, reassign-then-delete), `DashboardDao` (report reads only), `CategoryMemoryDao` (what quick add learnt), `AppDataDao` ("Delete all data"; the whole-table read and replace behind backup and restore), `SampleDataDao` (debug). Query result classes in `data/local/model/`.
+- `data/mapper/StorageErrorMapper` (`storageOutcome { }`) turns a `SQLiteException` into a `DomainError`.
+- `data/files/DocumentFiles` is the one place a Uri the user picked is opened (through `ContentResolver`). The CSV (UTF-8 with a BOM) and the backup go through it.
+- `data/scan/`: `MlKitBillTextReader` (text recognition, then deletes the photo), `BillLineAssembler` (joins recognized pieces into the bill's lines).
+- `data/language/AppLanguageRepositoryImpl` is the one place the app's language is read from and handed to AppCompat. String-resource lookups in any language: `data/currency/ResourceCurrencyNames`, `data/category/ResourceDefaultCategoryNames`. `AndroidNumberSymbolsProvider` gives a language's separators (`DecimalFormatSymbols`); `AndroidRegionCurrency` the phone region's currency for the first-run default.
+- `data/preferences/CurrencyRepositoryImpl` is also the `CurrencyProvider`. `AndroidMotionPreferences`: animations off when the animator duration scale is 0.
+- `domain/models/Ids.kt`: typed IDs. `domain/usecase/<feature>/`: one class per operation, `operator fun invoke`.
+- `domain/usecase/scan/`: `ScanBillUseCase` (read, then `ParseBillUseCase`), one parser per rule (amount, title, date, note), and `BillKeywords`: every word list and limit they use, en-IN for now.
+- `domain/usecase/quickadd/`: `ParseQuickAddUseCase` (runs the `QuickAddParser`, then checks its result), `SplitQuickAddUseCase` (several in one sentence), `GetFrequentTransactionsUseCase` (title + category at least 3 times in 60 days, median amount), `RuleBasedQuickAddParser` and its rule parsers, and `QuickAddKeywords`: every word they know, English and Hinglish (en-IN) for now.
+- `presentation/common/category/editor/`: the add/edit category sheet shared by Manage Categories and Add/Edit Transaction (`CategoryEditorReducer`); the host ViewModel keeps the state and wraps the events.
+- `presentation/transactions/addEditTransactions/`: `draft/TransactionDraftReducer` puts a `TransactionDraft` into the form and tracks which fields still hold its values and where they came from (`DraftFill`, `DraftSource`); `scan/rememberBillScanner` and `voice/rememberVoiceInput` are the one place the scanner and the speech recognizer are launched; `assist/DraftAssistController` does everything that fills the form for the user (scan, quick-add bar and preview, frequent spends, a batch and its review one by one, learning from corrections, entry mode), and the ViewModel gives it the form through `DraftAssistHost`.
+- `AddEntryMode` (manual, quick add, scan, voice) is the `mode` route argument, set by a long press on the bottom bar's + or a launcher shortcut (`res/xml-v25/shortcuts.xml`, deep link `expensetracker://add?mode=…`, no intent filter).
+- Controllers keep ViewModels small: `BackupController` (Export & backup), `RegionalSettingsController` (Settings' Language and Currency rows and their Undo snackbars), `AppLockController` (lock state, prompt flow, background timing; `MainViewModel` shows it and forwards the events).
+- `presentation/common/error/`: `DomainError.toMessageRes()`, the one place an error becomes a message.
+- Composition locals: `LocalDateFormatter`, `LocalCurrencyFormatter`, `LocalAppCurrency` (provided in `MainActivity` from `MainUiState.currency`, so a change recomposes every screen) with `amountFormatKey()`, `LocalAnimationsEnabled`.
+- `presentation/language/components/LocalizedContent` draws the Preview card in another language without switching the app. The Language and Currency pickers share `presentation/common/list/`.
+- `presentation/common/motion/AppMotionHost`: the app root (theme reveal, cross-fade, the fade after a recreate). `rememberHaptics()` gives confirm and toggle feedback through the View (Compose 1.7 has no such `HapticFeedbackType`).
 
 ## Architecture rules (target state)
 - **DI:** Hilt only. Use `@HiltViewModel` + `hiltViewModel()`. No ViewModel factories, no manual singletons, no dependencies created in `Application`.
@@ -71,7 +57,7 @@ Apply these to all new and changed code. Existing violations are tracked under K
 - **Use cases:** one operation each. When a ViewModel needs more than ~5 dependencies, add a facade use case that combines them (e.g. `GetDashboardUseCase`).
 - **Value types over primitives:** money is `Money` (whole minor units, hundredths of the currency's unit, as `Long`; never `Double`), IDs are typed (`TransactionId`, `CategoryId`: `@JvmInline value class` over `Int`; wrap in `data/mapper/`, unwrap only for Room, navigation arguments and lazy-list keys), dates go through `DateRange` / `TimeProvider`.
 - **No stringly-typed data:** fixed sets are enums or sealed types (e.g. `CategoryIcon` enum stored via a Room `TypeConverter`), not free strings.
-- **Data access:** one DAO per aggregate (`TransactionDao`, `CategoryDao`, `DashboardDao`), and a repository depends only on the DAOs it reads or writes. Don't store the same data twice; get related data through a JOIN or `@Relation`.
+- **Data access:** one DAO per aggregate, and a repository depends only on the DAOs it reads or writes. Don't store the same data twice; get related data through a JOIN or `@Relation`.
 - **Errors:** expected failures are typed. Writes return `Outcome<T>` (`Success(value)` / `Failure(DomainError)`, both in `domain/error/`), not `kotlin.Result`, `Boolean` or a nullable. Repositories wrap database writes in `storageOutcome { }`, which catches `SQLiteException` only; ViewModels turn the error into a `@StringRes` with `toMessageRes()`. No silent `catch {}`, no catch-all of `Throwable`, and no exceptions used for control flow.
 - **Time:** never call `System.currentTimeMillis()` or `Calendar.getInstance()` outside `data/time/`. Inject `TimeProvider`.
 - **Global objects:** `object` is only for stateless pure helpers. Anything that reads the clock, locale or other state is an injectable class.
@@ -113,28 +99,28 @@ Apply these to all new and changed code. Existing violations are tracked under K
 - Debug builds have Settings → Developer → "Load sample data" (`data/sample/`), gated by `BuildInfo.isDebug`. "Delete all data" (Settings → Danger zone, `AppDataRepository`) is a user feature in every build.
 
 ## Architecture decisions
-Settled during the LLD refactor. Change one only with a reason that beats the one given.
-- **Money is whole minor units in a `Long`** (`Money.minorUnits`, hundredths of the currency's unit, `MINOR_PER_UNIT = 100` for every currency), in the domain and in the database. `Double` loses the decimals when amounts are summed. The Room column is still named `amountPaise` (and the backup field too), so the schema didn't change.
-- **The currency formatter is an injected class**, not an `object`: it reads the currency from `CurrencyProvider` on every call, so a currency setting needs no change to the screens.
-- **The currency is a display setting; nothing is converted.** Stored amounts keep their numbers; only the symbol and how the number is written change, which the confirmation says with the user's latest transaction. The CSV gets a `Currency` column (ISO code) and keeps two decimals in every currency, and a backup carries an optional `currency` field (no version bump): restoring a file made in another currency offers to switch to it, and an unknown code is ignored, never a reason to refuse the file.
-- **The currency is read under the splash.** `CurrencyProvider.current()` is synchronous, so `PrepareAppUseCase` loads it into memory before the first frame; `MainViewModel` follows it through `ObserveDisplaySettingsUseCase` (theme + currency), which keeps it at five dependencies.
-- **Category name and icon are read through a JOIN**, never copied onto the transaction, so renaming a category can't leave old names behind.
-- **Expected failures are `Outcome<T>` with a `DomainError`**, not `Boolean`, a nullable or `kotlin.Result`: the caller has to handle the failure and can tell why it happened. Only `SQLiteException` is caught (`storageOutcome { }`); anything else is a bug and crashes.
-- **One DAO per aggregate**, and a repository takes only the DAOs it uses, so a change to one table's queries doesn't touch the others.
-- **`AppLockController` owns the app lock.** It is a plain injectable class, one per `MainViewModel`, so the lock rules are tested without a ViewModel and `MainViewModel` stays at five dependencies.
-- **A backup holds transactions and categories only**, never theme, profile or app lock: a file must not be able to turn the lock off. The file is versioned JSON (`Backup.VERSION`); its DTOs stay in `data/backup/`, and `ValidateBackupUseCase` checks the whole file before anything is written.
-- **A restore keeps only the picked file's Uri** (in `SavedStateHandle`), re-reads and re-validates it on confirm, and replaces both tables in one Room transaction (`AppDataDao.replaceAll`), so a failure at any point leaves the current data as it was.
-- **A scanned bill becomes a `TransactionDraft`, and only a draft reaches the form.** Reading (`BillTextReader`), parsing (`ParseBillUseCase`, pure Kotlin) and filling the form (`TransactionDraftReducer`) are separate steps, so another source of drafts reuses the last one unchanged. A draft never replaces what the user entered, and nothing is saved without the user tapping Save.
-- **The photo of a bill is never kept.** The reader deletes it once it has been read; only its Uri is held, in `SavedStateHandle`, until then, so a scan survives the process being killed. This is why the banner shows an icon and not the photo.
-- **A doubtful value is left out rather than guessed**: a total next to "Sub Total", a date in the future or over a year old, an amount of ₹10,00,000 or more. Bill words and limits live only in `BillKeywords`; the parsers hold rules, not words.
-- **A built-in category is known by its key, and its name follows the app's language.** The name is still stored, so every query and JOIN reads it as before; `LocalizeDefaultCategoriesUseCase` rewrites it when the language changes. A rename clears the key, which is how the user's name is never replaced; a built-in whose translated name another category of its type already has is left as it is. Backups carry the key as an optional field, so older files still restore.
-- **The language change is applied after the Language screen has closed**, and the previous choice is kept in memory for the Undo. The switch recreates the activity while `MainViewModel` stays, and the app is never reported as backgrounded, so the app lock is not triggered.
-- **Theme and language changes are shown with a snapshot at the root.** The whole tree recomposes with new colors in one frame, so `AppMotionHost` draws a picture of the old look over the new one and takes it away: a circle from the tapped option, or a cross-fade when the phone switched dark mode. A theme change doesn't recreate the activity (`configChanges="uiMode"`); a language change does, so its picture is kept in the activity-retained `ScreenSnapshotHolder` for at most a second. The effective theme reads the phone's own dark mode (`UiModeManager`), because from Android 12 the app's configuration reports the app's own night mode for a moment after a change.
-- **Quick add is another source of drafts.** A sentence becomes a `TransactionDraft` (with a type and a category of its own) and goes through the same `TransactionDraftReducer` as a bill: nothing typed is overwritten, Clear takes it out (the type too), nothing is saved without Save. `ParseQuickAddUseCase` checks whatever the parser returns (amount, date, category), so another parser (a language, an on-device model) can go behind `QuickAddParser` without new checks. Words live only in `QuickAddKeywords`.
-- **What quick add learns is a cache, not the user's data.** `category_memory` (title key and type → category) is written on Save when the user picked another category than the draft's, or one where it found none; it is not in backups, "Delete all data" empties it, and it goes with its category (`ON DELETE CASCADE`), so a restore clears it too.
-- **Several transactions from one sentence are saved all or none.** `SaveTransactionsUseCase` checks each with the form's rules (`ValidateTransactionDraftUseCase`), then one `TransactionDao.insertTransactions`, which Room runs in one transaction; no Room in the domain and no exception for control flow. "Save all" needs every row to have a title and a category, all on screen; "Review one by one" fills the form with each in turn.
-- **An entry mode is launched once.** A shortcut's mode becomes `QuickAddUiState.launchRequest`; the screen opens the scanner, the voice or the bar and reports `LaunchHandled`, kept in `SavedStateHandle`, so a recreate doesn't open it again. The NavHost exists only once unlocked, so a shortcut never opens anything over the lock.
-- **IDs are typed in the domain and `Int` in Room.** `TransactionId` and `CategoryId` can't be mixed up; entities keep `Int`, so typing them needed no schema change.
+Read `docs/architecture-decisions.md` before changing one of these. Each has its reasoning there; change one only with a reason that beats it.
+- Money is whole minor units in a `Long` (column still `amountPaise`).
+- The currency formatter is an injected class, reading `CurrencyProvider` on every call.
+- The currency is a display setting; nothing is converted.
+- The currency is read under the splash (`PrepareAppUseCase`).
+- Category name and icon are read through a JOIN, never copied onto the transaction.
+- Expected failures are `Outcome<T>` with a `DomainError`.
+- One DAO per aggregate.
+- `AppLockController` owns the app lock.
+- A backup holds transactions and categories only, never settings or the app lock.
+- A restore re-reads and re-validates the file on confirm and replaces both tables in one transaction.
+- A scanned bill becomes a `TransactionDraft`, and only a draft reaches the form.
+- The photo of a bill is never kept.
+- A doubtful value is left out rather than guessed.
+- A built-in category is known by its key; its name follows the app's language.
+- The language change is applied after the Language screen has closed.
+- Theme and language changes are shown with a snapshot at the root.
+- Quick add is another source of drafts.
+- What quick add learns is a cache, not the user's data.
+- Several transactions from one sentence are saved all or none.
+- An entry mode is launched once.
+- IDs are typed in the domain and `Int` in Room.
 
 ## Known issues (remove each line once fixed)
 - Bill scanning reads rupee words only (₹, Rs, INR in `BillKeywords`). With another currency it still reads bare numbers, but a total written with another symbol may be missed.
