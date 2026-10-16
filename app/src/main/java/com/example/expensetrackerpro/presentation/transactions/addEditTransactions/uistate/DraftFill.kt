@@ -16,6 +16,9 @@ sealed interface DraftSource {
 
     /** What the user typed or said into quick add, quoted on the banner. */
     data class Text(val text: String) : DraftSource
+
+    /** One of the user's frequent transactions, named on the banner. */
+    data class History(val title: String) : DraftSource
 }
 
 /** What a draft has put into the form, for as long as the form shows that it did. */

@@ -29,6 +29,15 @@ data class QuickAddResult(
     fun confidenceOf(field: QuickAddField): FieldConfidence? = confidence[field]
 }
 
+/**
+ * A sentence that holds several transactions, such as "450 swiggy and 120 uber today": the
+ * [parts] in the order they were said, each read on its own.
+ */
+data class QuickAddBatch(val parts: List<QuickAddPart>)
+
+/** One transaction of a [QuickAddBatch]: its own words, and what was understood from them. */
+data class QuickAddPart(val text: String, val result: QuickAddResult)
+
 /** A category the user chose for a title, remembered so that quick add picks it next time. */
 data class CategoryMemory(
     /** The title as [CategoryMemory.keyOf] writes it, so "DMart" and "dmart " are one. */

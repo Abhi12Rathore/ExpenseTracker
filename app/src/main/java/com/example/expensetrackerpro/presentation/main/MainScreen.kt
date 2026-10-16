@@ -1,9 +1,18 @@
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.PhotoCamera
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Mic
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -12,11 +21,20 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -34,6 +52,7 @@ import com.example.expensetrackerpro.domain.models.TransactionId
 import com.example.expensetrackerpro.presentation.homeScreen.HomeScreen
 import com.example.expensetrackerpro.presentation.navigation.Screens
 import com.example.expensetrackerpro.presentation.settings.SettingsScreen
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEntryMode
 import com.example.expensetrackerpro.presentation.transactions.transactionList.TransactionListScreen
 
 private val bottomNavItems = listOf(
@@ -46,6 +65,7 @@ private val bottomNavItems = listOf(
 fun MainScreen(
     snackbarHostState: SnackbarHostState,
     onNavigateToTransactionForm: (TransactionId?) -> Unit,
+    onNavigateToNewTransaction: (AddEntryMode) -> Unit,
     onNavigateToManageCategories: () -> Unit,
     onNavigateToExportBackup: () -> Unit,
     onNavigateToLanguage: () -> Unit,
@@ -79,7 +99,8 @@ fun MainScreen(
                         }
                     }
                 },
-                onAddClick = { onNavigateToTransactionForm(null) }
+                onAddClick = { onNavigateToNewTransaction(AddEntryMode.MANUAL) },
+                onAddModeSelected = onNavigateToNewTransaction
             )
         }
     ) { innerPadding ->
@@ -162,7 +183,8 @@ fun MainScreen(
 private fun MainBottomBar(
     currentRoute: String?,
     onTabSelected: (BottomNavItem) -> Unit,
-    onAddClick: () -> Unit
+    onAddClick: () -> Unit,
+    onAddModeSelected: (AddEntryMode) -> Unit
 ) {
     NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
         bottomNavItems.forEach { item ->
@@ -197,18 +219,83 @@ private fun MainBottomBar(
             )
         }
         // Last in the row, after the tabs, so it is in reach on every one of them
-        FloatingActionButton(
+        AddButton(
             onClick = onAddClick,
-            modifier = Modifier.padding(end = 16.dp),
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
+            onModeSelected = onAddModeSelected,
+            modifier = Modifier.padding(end = 16.dp)
+        )
+    }
+}
+
+private val AddButtonSize = 56.dp
+
+/** The ways to start a transaction offered on a long press, in the order the menu lists them. */
+private val addModes = listOf(
+    Triple(AddEntryMode.QUICK_ADD, Icons.Rounded.AutoAwesome, R.string.add_mode_quick_add),
+    Triple(AddEntryMode.SCAN, Icons.Rounded.PhotoCamera, R.string.add_mode_scan),
+    Triple(AddEntryMode.VOICE, Icons.Rounded.Mic, R.string.add_mode_voice),
+    Triple(AddEntryMode.MANUAL, Icons.Rounded.Edit, R.string.add_mode_manual)
+)
+
+/**
+ * The + button: a tap opens the form as always, a long press a short menu of the other ways to
+ * start one (quick add, a bill, the voice). Drawn like a FloatingActionButton, which has no long press.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun AddButton(
+    onClick: () -> Unit,
+    onModeSelected: (AddEntryMode) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // Purely visual: whether the long-press menu is open
+    var isMenuOpen by remember { mutableStateOf(false) }
+    val haptics = LocalHapticFeedback.current
+
+    Box(modifier = modifier) {
+        Surface(
+            modifier = Modifier.size(AddButtonSize),
+            shape = FloatingActionButtonDefaults.shape,
+            color = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            shadowElevation = 6.dp
         ) {
-            Icon(
-                imageVector = Icons.Rounded.Add,
-                contentDescription = stringResource(R.string.nav_add_transaction)
-            )
+            Box(
+                modifier = Modifier.combinedClickable(
+                    role = Role.Button,
+                    onLongClickLabel = stringResource(R.string.add_mode_menu_label),
+                    onLongClick = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        isMenuOpen = true
+                    },
+                    onClick = onClick
+                ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Add,
+                    contentDescription = stringResource(R.string.nav_add_transaction)
+                )
+            }
+        }
+        DropdownMenu(expanded = isMenuOpen, onDismissRequest = { isMenuOpen = false }) {
+            addModes.forEach { (mode, icon, labelRes) ->
+                AddModeItem(icon = icon, label = stringResource(labelRes)) {
+                    isMenuOpen = false
+                    onModeSelected(mode)
+                }
+            }
         }
     }
+}
+
+@Composable
+private fun AddModeItem(icon: ImageVector, label: String, onClick: () -> Unit) {
+    DropdownMenuItem(
+        text = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        leadingIcon = { Icon(icon, contentDescription = null) },
+        onClick = onClick
+    )
 }
 
 @PreviewLightDark
@@ -218,7 +305,8 @@ private fun MainBottomBarHomePreview() {
         MainBottomBar(
             currentRoute = BottomNavItem.Home.route,
             onTabSelected = {},
-            onAddClick = {}
+            onAddClick = {},
+            onAddModeSelected = {}
         )
     }
 }
@@ -230,7 +318,8 @@ private fun MainBottomBarHistoryPreview() {
         MainBottomBar(
             currentRoute = BottomNavItem.Transactions.route,
             onTabSelected = {},
-            onAddClick = {}
+            onAddClick = {},
+            onAddModeSelected = {}
         )
     }
 }

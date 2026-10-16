@@ -43,7 +43,12 @@ data class QuickAddKeywords(
     /** Category keywords that name only the kind, not the place: left out of a title that has another word. */
     val genericWords: List<String>,
     val shortKeywordLength: Int,
-    val titleMaxLength: Int
+    val titleMaxLength: Int,
+    /**
+     * Words between two transactions said in one go: "450 swiggy and 120 uber". Commas and new
+     * lines split too. Not between written-out numbers, where "and" is a [numberJoiners] word.
+     */
+    val splitWords: List<String> = emptyList()
 ) {
 
     companion object {
@@ -170,7 +175,8 @@ data class QuickAddKeywords(
                 "fuel", "bill", "fees", "fee", "subscription", "trip"
             ),
             shortKeywordLength = 4,
-            titleMaxLength = 40
+            titleMaxLength = 40,
+            splitWords = listOf("and", "aur")
         )
     }
 }

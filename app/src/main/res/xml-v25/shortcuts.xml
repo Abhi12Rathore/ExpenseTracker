@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The launcher's app shortcuts (long-press the app's icon): the same four ways to start a
+    transaction as the long press on the bottom bar's +. Each opens MainActivity with a link that
+    the transaction form's deep link reads (Screens.TransactionForm.DEEP_LINK). The activity has
+    no intent filter for it, so only these shortcuts, which name the activity, can send it.
+    targetPackage is the applicationId, which never changes.
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="add_quick_add"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_quick_add"
+        android:shortcutShortLabel="@string/shortcut_quick_add_short"
+        android:shortcutLongLabel="@string/add_mode_quick_add">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="expensetracker://add?mode=QUICK_ADD"
+            android:targetClass="com.example.expensetrackerpro.MainActivity"
+            android:targetPackage="dev.pebblework.expensetracker" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="add_scan"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_scan"
+        android:shortcutShortLabel="@string/shortcut_scan_short"
+        android:shortcutLongLabel="@string/add_mode_scan">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="expensetracker://add?mode=SCAN"
+            android:targetClass="com.example.expensetrackerpro.MainActivity"
+            android:targetPackage="dev.pebblework.expensetracker" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="add_voice"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_voice"
+        android:shortcutShortLabel="@string/shortcut_voice_short"
+        android:shortcutLongLabel="@string/add_mode_voice">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="expensetracker://add?mode=VOICE"
+            android:targetClass="com.example.expensetrackerpro.MainActivity"
+            android:targetPackage="dev.pebblework.expensetracker" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="add_manual"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_manual"
+        android:shortcutShortLabel="@string/shortcut_manual_short"
+        android:shortcutLongLabel="@string/add_mode_manual">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="expensetracker://add?mode=MANUAL"
+            android:targetClass="com.example.expensetrackerpro.MainActivity"
+            android:targetPackage="dev.pebblework.expensetracker" />
+    </shortcut>
+</shortcuts>

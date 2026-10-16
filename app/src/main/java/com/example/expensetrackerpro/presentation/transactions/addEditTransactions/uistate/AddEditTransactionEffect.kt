@@ -17,6 +17,9 @@ sealed interface AddEditTransactionEffect {
     /** The text had no amount, so the keypad comes up for it. */
     data object FocusAmount : AddEditTransactionEffect
 
+    /** One of a batch reviewed one by one was saved, and the form now holds the next. */
+    data class SavedOneOfMany(val number: Int, val total: Int) : AddEditTransactionEffect
+
     /** The first correction for [title]: "Next time [title] goes to [categoryName]", with Undo. */
     data class CategoryLearned(val title: String, val categoryName: String) : AddEditTransactionEffect
 }

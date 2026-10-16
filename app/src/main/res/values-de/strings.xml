@@ -289,6 +289,41 @@
     <string name="quick_add_banner_quote">„%1$s“</string>
     <string name="quick_add_tag">✨ Aus deinem Text</string>
     <string name="quick_add_learned">Nächstes Mal kommt „%1$s“ zu %2$s</string>
+
+    <!-- Quick add: frequent transactions, several in one sentence -->
+    <string name="quick_add_frequent">Häufig</string>
+    <plurals name="quick_add_frequent_times">
+        <item quantity="one">%1$d-mal</item>
+        <item quantity="other">%1$d-mal</item>
+    </plurals>
+    <string name="quick_add_history_tag">🕘 Aus deinem Verlauf</string>
+    <string name="quick_add_history_banner_title">Aus deinem Verlauf übernommen</string>
+    <string name="quick_add_history_banner_message">Dein übliches „%1$s“. Prüf den Betrag vor dem Speichern.</string>
+    <string name="quick_add_review_banner_title">%1$s · %2$d von %3$d</string>
+    <string name="quick_add_review_saved">%1$d von %2$d gespeichert. Hier ist die nächste.</string>
+    <plurals name="quick_add_batch_found_expenses">
+        <item quantity="one">%1$d Ausgabe gefunden</item>
+        <item quantity="other">%1$d Ausgaben gefunden</item>
+    </plurals>
+    <plurals name="quick_add_batch_found_transactions">
+        <item quantity="one">%1$d Buchung gefunden</item>
+        <item quantity="other">%1$d Buchungen gefunden</item>
+    </plurals>
+    <string name="quick_add_batch_save_all_total">Alle speichern · %1$s</string>
+    <string name="quick_add_batch_save_all">Alle speichern</string>
+    <string name="quick_add_batch_review">Einzeln prüfen</string>
+    <string name="quick_add_batch_incomplete">Bei manchen fehlt ein Titel oder eine Kategorie. Wähl oben eine aus oder prüf sie einzeln.</string>
+
+    <!-- The + button's long press, and the launcher's app shortcuts -->
+    <string name="add_mode_menu_label">Weitere Wege zum Hinzufügen</string>
+    <string name="add_mode_quick_add">Schnell erfassen</string>
+    <string name="add_mode_scan">Beleg scannen</string>
+    <string name="add_mode_voice">Sprechen</string>
+    <string name="add_mode_manual">Selbst eingeben</string>
+    <string name="shortcut_quick_add_short">Schnell</string>
+    <string name="shortcut_scan_short">Beleg</string>
+    <string name="shortcut_voice_short">Sprechen</string>
+    <string name="shortcut_manual_short">Neu</string>
     <string name="transaction_delete_dialog_title">Buchung löschen?</string>
     <string name="transaction_delete_dialog_message">Sie wird aus deinen Buchungen und Summen entfernt.</string>
     <string name="transaction_delete_dialog_cancel">Abbrechen</string>
@@ -489,6 +524,7 @@
     <string name="error_backup_invalid">Diese Datei ist keine Sicherung von Expense Tracker</string>
     <string name="error_backup_too_new">Diese Sicherung stammt aus einer neueren Version der App</string>
     <string name="error_bill_unreadable">Dieser Beleg konnte nicht gelesen werden</string>
+    <string name="error_transaction_incomplete">Jede Buchung braucht einen Betrag, einen Titel und eine Kategorie</string>
     <string name="error_file_write_failed">Die Datei konnte nicht gespeichert werden. Prüfe, ob der Speicherort noch verfügbar ist und Platz hat.</string>
 
     <!-- Export & backup -->

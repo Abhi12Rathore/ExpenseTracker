@@ -297,6 +297,42 @@
     <string name="quick_add_banner_quote">“%1$s”</string>
     <string name="quick_add_tag">✨ From your text</string>
     <string name="quick_add_learned">Next time “%1$s” goes to %2$s</string>
+
+    <!-- Quick add: frequent transactions, several in one sentence -->
+    <string name="quick_add_frequent">Frequent</string>
+    <plurals name="quick_add_frequent_times">
+        <item quantity="one">%1$d time</item>
+        <item quantity="other">%1$d times</item>
+    </plurals>
+    <string name="quick_add_frequent_detail" translatable="false">%1$s · %2$s</string>
+    <string name="quick_add_history_tag">🕘 From your history</string>
+    <string name="quick_add_history_banner_title">Filled from your history</string>
+    <string name="quick_add_history_banner_message">Your usual “%1$s”. Check the amount before you save.</string>
+    <string name="quick_add_review_banner_title">%1$s · %2$d of %3$d</string>
+    <string name="quick_add_review_saved">Saved %1$d of %2$d. Here is the next one.</string>
+    <plurals name="quick_add_batch_found_expenses">
+        <item quantity="one">Found %1$d expense</item>
+        <item quantity="other">Found %1$d expenses</item>
+    </plurals>
+    <plurals name="quick_add_batch_found_transactions">
+        <item quantity="one">Found %1$d transaction</item>
+        <item quantity="other">Found %1$d transactions</item>
+    </plurals>
+    <string name="quick_add_batch_save_all_total">Save all · %1$s</string>
+    <string name="quick_add_batch_save_all">Save all</string>
+    <string name="quick_add_batch_review">Review one by one</string>
+    <string name="quick_add_batch_incomplete">Some need a title or a category. Pick one above, or review them one by one.</string>
+
+    <!-- The + button's long press, and the launcher's app shortcuts -->
+    <string name="add_mode_menu_label">More ways to add</string>
+    <string name="add_mode_quick_add">Quick add</string>
+    <string name="add_mode_scan">Scan a bill</string>
+    <string name="add_mode_voice">Say it</string>
+    <string name="add_mode_manual">Add manually</string>
+    <string name="shortcut_quick_add_short">Quick add</string>
+    <string name="shortcut_scan_short">Scan bill</string>
+    <string name="shortcut_voice_short">Say it</string>
+    <string name="shortcut_manual_short">Add</string>
     <string name="transaction_delete_dialog_title">Delete transaction?</string>
     <string name="transaction_delete_dialog_message">It will be removed from your transactions and totals.</string>
     <string name="transaction_delete_dialog_cancel">Cancel</string>
@@ -513,6 +549,7 @@
     <string name="error_backup_invalid">This file isn\'t an Expense Tracker backup</string>
     <string name="error_backup_too_new">This backup is from a newer version of the app</string>
     <string name="error_bill_unreadable">Couldn\'t read this bill</string>
+    <string name="error_transaction_incomplete">Each transaction needs an amount, a title and a category</string>
     <string name="error_file_write_failed">Couldn\'t save the file. Check that the location is still available and has space.</string>
 
     <!-- Export & backup -->

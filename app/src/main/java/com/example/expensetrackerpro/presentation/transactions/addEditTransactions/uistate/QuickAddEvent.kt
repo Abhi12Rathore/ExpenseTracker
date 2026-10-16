@@ -35,4 +35,21 @@ sealed interface QuickAddEvent {
 
     /** Undo on "Next time … goes to …": the correction is not remembered. */
     data object LearnUndone : QuickAddEvent
+
+    /** One of the frequent transactions was tapped: the form is filled with it. */
+    data class FrequentSelected(val index: Int) : QuickAddEvent
+
+    /** The category chip of the batch's [row] was tapped. */
+    data class BatchCategoryClicked(val row: Int) : QuickAddEvent
+
+    data class BatchCategoryChosen(val row: Int, val categoryId: CategoryId) : QuickAddEvent
+
+    /** "Save all": every transaction of the batch is stored, or none. */
+    data object SaveAllClicked : QuickAddEvent
+
+    /** "Review one by one": the form is filled with each of the batch in turn. */
+    data object ReviewOneByOneClicked : QuickAddEvent
+
+    /** The screen opened what [QuickAddUiState.launchRequest] asked for. */
+    data object LaunchHandled : QuickAddEvent
 }

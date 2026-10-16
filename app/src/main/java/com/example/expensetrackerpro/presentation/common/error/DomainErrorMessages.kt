@@ -16,6 +16,7 @@ fun DomainError.toMessageRes(): Int = when (this) {
         InvalidInputReason.NAME_BLANK -> R.string.category_editor_name_error_blank
         InvalidInputReason.NAME_TOO_LONG -> R.string.error_name_too_long
         InvalidInputReason.INCOMPATIBLE_REASSIGN_TARGET -> R.string.error_incompatible_reassign_target
+        InvalidInputReason.TRANSACTION_INCOMPLETE -> R.string.error_transaction_incomplete
     }
     is DomainError.StorageFailure -> R.string.error_storage_failure
     DomainError.FileWriteFailed -> R.string.error_file_write_failed

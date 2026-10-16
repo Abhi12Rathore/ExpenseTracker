@@ -90,7 +90,11 @@ class AddEditTransactionQuickAddTest {
     private val preferences = FakeQuickAddPreferencesRepository()
     private val voice = FakeVoiceInputAvailability()
 
-    private fun viewModel(transactionId: Int? = null, locale: Locale = Locale.ENGLISH) = AddEditTransactionViewModel(
+    private fun viewModel(
+        transactionId: Int? = null,
+        locale: Locale = Locale.ENGLISH,
+        savedState: Map<String, Any?> = emptyMap()
+    ) = AddEditTransactionViewModel(
         getTransactionById = GetTransactionByIdUseCase(transactions),
         getCategoriesByType = GetCategoriesByTypeUseCase(categories),
         saveTransaction = SaveTransactionUseCase(AddTransactionUseCase(transactions), UpdateTransactionUseCase(transactions)),
@@ -113,9 +117,12 @@ class AddEditTransactionQuickAddTest {
             memory = memory,
             preferences = preferences,
             voice = voice,
-            locale = locale
+            locale = locale,
+            transactions = transactions
         ),
-        savedStateHandle = SavedStateHandle(if (transactionId != null) mapOf("transactionId" to transactionId) else emptyMap())
+        savedStateHandle = SavedStateHandle(
+            savedState + if (transactionId != null) mapOf("transactionId" to transactionId) else emptyMap()
+        )
     )
 
     private fun TestScope.effectsOf(viewModel: AddEditTransactionViewModel): List<AddEditTransactionEffect> {

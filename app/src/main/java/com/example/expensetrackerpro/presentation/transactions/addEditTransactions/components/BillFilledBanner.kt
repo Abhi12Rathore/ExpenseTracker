@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.History
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.DraftSource
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.ReviewPosition
 
 private val BannerShape = RoundedCornerShape(16.dp)
 
@@ -36,7 +38,13 @@ private val BannerShape = RoundedCornerShape(16.dp)
  * deleted once it is read. Text is quoted, so the user sees what was understood from what.
  */
 @Composable
-fun BillFilledBanner(onClear: () -> Unit, modifier: Modifier = Modifier, source: DraftSource = DraftSource.Bill) {
+fun BillFilledBanner(
+    onClear: () -> Unit,
+    modifier: Modifier = Modifier,
+    source: DraftSource = DraftSource.Bill,
+    // Where the form is in a sentence's transactions being gone through one by one
+    reviewPosition: ReviewPosition? = null
+) {
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = BannerShape,
@@ -49,22 +57,36 @@ fun BillFilledBanner(onClear: () -> Unit, modifier: Modifier = Modifier, source:
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = if (source is DraftSource.Text) Icons.Rounded.AutoAwesome else Icons.AutoMirrored.Filled.ReceiptLong,
+                imageVector = when (source) {
+                    is DraftSource.Text -> Icons.Rounded.AutoAwesome
+                    is DraftSource.History -> Icons.Rounded.History
+                    DraftSource.Bill -> Icons.AutoMirrored.Filled.ReceiptLong
+                },
                 contentDescription = null,
                 modifier = Modifier.size(28.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
             Column(modifier = Modifier.weight(1f)) {
+                val title = stringResource(
+                    when (source) {
+                        is DraftSource.Text -> R.string.quick_add_banner_title
+                        is DraftSource.History -> R.string.quick_add_history_banner_title
+                        DraftSource.Bill -> R.string.bill_fill_banner_title
+                    }
+                )
                 Text(
-                    text = stringResource(
-                        if (source is DraftSource.Text) R.string.quick_add_banner_title else R.string.bill_fill_banner_title
-                    ),
+                    text = reviewPosition
+                        ?.let { stringResource(R.string.quick_add_review_banner_title, title, it.number, it.total) }
+                        ?: title,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
                     text = when (source) {
                         is DraftSource.Text -> stringResource(R.string.quick_add_banner_quote, source.text)
+                        is DraftSource.History -> stringResource(R.string.quick_add_history_banner_message, source.title)
                         DraftSource.Bill -> stringResource(R.string.bill_fill_banner_message)
                     },
                     style = MaterialTheme.typography.bodySmall,

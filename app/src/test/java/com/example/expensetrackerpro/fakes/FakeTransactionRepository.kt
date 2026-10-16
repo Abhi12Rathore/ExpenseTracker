@@ -40,7 +40,21 @@ class FakeTransactionRepository(
 
     override suspend fun saveTransaction(transaction: Transaction): Outcome<Unit> {
         if (failWrites) return Outcome.Failure(writeFailure)
-        transactions.update { list -> list.filterNot { it.id == transaction.id } + transaction }
+        // A new one is added, as the database gives it an id of its own; a stored one is replaced
+        transactions.update { list ->
+            list.filterNot { transaction.id != TransactionId.UNSAVED && it.id == transaction.id } + transaction
+        }
+        return Outcome.Success(Unit)
+    }
+
+    /** How many batches were asked for, whether or not they went through. */
+    var batchSaveCalls = 0
+        private set
+
+    override suspend fun saveTransactions(transactions: List<Transaction>): Outcome<Unit> {
+        batchSaveCalls++
+        if (failWrites) return Outcome.Failure(writeFailure)
+        this.transactions.update { list -> list + transactions }
         return Outcome.Success(Unit)
     }
 
@@ -79,6 +93,20 @@ class FakeTransactionRepository(
             list.filter { it.dateMillis >= range.startMillis && it.dateMillis < range.endMillis }
                 .filter { it.matches(query.trim()) }
         }
+
+    override suspend fun getRepeatedTransactions(
+        type: TransactionType,
+        range: DateRange,
+        minCount: Int
+    ): List<Transaction> {
+        val inRange = transactions.value.filter {
+            it.transactionType == type && it.dateMillis >= range.startMillis && it.dateMillis < range.endMillis
+        }
+        val repeated = inRange.groupBy { it.title.trim().lowercase() to it.categoryId }
+            .filterValues { it.size >= minCount }
+            .values.flatten()
+        return repeated.sortedByDescending { it.dateMillis }
+    }
 
     private fun Transaction.matches(query: String): Boolean =
         query.isEmpty() || listOf(title, note, categoryName).any { it.contains(query, ignoreCase = true) }

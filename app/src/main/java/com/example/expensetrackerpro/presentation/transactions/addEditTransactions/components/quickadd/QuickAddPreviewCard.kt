@@ -50,6 +50,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackerpro.ExpenseTrackerProTheme
 import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.domain.models.Category
 import com.example.expensetrackerpro.domain.models.CategoryId
 import com.example.expensetrackerpro.domain.models.DateChoice
 import com.example.expensetrackerpro.domain.models.FieldConfidence
@@ -120,7 +121,15 @@ fun QuickAddPreviewCard(
             // Each chip already sits in a 48dp slot, which spaces the rows
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 AmountChip(preview.amount, preview.amountConfidence, onClick = { onChipClick(QuickAddField.AMOUNT) })
-                CategoryChip(preview, isEditing = editing == QuickAddField.CATEGORY, onChipClick, onEditDismissed, onCategoryChosen)
+                CategoryChip(
+                    category = preview.category,
+                    confidence = preview.categoryConfidence,
+                    options = preview.categoryOptions,
+                    isEditing = editing == QuickAddField.CATEGORY,
+                    onClick = { onChipClick(QuickAddField.CATEGORY) },
+                    onEditDismissed = onEditDismissed,
+                    onCategoryChosen = onCategoryChosen
+                )
                 ConfidenceChip(
                     label = preview.title ?: stringResource(R.string.quick_add_title_missing),
                     confidence = preview.titleConfidence,
@@ -159,7 +168,7 @@ fun QuickAddPreviewCard(
 }
 
 @Composable
-private fun AmountChip(amount: Money?, confidence: FieldConfidence, onClick: () -> Unit) {
+internal fun AmountChip(amount: Money?, confidence: FieldConfidence, onClick: (() -> Unit)?) {
     ConfidenceChip(
         label = amount?.let { LocalCurrencyFormatter.current.format(it) }
             ?: stringResource(R.string.quick_add_amount_missing),
@@ -169,40 +178,43 @@ private fun AmountChip(amount: Money?, confidence: FieldConfidence, onClick: () 
     )
 }
 
+/** The category understood, with a short list of the type's categories to change it. */
 @Composable
-private fun CategoryChip(
-    preview: QuickAddPreview,
+internal fun CategoryChip(
+    category: Category?,
+    confidence: FieldConfidence,
+    options: List<Category>,
     isEditing: Boolean,
-    onChipClick: (QuickAddField) -> Unit,
+    onClick: () -> Unit,
     onEditDismissed: () -> Unit,
     onCategoryChosen: (CategoryId) -> Unit
 ) {
     Box {
         ConfidenceChip(
-            label = preview.category?.name ?: stringResource(R.string.quick_add_category_missing),
-            confidence = preview.categoryConfidence,
-            icon = preview.category?.icon?.ui?.imageVector ?: Icons.Rounded.Category,
-            onClick = { onChipClick(QuickAddField.CATEGORY) }
+            label = category?.name ?: stringResource(R.string.quick_add_category_missing),
+            confidence = confidence,
+            icon = category?.icon?.ui?.imageVector ?: Icons.Rounded.Category,
+            onClick = onClick
         )
         // A short list: the suggestion first, the rest a scroll away (the form shows them all too)
-        val options = listOfNotNull(preview.category) + preview.categoryOptions.filter { it.id != preview.category?.id }
+        val listed = listOfNotNull(category) + options.filter { it.id != category?.id }
         DropdownMenu(
             expanded = isEditing,
             onDismissRequest = onEditDismissed,
             modifier = Modifier.heightIn(max = MenuMaxHeight)
         ) {
-            options.forEach { category ->
+            listed.forEach { option ->
                 DropdownMenuItem(
                     text = {
                         Text(
-                            text = category.name,
-                            fontWeight = if (category.id == preview.category?.id) FontWeight.SemiBold else null,
+                            text = option.name,
+                            fontWeight = if (option.id == category?.id) FontWeight.SemiBold else null,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                     },
-                    leadingIcon = { CategoryIconTile(icon = category.icon, size = 28.dp) },
-                    onClick = { onCategoryChosen(category.id) }
+                    leadingIcon = { CategoryIconTile(icon = option.icon, size = 28.dp) },
+                    onClick = { onCategoryChosen(option.id) }
                 )
             }
         }
@@ -210,12 +222,12 @@ private fun CategoryChip(
 }
 
 @Composable
-private fun DateChip(
+internal fun DateChip(
     date: TransactionDate?,
     pickerUtcMillis: Long,
     maxPickerUtcMillis: Long,
     isEditing: Boolean,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     onEditDismissed: () -> Unit,
     onDateChoiceChosen: (DateChoice) -> Unit,
     onDatePicked: (Long) -> Unit
@@ -266,7 +278,7 @@ private fun DateChip(
  * outline when missing, and plain when [confidence] is null (nothing said, nothing needed).
  */
 @Composable
-private fun ConfidenceChip(
+internal fun ConfidenceChip(
     label: String,
     confidence: FieldConfidence?,
     icon: ImageVector,

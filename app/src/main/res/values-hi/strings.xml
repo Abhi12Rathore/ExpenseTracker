@@ -281,6 +281,41 @@
     <string name="quick_add_banner_quote">“%1$s”</string>
     <string name="quick_add_tag">✨ आपके लिखे से</string>
     <string name="quick_add_learned">अगली बार “%1$s” %2$s में जाएगा</string>
+
+    <!-- Quick add: frequent transactions, several in one sentence -->
+    <string name="quick_add_frequent">अक्सर वाले</string>
+    <plurals name="quick_add_frequent_times">
+        <item quantity="one">%1$d बार</item>
+        <item quantity="other">%1$d बार</item>
+    </plurals>
+    <string name="quick_add_history_tag">🕘 आपकी हिस्ट्री से</string>
+    <string name="quick_add_history_banner_title">आपकी हिस्ट्री से भरा गया</string>
+    <string name="quick_add_history_banner_message">आपका हमेशा वाला “%1$s”। सेव करने से पहले राशि देख लें।</string>
+    <string name="quick_add_review_banner_title">%1$s · %3$d में से %2$d</string>
+    <string name="quick_add_review_saved">%2$d में से %1$d सेव हो गया। अब अगला।</string>
+    <plurals name="quick_add_batch_found_expenses">
+        <item quantity="one">%1$d खर्च मिला</item>
+        <item quantity="other">%1$d खर्च मिले</item>
+    </plurals>
+    <plurals name="quick_add_batch_found_transactions">
+        <item quantity="one">%1$d लेन-देन मिला</item>
+        <item quantity="other">%1$d लेन-देन मिले</item>
+    </plurals>
+    <string name="quick_add_batch_save_all_total">सब सेव करें · %1$s</string>
+    <string name="quick_add_batch_save_all">सब सेव करें</string>
+    <string name="quick_add_batch_review">एक-एक करके देखें</string>
+    <string name="quick_add_batch_incomplete">कुछ में टाइटल या कैटेगरी नहीं है। ऊपर चुनें, या एक-एक करके देखें।</string>
+
+    <!-- The + button's long press, and the launcher's app shortcuts -->
+    <string name="add_mode_menu_label">जोड़ने के और तरीके</string>
+    <string name="add_mode_quick_add">झटपट जोड़ें</string>
+    <string name="add_mode_scan">बिल स्कैन करें</string>
+    <string name="add_mode_voice">बोलें</string>
+    <string name="add_mode_manual">खुद भरें</string>
+    <string name="shortcut_quick_add_short">झटपट जोड़ें</string>
+    <string name="shortcut_scan_short">बिल स्कैन</string>
+    <string name="shortcut_voice_short">बोलें</string>
+    <string name="shortcut_manual_short">जोड़ें</string>
     <string name="transaction_delete_dialog_title">लेन-देन हटाएं?</string>
     <string name="transaction_delete_dialog_message">यह आपके लेन-देन और कुल हिसाब से हट जाएगा।</string>
     <string name="transaction_delete_dialog_cancel">रद्द करें</string>
@@ -477,6 +512,7 @@
     <string name="error_backup_invalid">यह फ़ाइल Expense Tracker का बैकअप नहीं है</string>
     <string name="error_backup_too_new">यह बैकअप ऐप के नए वर्शन से बना है</string>
     <string name="error_bill_unreadable">यह बिल पढ़ा नहीं जा सका</string>
+    <string name="error_transaction_incomplete">हर लेन-देन में राशि, टाइटल और कैटेगरी होनी चाहिए</string>
     <string name="error_file_write_failed">फ़ाइल सेव नहीं हो सकी। देखें कि वह जगह अभी भी मौजूद है और उसमें जगह बची है।</string>
 
     <!-- Export & backup -->

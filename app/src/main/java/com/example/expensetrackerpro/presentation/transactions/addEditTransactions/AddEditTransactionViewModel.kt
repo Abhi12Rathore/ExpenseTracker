@@ -33,6 +33,7 @@ import com.example.expensetrackerpro.presentation.transactions.addEditTransactio
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEffect
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionEvent
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEditTransactionUiState
+import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.AddEntryMode
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.DraftField
 import com.example.expensetrackerpro.presentation.transactions.addEditTransactions.uistate.withDate
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -72,6 +73,9 @@ class AddEditTransactionViewModel @Inject constructor(
     private val transactionId: TransactionId? =
         savedStateHandle.get<Int>("transactionId")?.takeIf { it != -1 }?.let(::TransactionId)
 
+    // Nav argument: what a new transaction opens with, from the + button's long press or an app shortcut
+    private val entryMode: AddEntryMode = AddEntryMode.fromName(savedStateHandle.get<String>("mode"))
+
     // The stored transaction being edited, once it has loaded
     private var original: Transaction? = null
 
@@ -94,7 +98,7 @@ class AddEditTransactionViewModel @Inject constructor(
         if (transactionId != null) {
             loadExistingTransaction(transactionId)
         }
-        assist.start(viewModelScope, savedStateHandle, assistHost, isEditMode = transactionId != null)
+        assist.start(viewModelScope, savedStateHandle, assistHost, isEditMode = transactionId != null, entryMode)
     }
 
     private val assistHost: DraftAssistHost
@@ -103,6 +107,7 @@ class AddEditTransactionViewModel @Inject constructor(
             override val allCategories: List<Category> get() = this@AddEditTransactionViewModel.allCategories
             override fun updateForm(change: (AddEditTransactionUiState) -> AddEditTransactionUiState) =
                 this@AddEditTransactionViewModel.updateForm(change)
+            override fun resetForm() = this@AddEditTransactionViewModel.resetForm()
             override suspend fun send(effect: AddEditTransactionEffect) = _effects.send(effect)
         }
 
@@ -300,8 +305,9 @@ class AddEditTransactionViewModel @Inject constructor(
 
             result
                 .onSuccess {
-                    assist.onSaved(state.title.trim(), state.transactionType, category.id)
-                    _effects.send(AddEditTransactionEffect.Saved)
+                    // While a batch is reviewed one by one, the form now holds the next of it
+                    val isNextFilled = assist.onSaved(state.title.trim(), state.transactionType, category.id)
+                    if (!isNextFilled) _effects.send(AddEditTransactionEffect.Saved)
                 }
                 .onFailure { error ->
                     updateForm { it.copy(isSaving = false) }
@@ -318,6 +324,21 @@ class AddEditTransactionViewModel @Inject constructor(
             deleteTransaction(transaction)
                 .onSuccess { _effects.send(AddEditTransactionEffect.NavigateBack) }
                 .onFailure { _effects.send(AddEditTransactionEffect.ShowError(it.toMessageRes())) }
+        }
+    }
+
+    /**
+     * A new transaction's empty form, of the same type, with what the screen knows about the
+     * phone and the categories kept.
+     */
+    private fun resetForm() {
+        updateForm {
+            AddEditTransactionUiState(
+                transactionType = it.transactionType,
+                availableCategories = it.availableCategories,
+                isScanAvailable = it.isScanAvailable,
+                quickAdd = it.quickAdd
+            ).withDate(resolveTransactionDate(DateSelection.Today))
         }
     }
 

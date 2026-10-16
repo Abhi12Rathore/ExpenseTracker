@@ -290,6 +290,44 @@
     <string name="quick_add_banner_quote">«\u00A0%1$s\u00A0»</string>
     <string name="quick_add_tag">✨ De votre texte</string>
     <string name="quick_add_learned">La prochaine fois, «\u00A0%1$s\u00A0» ira dans %2$s</string>
+
+    <!-- Quick add: frequent transactions, several in one sentence -->
+    <string name="quick_add_frequent">Fréquents</string>
+    <plurals name="quick_add_frequent_times">
+        <item quantity="one">%1$d fois</item>
+        <item quantity="many">%1$d fois</item>
+        <item quantity="other">%1$d fois</item>
+    </plurals>
+    <string name="quick_add_history_tag">🕘 De votre historique</string>
+    <string name="quick_add_history_banner_title">Rempli à partir de votre historique</string>
+    <string name="quick_add_history_banner_message">Votre «\u00A0%1$s\u00A0» habituel. Vérifiez le montant avant d’enregistrer.</string>
+    <string name="quick_add_review_banner_title">%1$s · %2$d sur %3$d</string>
+    <string name="quick_add_review_saved">%1$d sur %2$d enregistré. Voici le suivant.</string>
+    <plurals name="quick_add_batch_found_expenses">
+        <item quantity="one">%1$d dépense trouvée</item>
+        <item quantity="many">%1$d dépenses trouvées</item>
+        <item quantity="other">%1$d dépenses trouvées</item>
+    </plurals>
+    <plurals name="quick_add_batch_found_transactions">
+        <item quantity="one">%1$d transaction trouvée</item>
+        <item quantity="many">%1$d transactions trouvées</item>
+        <item quantity="other">%1$d transactions trouvées</item>
+    </plurals>
+    <string name="quick_add_batch_save_all_total">Tout enregistrer · %1$s</string>
+    <string name="quick_add_batch_save_all">Tout enregistrer</string>
+    <string name="quick_add_batch_review">Vérifier une par une</string>
+    <string name="quick_add_batch_incomplete">Il manque un titre ou une catégorie à certaines. Choisissez-en une ci-dessus, ou vérifiez-les une par une.</string>
+
+    <!-- The + button's long press, and the launcher's app shortcuts -->
+    <string name="add_mode_menu_label">Autres façons d’ajouter</string>
+    <string name="add_mode_quick_add">Ajout rapide</string>
+    <string name="add_mode_scan">Scanner un ticket</string>
+    <string name="add_mode_voice">Dites-le</string>
+    <string name="add_mode_manual">Saisir à la main</string>
+    <string name="shortcut_quick_add_short">Rapide</string>
+    <string name="shortcut_scan_short">Ticket</string>
+    <string name="shortcut_voice_short">Dites-le</string>
+    <string name="shortcut_manual_short">Ajouter</string>
     <string name="transaction_delete_dialog_title">Supprimer la transaction\u00A0?</string>
     <string name="transaction_delete_dialog_message">Elle sera retirée de vos transactions et de vos totaux.</string>
     <string name="transaction_delete_dialog_cancel">Annuler</string>
@@ -498,6 +536,7 @@
     <string name="error_backup_invalid">Ce fichier n’est pas une sauvegarde Expense Tracker</string>
     <string name="error_backup_too_new">Cette sauvegarde provient d’une version plus récente de l’appli</string>
     <string name="error_bill_unreadable">Impossible de lire ce ticket</string>
+    <string name="error_transaction_incomplete">Chaque transaction doit avoir un montant, un titre et une catégorie</string>
     <string name="error_file_write_failed">Impossible d’enregistrer le fichier. Vérifiez que l’emplacement est toujours disponible et qu’il reste de la place.</string>
 
     <!-- Export & backup -->
